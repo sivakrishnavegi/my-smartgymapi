@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import User from '../models/auth.login'
+import User from '../models/auth.user'
 import { generateToken } from '../utils/genarateToken'
 import bcrypt from 'bcrypt'
 
