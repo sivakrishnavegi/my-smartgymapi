@@ -21,25 +21,37 @@ export const checkIn = async (req: Request, res: Response) => {
       date: { $gte: todayStart, $lte: todayEnd },
     });
 
+    // ✅ If already checked in today
     if (existingCheckIn) {
-      return res.status(409).json({
-        success: false,
-        message: 'Already checked in today.',
-        data: existingCheckIn,
-      });
+      if (existingCheckIn.status === 'pending') {
+        return res.status(200).json({
+          success: false,
+          message: 'Already checked in today. Awaiting approval.',
+          data: existingCheckIn,
+          qrCodeData: `check-in:${existingCheckIn._id}:${userId}`,
+        });
+      } else {
+        return res.status(409).json({
+          success: false,
+          message: 'Already checked in today.',
+          data: existingCheckIn,
+        });
+      }
     }
 
+    // ✅ New check-in entry
     const attendance = await Attendance.create({
       userId,
       date: new Date(),
       checkInTime: new Date(),
-      status: 'pending', // initially pending, can be updated to 'approved' by staff
+      status: 'pending', // initially pending, can be updated by staff
     });
 
     return res.status(201).json({
       success: true,
       message: 'Check-in recorded. Awaiting staff approval.',
       data: attendance,
+      qrCodeData: `check-in:${attendance._id}:${userId}`,
     });
   } catch (error) {
     console.error('[CHECK-IN ERROR]', error);

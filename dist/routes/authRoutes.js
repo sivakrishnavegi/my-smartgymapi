@@ -1,15 +1,14 @@
-import { Router } from 'express';
-import { login, signup } from '../controllers/authController';
-
-const router = Router();
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const authController_1 = require("../controllers/authController");
+const router = (0, express_1.Router)();
 /**
  * @swagger
  * tags:
  *   name: Auth
  *   description: Authentication routes
  */
-
 /**
  * @swagger
  * /api/auth/login:
@@ -56,8 +55,7 @@ const router = Router();
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', login);
-
+router.post('/login', authController_1.login);
 /**
  * @swagger
  * /api/auth/signup:
@@ -91,27 +89,5 @@ router.post('/login', login);
  *       500:
  *         description: Server error
  */
-router.post('/signup', signup);
-
-/**
- * @swagger
- * /api/auth/logout:
- *   post:
- *     summary: Logout the current user and clear the auth cookie
- *     tags: [Auth]
- *     responses:
- *       200:
- *         description: Logout successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Logout successful
- *       500:
- *         description: Server error during logout
- */
-
-export default router;
+router.post('/signup', authController_1.signup);
+exports.default = router;
