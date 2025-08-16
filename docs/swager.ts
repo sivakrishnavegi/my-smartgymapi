@@ -68,7 +68,27 @@ const options: swaggerJSDoc.Options = {
             },
           },
         },
-
+        Section: {
+          type: "object",
+          properties: {
+            _id: { type: "string", example: "64fc4d8b8af92b001ea9a3f1" },
+            tenantId: { type: "string", example: "tenant123" },
+            schoolId: { type: "string", example: "64fc3c8f8af92b001ea9a444" },
+            classId: { type: "string", example: "64fc3d8f8af92b001ea9a555" },
+            name: { type: "string", example: "Section A" },
+            capacity: { type: "number", example: 30 },
+            homeroomTeacherId: {
+              type: "string",
+              example: "64fc3e8f8af92b001ea9a666",
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              example: "2025-08-05T08:30:00Z",
+            },
+          },
+          required: ["tenantId", "schoolId", "classId", "name"],
+        },
         // 🔹 Add User schemas here
         User: {
           type: "object",
@@ -140,38 +160,54 @@ const options: swaggerJSDoc.Options = {
             studentId: { type: "string" },
             classId: { type: "string", format: "ObjectId" },
             sectionId: { type: "string", format: "ObjectId" },
-            rollNo: { type: "string" },
+            regNo: { type: "string" },
           },
         },
-         School: {
-      type: "object",
-      properties: {
-        tenantId: { type: "string", example: "tenant123" },
-        name: { type: "string", example: "ABC High School" },
-        address: { type: "string", example: "123 Street, City" },
-        contact: {
+        School: {
           type: "object",
           properties: {
-            phone: { type: "string", example: "+911234567890" },
-            email: { type: "string", example: "info@school.com" }
-          }
+            tenantId: { type: "string", example: "tenant123" },
+            name: { type: "string", example: "ABC High School" },
+            address: { type: "string", example: "123 Street, City" },
+            contact: {
+              type: "object",
+              properties: {
+                phone: { type: "string", example: "+911234567890" },
+                email: { type: "string", example: "info@school.com" },
+              },
+            },
+            academicYears: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  yearId: { type: "string", example: "2025-2026" },
+                  start: {
+                    type: "string",
+                    format: "date",
+                    example: "2025-06-01",
+                  },
+                  end: {
+                    type: "string",
+                    format: "date",
+                    example: "2026-05-31",
+                  },
+                  status: {
+                    type: "string",
+                    enum: ["active", "archived"],
+                    example: "active",
+                  },
+                },
+              },
+            },
+            settings: { type: "object", example: { theme: "blue" } },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              example: "2025-08-16T10:00:00Z",
+            },
+          },
         },
-        academicYears: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              yearId: { type: "string", example: "2025-2026" },
-              start: { type: "string", format: "date", example: "2025-06-01" },
-              end: { type: "string", format: "date", example: "2026-05-31" },
-              status: { type: "string", enum: ["active", "archived"], example: "active" }
-            }
-          }
-        },
-        settings: { type: "object", example: { theme: "blue" } },
-        createdAt: { type: "string", format: "date-time", example: "2025-08-16T10:00:00Z" }
-      }
-    }
       },
     },
     security: [{ bearerAuth: [] }],

@@ -3,7 +3,7 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 export interface IStudentProfile extends Document {
   userId: Types.ObjectId;   // reference to Users
   admissionDate: Date;
-  rollNo: string;
+  regNo: string;
   classId: Types.ObjectId;
   sectionId: Types.ObjectId;
   guardianId?: Types.ObjectId; // linked guardian
@@ -18,7 +18,7 @@ export interface IStudentProfile extends Document {
 const StudentProfileSchema = new Schema<IStudentProfile>({
   userId: { type: Schema.Types.ObjectId, ref: "Users", required: true, unique: true },
   admissionDate: Date,
-  rollNo: String,
+  regNo: String,
   classId: { type: Schema.Types.ObjectId, ref: "Class" },
   sectionId: { type: Schema.Types.ObjectId, ref: "Section" },
   guardianId: { type: Schema.Types.ObjectId, ref: "Users" },

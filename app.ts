@@ -7,6 +7,8 @@ import authRoutes from "./routes/authRoutes";
 import schoolRoutes from "./routes/school.routes";
 import tenantRoutes from "./routes/tenantRoutes";
 import rolesRoutes from "./routes/roleRoutes";
+import classesRoutes from './routes/classRoutes';
+import sectionRoutes from './routes/section.routes';
 
 const app = express();
 
@@ -32,6 +34,11 @@ app.use("/api/tenants", tenantRoutes);
 app.use("/api/schools", schoolRoutes);
 
 app.use("/api/roles", rolesRoutes);
+
+app.use("/api/classes", classesRoutes);
+
+app.use("/api/sections", sectionRoutes);
+
 
 // Health check
 app.get("/", (_req, res) => {
