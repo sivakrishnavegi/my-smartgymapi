@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import { v4 as uuidv4 } from "uuid";
 
 import { Document } from "mongoose";
 
@@ -29,7 +30,12 @@ export interface ITenant extends Document {
 
 
 const TenantSchema = new Schema({
-  tenantId: { type: String, unique: true, required: true, index: true },
+  tenantId: {
+      type: String,
+      unique: true,
+      default: uuidv4,  // ✅ auto-generate if not passed
+      index: true
+    },
   name: String,
   domain: String,
   apiKeys: [{

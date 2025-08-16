@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes';
 import attendanceRoutes from './routes/attendanceRoutes';
+import tenantRoutes from './routes/tenantRoutes';
 
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './docs/swager';
@@ -22,6 +23,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/auth', authRoutes);
 
 app.use('/api/attendance', attendanceRoutes);
+
+app.use("/api/tenants", tenantRoutes);
 
 
 // Health check
