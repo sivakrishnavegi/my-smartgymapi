@@ -1,11 +1,11 @@
-import express from 'express';
 import cors from 'cors';
-import authRoutes from './routes/authRoutes';
-import attendanceRoutes from './routes/attendanceRoutes';
-import tenantRoutes from './routes/tenantRoutes';
-
+import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './docs/swager';
+import attendanceRoutes from './routes/attendanceRoutes';
+import authRoutes from './routes/authRoutes';
+import schoolRoutes from './routes/school.routes';
+import tenantRoutes from './routes/tenantRoutes';
 
 const app = express();
 
@@ -26,6 +26,7 @@ app.use('/api/attendance', attendanceRoutes);
 
 app.use("/api/tenants", tenantRoutes);
 
+app.use("/api/schools", schoolRoutes);
 
 // Health check
 app.get('/', (_req, res) => {

@@ -68,6 +68,110 @@ const options: swaggerJSDoc.Options = {
             },
           },
         },
+
+        // 🔹 Add User schemas here
+        User: {
+          type: "object",
+          required: ["tenantId", "schoolId", "userType", "roles"],
+          properties: {
+            _id: { type: "string", format: "ObjectId" },
+            tenantId: { type: "string" },
+            schoolId: { type: "string", format: "ObjectId" },
+            userType: {
+              type: "string",
+              enum: ["admin", "teacher", "student", "librarian", "guardian"],
+            },
+            profile: { $ref: "#/components/schemas/UserProfile" },
+            account: { $ref: "#/components/schemas/UserAccount" },
+            roles: {
+              type: "array",
+              items: { type: "string", format: "ObjectId" },
+            },
+            linkedStudentIds: {
+              type: "array",
+              items: { type: "string", format: "ObjectId" },
+            },
+            employment: { $ref: "#/components/schemas/UserEmployment" },
+            enrollment: { $ref: "#/components/schemas/UserEnrollment" },
+            createdAt: { type: "string", format: "date-time" },
+          },
+        },
+        UserProfile: {
+          type: "object",
+          properties: {
+            firstName: { type: "string" },
+            lastName: { type: "string" },
+            dob: { type: "string", format: "date" },
+            gender: { type: "string" },
+            photoUrl: { type: "string", format: "uri" },
+            address: { type: "string" },
+            contact: {
+              type: "object",
+              properties: {
+                phone: { type: "string" },
+                email: { type: "string", format: "email" },
+              },
+            },
+          },
+        },
+        UserAccount: {
+          type: "object",
+          properties: {
+            email: { type: "string", format: "email" },
+            username: { type: "string" },
+            passwordHash: { type: "string" },
+            status: {
+              type: "string",
+              enum: ["active", "inactive", "suspended"],
+            },
+          },
+        },
+        UserEmployment: {
+          type: "object",
+          properties: {
+            staffId: { type: "string" },
+            deptId: { type: "string" },
+            hireDate: { type: "string", format: "date-time" },
+          },
+        },
+        UserEnrollment: {
+          type: "object",
+          properties: {
+            studentId: { type: "string" },
+            classId: { type: "string", format: "ObjectId" },
+            sectionId: { type: "string", format: "ObjectId" },
+            rollNo: { type: "string" },
+          },
+        },
+         School: {
+      type: "object",
+      properties: {
+        tenantId: { type: "string", example: "tenant123" },
+        name: { type: "string", example: "ABC High School" },
+        address: { type: "string", example: "123 Street, City" },
+        contact: {
+          type: "object",
+          properties: {
+            phone: { type: "string", example: "+911234567890" },
+            email: { type: "string", example: "info@school.com" }
+          }
+        },
+        academicYears: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              yearId: { type: "string", example: "2025-2026" },
+              start: { type: "string", format: "date", example: "2025-06-01" },
+              end: { type: "string", format: "date", example: "2026-05-31" },
+              status: { type: "string", enum: ["active", "archived"], example: "active" }
+            }
+          }
+        },
+        settings: { type: "object", example: { theme: "blue" } },
+        createdAt: { type: "string", format: "date-time", example: "2025-08-16T10:00:00Z" }
+      }
+    }
       },
     },
     security: [{ bearerAuth: [] }],
