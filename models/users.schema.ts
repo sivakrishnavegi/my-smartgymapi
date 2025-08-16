@@ -2,12 +2,7 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 import { ObjectId } from "mongodb";
 import Counter from "./counter.schema";
 
-export type UserType =
-  | "admin"
-  | "teacher"
-  | "student"
-  | "librarian"
-  | "guardian";
+export type UserType = "admin" | "teacher" | "student" | "librarian" | "guardian";
 export type AccountStatus = "active" | "inactive" | "suspended";
 
 export interface IContact {
@@ -52,15 +47,15 @@ export interface IUser extends Document {
   profile?: IProfile;
   account?: IAccount;
   roles: Types.ObjectId[];
-  linkedStudentIds: Types.ObjectId[]; // only for guardian users
-  employment?: IEmployment; // only for staff (teacher/admin/librarian)
-  enrollment?: IEnrollment; // only for students
+  linkedStudentIds: Types.ObjectId[];
+  employment?: IEmployment;
+  enrollment?: IEnrollment;
   createdAt: Date;
 }
 
-const UserSchema = new Schema({
-  tenantId: { type: String, required: true, index: true },
-  schoolId: { type: ObjectId, ref: "School", required: true, index: true },
+const UserSchema = new Schema<IUser>({
+  tenantId: { type: String, required: true },
+  schoolId: { type: Schema.Types.ObjectId, ref: "School", required: true },
   userType: {
     type: String,
     enum: ["admin", "teacher", "student", "librarian", "guardian"],
@@ -86,7 +81,7 @@ const UserSchema = new Schema({
     },
   },
   roles: [{ type: ObjectId, ref: "Role" }],
-  linkedStudentIds: [{ type: ObjectId, ref: "User" }], // for guardians
+  linkedStudentIds: [{ type: ObjectId, ref: "User" }],
   employment: { staffId: String, deptId: String, hireDate: Date },
   enrollment: {
     studentId: String,
@@ -97,24 +92,38 @@ const UserSchema = new Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-// ------------------ Pre-save hook goes here ------------------
-UserSchema.pre("save", async function (next) {
-    // @ts-ignore
-  const user = this as IUser;
+// ------------------ Pre-save Hook ------------------
+UserSchema.pre<IUser>("save", async function (next) {
+  const user = this;
 
-  // Only generate rollNo for students who don't have it yet
-    const counter = await Counter.findByIdAndUpdate(
-      "regNo",
-      { $inc: { seq: 1 } },
-      { new: true, upsert: true }
-    );
+  // Ensure account exists
+  user.account = user.account || { status: "active" };
 
+  // Normalize email
+  if (!user.account.email || user.account.email.trim() === "") {
+    delete user.account.email; // remove undefined, null, or empty string
+  } else {
+    user.account.email = user.account.email.toLowerCase().trim();
+  }
+
+  // Only generate regNo for students who don't have it yet
+  if (user.userType === "student") {
     user.enrollment = user.enrollment || {};
-    user.enrollment.regNo = counter.seq.toString(); // Assign as string
-  
+    if (!user.enrollment.regNo) {
+      const counter = await Counter.findByIdAndUpdate(
+        "regNo",
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+      );
+      user.enrollment.regNo = counter.seq.toString();
+    }
+  }
 
   next();
 });
-// -------------------------------------------------------------
+
+// ------------------ Indexes ------------------
+// Unique, but only for documents that have an email
+// UserSchema.index({ "account.email": 1 }, { unique: true, sparse: true });
 
 export default mongoose.model<IUser>("Users", UserSchema);

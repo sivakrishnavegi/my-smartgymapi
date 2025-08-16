@@ -9,6 +9,7 @@ import tenantRoutes from "./routes/tenantRoutes";
 import rolesRoutes from "./routes/roleRoutes";
 import classesRoutes from './routes/classRoutes';
 import sectionRoutes from './routes/section.routes';
+import userRoutes from './routes/user.routes';
 
 const app = express();
 
@@ -38,6 +39,8 @@ app.use("/api/roles", rolesRoutes);
 app.use("/api/classes", classesRoutes);
 
 app.use("/api/sections", sectionRoutes);
+
+app.use("/api/users", userRoutes);
 
 
 // Health check

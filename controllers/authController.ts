@@ -1,7 +1,7 @@
-import { Request, Response } from 'express'
-import User from '../models/auth.user'
-import { generateToken } from '../utils/genarateToken'
-import bcrypt from 'bcrypt'
+import { Request, Response } from "express";
+import User from "../models/auth.user";
+import { generateToken } from "../utils/genarateToken";
+import bcrypt from "bcrypt";
 import { serialize } from "cookie";
 
 export const login = async (req: Request, res: Response) => {
@@ -26,17 +26,16 @@ export const login = async (req: Request, res: Response) => {
     });
 
     // Set secure HTTP-only cookie
-res.setHeader(
-  "Set-Cookie",
-  serialize("token", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 60 * 60 * 24, // 1 day
-    path: "/",
-  })
-);
-
+    res.setHeader(
+      "Set-Cookie",
+      serialize("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 60 * 60 * 24, // 1 day
+        path: "/",
+      })
+    );
 
     // Respond with user data (no token in body)
     return res.status(200).json({
@@ -53,44 +52,43 @@ res.setHeader(
   }
 };
 
-
 export const signup = async (req: Request, res: Response) => {
-  const { email, password, role } = req.body
+  const { email, password, role } = req.body;
 
   try {
-    const existingUser = await User.findOne({ email })
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'Email already registered' })
+      return res.status(400).json({ message: "Email already registered" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10)
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await User.create({
       email,
       password: hashedPassword,
-      role: role || 'user',
-    })
+      role: role || "user",
+    });
 
     const token = generateToken({
       _id: newUser._id.toString(),
       email: newUser.email,
       role: newUser.role,
-    })
+    });
 
     res.status(201).json({
-      message: 'User registered successfully',
+      message: "User registered successfully",
       token,
       user: {
         id: newUser._id,
         email: newUser.email,
         role: newUser.role,
       },
-    })
+    });
   } catch (error) {
-    console.error('[SIGNUP ERROR]', error)
-    res.status(500).json({ message: 'Server error' })
+    console.error("[SIGNUP ERROR]", error);
+    res.status(500).json({ message: "Server error" });
   }
-}
+};
 
 export const logout = (req: Request, res: Response) => {
   try {

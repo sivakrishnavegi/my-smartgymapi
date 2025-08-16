@@ -219,7 +219,7 @@ router.delete("/:id", deleteSection);
 
 /**
  * @swagger
- * /sections/{id}/assign-teacher:
+ * /api/sections/{id}/assign-teacher:
  *   put:
  *     summary: Assign a homeroom teacher to a section
  *     tags:
