@@ -4,7 +4,8 @@ import {
   getUserById,
   updateUser,
   deleteUser,
-  listUsers
+  listUsers,
+  loginUser
 } from "../controllers/userController";
 
 const router = Router();
@@ -119,5 +120,67 @@ router.put("/:id", updateUser);
  *         description: User not found
  */
 router.delete("/:id", deleteUser);
+
+/**
+ * @swagger
+ * tags:
+ *   name: Authentication
+ *   description: User login and authentication
+ */
+
+/**
+ * @swagger
+ * /api/users/login:
+ *   post:
+ *     summary: Login user
+ *     description: Logs in a user using email and password. Returns a JWT token in cookie.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: test@example.com
+ *               password:
+ *                 type: string
+ *                 example: Password123
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Login successful
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: 64eaf47a93a9baf21d6d4a1c
+ *                     email:
+ *                       type: string
+ *                       example: test@example.com
+ *                     role:
+ *                       type: string
+ *                       example: teacher
+ *       400:
+ *         description: Bad Request (Missing email or password)
+ *       401:
+ *         description: Invalid credentials
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/login", loginUser);
 
 export default router;

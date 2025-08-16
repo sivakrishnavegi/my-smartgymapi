@@ -1,7 +1,9 @@
+export type UserType = "admin" | "teacher" | "student" | "librarian" | "guardian" | "user";
+
 export interface IUser {
   _id: string
   email: string
-  role: 'admin' | 'user'
+  role: UserType
 }
 
 // types/express/index.d.ts

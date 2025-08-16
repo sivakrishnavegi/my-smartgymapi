@@ -2,8 +2,10 @@ import { Request, Response } from "express";
 import User from "../models/users.schema";
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import { serialize } from "cookie";
 
 import School from "../models/schools.schema";
+import { generateToken } from "../utils/genarateToken";
 
 export const createUser = async (req: Request, res: Response) => {
 
@@ -196,5 +198,56 @@ export const deleteUser = async (req: Request, res: Response) => {
     res.status(200).json({ message: "User deleted" });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+export const loginUser = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ "account.email": email.toLowerCase().trim() });
+    if (!user) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    // Compare password
+    if (!user.account || typeof user.account.passwordHash !== "string") {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+    const isMatch = await bcrypt.compare(password, user.account.passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    // Generate token 
+    const token = await generateToken({ _id : user?._id as string, email: user.account.email!, role: user.userType });
+
+    // Set cookie
+    const cookie = serialize("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 24, // 1 day
+      path: "/",
+    });
+    res.setHeader("Set-Cookie", cookie);
+
+    // Return response
+    return res.status(200).json({
+      message: "Login successful",
+      user: {
+        id: user._id,
+        email: user.account?.email ?? null,
+        role: user.userType,
+      },
+    });
+  } catch (err) {
+    console.error("Login error:", err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
