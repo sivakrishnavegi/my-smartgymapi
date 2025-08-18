@@ -208,6 +208,52 @@ const options: swaggerJSDoc.Options = {
             },
           },
         },
+        Event: {
+          type: "object",
+          required: ["title", "startDate", "endDate", "createdBy"],
+          properties: {
+            _id: {
+              type: "string",
+              example: "64d3f123abc4567890def123",
+            },
+            title: {
+              type: "string",
+              example: "Annual Sports Day",
+            },
+            description: {
+              type: "string",
+              example: "Sports event for all classes",
+            },
+            startDate: {
+              type: "string",
+              format: "date-time",
+              example: "2025-09-01T10:00:00Z",
+            },
+            endDate: {
+              type: "string",
+              format: "date-time",
+              example: "2025-09-01T16:00:00Z",
+            },
+            bannerUrl: {
+              type: "string",
+              example: "https://example.com/banner.jpg",
+            },
+            createdBy: {
+              type: "string",
+              example: "64d3f123abc4567890def123",
+            },
+            createdAt: {
+              type: "string",
+              format: "date-time",
+              example: "2025-08-18T12:34:56Z",
+            },
+            updatedAt: {
+              type: "string",
+              format: "date-time",
+              example: "2025-08-18T12:34:56Z",
+            },
+          },
+        },
       },
     },
     security: [{ bearerAuth: [] }],

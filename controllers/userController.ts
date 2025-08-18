@@ -140,8 +140,6 @@ export const createUser = async (req: Request, res: Response) => {
   }
 };
 
-
-
 // List all users
 export const listUsers = async (req: Request, res: Response) => {
   try {
@@ -244,6 +242,7 @@ export const loginUser = async (req: Request, res: Response) => {
         id: user._id,
         email: user.account?.email ?? null,
         role: user.userType,
+        token : token
       },
     });
   } catch (err) {
