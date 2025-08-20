@@ -1,4 +1,4 @@
-export type UserType = "admin" | "teacher" | "student" | "librarian" | "guardian" | "user";
+export type UserType = "admin" | "teacher" | "student" | "librarian" | "guardian" | "user" | "guest";
 
 export interface IUser {
   _id: string

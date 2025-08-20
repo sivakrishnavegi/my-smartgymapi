@@ -2,7 +2,13 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 import { ObjectId } from "mongodb";
 import Counter from "./counter.schema";
 
-export type UserType = "admin" | "teacher" | "student" | "librarian" | "guardian";
+export type UserType =
+  | "admin"
+  | "guest"
+  | "teacher"
+  | "student"
+  | "librarian"
+  | "guardian";
 export type AccountStatus = "active" | "inactive" | "suspended";
 
 export interface IContact {
@@ -52,14 +58,31 @@ export interface IUser extends Document {
   enrollment?: IEnrollment;
   createdAt: Date;
 }
+export interface IAuthProvider {
+  provider: "local" | "google";
+  providerId?: string; // google sub id
+}
+
+export interface IUser extends Document {
+  tenantId: string;
+  schoolId: Types.ObjectId;
+  userType: UserType;
+  profile?: IProfile;
+  account?: IAccount;
+  providers: IAuthProvider[]; // 👈 multiple login providers
+  roles: Types.ObjectId[];
+  linkedStudentIds: Types.ObjectId[];
+  employment?: IEmployment;
+  enrollment?: IEnrollment;
+  createdAt: Date;
+}
 
 const UserSchema = new Schema<IUser>({
   tenantId: { type: String, required: true },
-  schoolId: { type: Schema.Types.ObjectId, ref: "School", required: true },
+  schoolId: { type: Schema.Types.ObjectId, ref: "School" },
   userType: {
     type: String,
-    enum: ["admin", "teacher", "student", "librarian", "guardian"],
-    required: true,
+    enum: ["admin", "teacher", "student", "librarian", "guardian", "guest"],
   },
   profile: {
     firstName: String,
@@ -71,7 +94,7 @@ const UserSchema = new Schema<IUser>({
     contact: { phone: String, email: String },
   },
   account: {
-    email: String,
+    email: { type: String, lowercase: true, trim: true },
     username: String,
     passwordHash: String,
     status: {
@@ -79,7 +102,21 @@ const UserSchema = new Schema<IUser>({
       enum: ["active", "inactive", "suspended"],
       default: "active",
     },
+    google: {
+      accessToken: { type: String },
+      refreshToken: { type: String },
+      expiryDate: { type: Number },
+      idToken: { type: String },
+      tokenType: { type: String },
+      scope: { type: String },
+    },
   },
+  providers: [
+    {
+      provider: { type: String, enum: ["local", "google"] },
+      providerId: String,
+    },
+  ],
   roles: [{ type: ObjectId, ref: "Role" }],
   linkedStudentIds: [{ type: ObjectId, ref: "User" }],
   employment: { staffId: String, deptId: String, hireDate: Date },

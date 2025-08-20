@@ -15,6 +15,7 @@ import googleAuthRoutes from './routes/googleAuthRoutes';
 import { limiter } from "./utils/rateLimter";
 import helmet from "helmet";
 import slowDown from "express-slow-down";
+import  cookieParser from "cookie-parser";
 
 
 const app = express();
@@ -29,6 +30,7 @@ const allowedOrigins = ["http://localhost:3000","http://localhost:3001", "http:/
 app.use(express.json({ limit: "10kb" })); 
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(helmet());
+app.use(cookieParser());
 
 // Middleware
 app.use(cors({

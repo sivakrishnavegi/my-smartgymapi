@@ -134,6 +134,6 @@ router.post('/signup', signup);
  *       500:
  *         description: Server error during logout
  */
-router.post('/logout', logout);
+router.get('/logout', logout);
 
 export default router;

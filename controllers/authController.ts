@@ -44,6 +44,7 @@ export const login = async (req: Request, res: Response) => {
         id: user._id,
         email: user.email,
         role: user.role,
+        token: token,
       },
     });
   } catch (error) {
@@ -92,21 +93,23 @@ export const signup = async (req: Request, res: Response) => {
 
 export const logout = (req: Request, res: Response) => {
   try {
-    // Clear the token cookie
-    res.setHeader(
-      "Set-Cookie",
-      serialize("token", "", {
+    const cookies = req.cookies || {};
+
+    Object.keys(cookies).forEach((cookieName) => {
+      res.clearCookie(cookieName, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-        maxAge: 0, // Expire immediately
-        path: "/",
-      })
-    );
+        path: "/", // must match the cookie path
+      });
+      console.log(`Cleared cookie: ${cookieName}`);
+    });
+
+    console.log("✅ Logout completed: All cookies cleared except 'token'");
 
     return res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
-    console.error("Logout error:", error);
+    console.error("❌ Logout error:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
