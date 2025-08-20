@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { google } from "googleapis";
-import { googleAuthCallback } from "../controllers/googleAuthContorller";
+import { googleAuthCallback, googleAuthCallbacks } from "../controllers/googleAuthContorller";
 
 const router = Router();
 
@@ -22,10 +22,11 @@ router.get("/auth", (req, res) => {
     ],
     prompt: "consent",
   });
+  console.log("first google ::",url)
   res.redirect(url);
 });
 
 // Step 2: Handle callback
-router.post("/callback", googleAuthCallback);
+router.get("/callback", googleAuthCallbacks);
 
 export default router;
