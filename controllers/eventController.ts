@@ -20,7 +20,7 @@ export const createEvent = async (req: Request, res: Response) => {
     // Push event to Google Calendar
     //   calendarId: 'c2fbf05f64dae08edb6a733b3345c7fcd70cf5d366bdfd5d518aa5c0644a5886@group.calendar.google.com',
     const googleEvent = await calendar.events.insert({
-      calendarId: "primary",
+      calendarId: "c2fbf05f64dae08edb6a733b3345c7fcd70cf5d366bdfd5d518aa5c0644a5886@group.calendar.google.com",
       requestBody: {
         summary: title,
         description,

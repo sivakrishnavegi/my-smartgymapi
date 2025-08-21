@@ -21,7 +21,6 @@ export const checkIn = async (req: Request, res: Response) => {
       date: { $gte: todayStart, $lte: todayEnd },
     });
 
-    // ✅ If already checked in today
     if (existingCheckIn) {
       if (existingCheckIn.status === 'pending') {
         return res.status(200).json({
@@ -39,7 +38,6 @@ export const checkIn = async (req: Request, res: Response) => {
       }
     }
 
-    // ✅ New check-in entry
     const attendance = await Attendance.create({
       userId,
       date: new Date(),

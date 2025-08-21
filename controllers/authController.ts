@@ -105,11 +105,9 @@ export const logout = (req: Request, res: Response) => {
       console.log(`Cleared cookie: ${cookieName}`);
     });
 
-    console.log("✅ Logout completed: All cookies cleared except 'token'");
 
     return res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
-    console.error("❌ Logout error:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };

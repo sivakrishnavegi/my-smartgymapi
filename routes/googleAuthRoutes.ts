@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { google } from "googleapis";
-import { googleAuthCallback, googleAuthCallbacks } from "../controllers/googleAuthContorller";
+import { googleAuthCallbackSignInButton, googleAuthCallbacks } from "../controllers/googleAuthContorller";
 
 const router = Router();
 
@@ -30,7 +30,7 @@ router.get("/auth", (req, res) => {
 router.get("/callback", googleAuthCallbacks);
 
 //ui frontend google btn
-router.post("/callbackUi", googleAuthCallback);
+router.post("/callbackUi", googleAuthCallbackSignInButton);
 
 
 export default router;

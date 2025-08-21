@@ -3,11 +3,7 @@ import { ClassModel } from "../models/class.model";
 import  SchoolModel  from "../models/schools.schema"; 
 import mongoose from "mongoose";
 
-/**
- * @desc Create a new class
- * @route POST /api/classes
- * @access Public
- */
+
 export const createClass = async (req: Request, res: Response) => {
   try {
     const { tenantId, schoolId, name, code } = req.body;
@@ -42,11 +38,7 @@ export const createClass = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * @desc Get all classes (optionally filter by tenantId or schoolId)
- * @route GET /api/classes
- * @access Public
- */
+
 export const getClasses = async (req: Request, res: Response) => {
   try {
     const { tenantId, schoolId } = req.query;
@@ -68,11 +60,7 @@ export const getClasses = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * @desc Get a single class by ID
- * @route GET /api/classes/:id
- * @access Public
- */
+
 export const getClassById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -91,11 +79,7 @@ export const getClassById = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * @desc Update a class
- * @route PUT /api/classes/:id
- * @access Public
- */
+
 export const updateClass = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -127,11 +111,7 @@ export const updateClass = async (req: Request, res: Response) => {
   }
 };
 
-/**
- * @desc Delete a class
- * @route DELETE /api/classes/:id
- * @access Public
- */
+
 export const deleteClass = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

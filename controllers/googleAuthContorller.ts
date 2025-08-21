@@ -1,10 +1,13 @@
 import { serialize } from "cookie";
 import { Request, Response } from "express";
-import User from "../models/users.schema";
+import User, { IGoogleAuth, IProfile } from "../models/users.schema";
 import { oauth2Client } from "../routes/googleAuthRoutes";
 import { generateToken } from "../utils/genarateToken";
 
-export const googleAuthCallback = async (req: Request, res: Response) => {
+export const googleAuthCallbackSignInButton = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { account, profile, user: userData } = req.body;
 
@@ -13,16 +16,40 @@ export const googleAuthCallback = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "User email is required" });
     }
     // 1. Find existing user
-    let user = await User.findOne({ "account.email": userData.email });
+    let user = await User.findOne({ "account.primaryEmail": userData.email });
+ 
+        const updatedProfile: IProfile = {
+        firstName: profile?.firstName,
+        lastName: profile?.family_name,
+        dob: profile?.dob,
+        gender: profile?.gender,
+        photoUrl: userData?.image,
+        address: profile?.address,
+        contact: profile?.contact,
+      };
 
+      const updateGoogleData: IGoogleAuth = {
+        accessToken: account?.access_token,
+        expiryDate: account?.expires_at, // usually epoch timestamp (ms or s)
+        idToken: account?.id_token,
+        tokenType: account?.type,
+        scope: account?.scope,
+      };
+      
+    console.log("first user", user);
     if (!user) {
+  
+
       // 2. Create new user
       user = await User.create({
         tenantId: "default",
         schoolId: null,
         userType: userData.role ?? "guest",
-        profile,
-        account,
+        profile: {...updatedProfile},
+        account: {
+          primaryEmail: userData.email,
+          google: {...updateGoogleData},
+        },
         providers: [
           {
             provider: account?.provider ?? "google",
@@ -31,22 +58,54 @@ export const googleAuthCallback = async (req: Request, res: Response) => {
         ],
       });
     } else {
-      user.account = account;
-      user.profile = profile;
-      if (!user.providers.some((p) => p.providerId === userData.id)) {
-        user.providers.push({
-          provider: account?.provider ?? "google",
-          providerId: userData.id,
-        });
-      }
-      await user.save();
-    }
 
+      //       const updatedProfile: IProfile = {
+      //   firstName: profile?.firstName,
+      //   lastName: profile?.family_name,
+      //   dob: profile?.dob,
+      //   gender: profile?.gender,
+      //   photoUrl: userData?.image,
+      //   address: profile?.address,
+      //   contact: profile?.contact,
+      // };
+
+      // const updateGoogleData: IGoogleAuth = {
+      //   accessToken: account?.access_token,
+      //   expiryDate: account?.expires_at, // usually epoch timestamp (ms or s)
+      //   idToken: account?.id_token,
+      //   tokenType: account?.type,
+      //   scope: account?.scope,
+      // };
+      const provider = account?.provider ?? "google";
+
+      // Update user atomically
+      const updatedUsr = await User.findByIdAndUpdate(
+        user._id,
+        {
+          $set: {
+            "account.primaryEmail": userData.email,
+            "account.google": updateGoogleData,
+            profile: updatedProfile,
+            "providers.$[elem]": {
+              provider,
+              providerId: userData.id,
+            },
+          },
+        },
+        {
+          new: true,
+          arrayFilters: [{ "elem.provider": provider }], // match provider inside array
+          upsert: false,
+        }
+      );
+      await updatedUsr?.save();
+      console.log(" updated user ", updatedUsr);
+    }
     // 4. Generate JWT
     const token = generateToken({
       //@ts-ignore
       _id: user._id.toString(),
-      email: user.account?.email!,
+      email: user.account?.primaryEmail!,
       role: user.userType,
     });
 
@@ -69,7 +128,7 @@ export const googleAuthCallback = async (req: Request, res: Response) => {
       message: "Authentication successful",
       user: {
         id: user._id,
-        email: user.account?.email,
+        email: user.account?.primaryEmail,
         role: user.userType,
         token,
       },
@@ -114,11 +173,11 @@ export const googleAuthCallbacks = async (req: Request, res: Response) => {
       firstName: payload.given_name,
       lastName: payload.family_name,
       photoUrl: payload.picture,
-      contact: { email: payload.email },
+      contact: { secondaryEmail: payload.email },
     };
 
     const account = {
-      email: payload.email,
+      primaryEmail: payload.email,
       status: "active",
       google: {
         accessToken: tokens.access_token,

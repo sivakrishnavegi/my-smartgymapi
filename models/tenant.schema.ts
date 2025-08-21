@@ -33,7 +33,7 @@ const TenantSchema = new Schema({
   tenantId: {
       type: String,
       unique: true,
-      default: uuidv4,  // ✅ auto-generate if not passed
+      default: uuidv4, 
       index: true
     },
   name: String,

@@ -2,6 +2,16 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 import { ObjectId } from "mongodb";
 import Counter from "./counter.schema";
 
+export interface IGoogleAuth {
+  accessToken?: string;
+  refreshToken?: string;
+  expiryDate?: number;   // usually epoch timestamp (ms or s)
+  idToken?: string;
+  tokenType?: string;
+  scope?: string;
+}
+
+
 export type UserType =
   | "admin"
   | "guest"
@@ -12,8 +22,8 @@ export type UserType =
 export type AccountStatus = "active" | "inactive" | "suspended";
 
 export interface IContact {
-  phone?: string;
-  email?: string;
+  secondaryContact?: string;
+  secondaryEmail?: string;
 }
 
 export interface IProfile {
@@ -27,10 +37,11 @@ export interface IProfile {
 }
 
 export interface IAccount {
-  email?: string;
+  primaryEmail?: string;
   username?: string;
   passwordHash?: string;
   status: AccountStatus;
+  google? : IGoogleAuth;
 }
 
 export interface IEmployment {
@@ -94,7 +105,7 @@ const UserSchema = new Schema<IUser>({
     contact: { phone: String, email: String },
   },
   account: {
-    email: { type: String, lowercase: true, trim: true },
+    primaryEmail: { type: String, lowercase: true, trim: true },
     username: String,
     passwordHash: String,
     status: {
@@ -137,10 +148,10 @@ UserSchema.pre<IUser>("save", async function (next) {
   user.account = user.account || { status: "active" };
 
   // Normalize email
-  if (!user.account.email || user.account.email.trim() === "") {
-    delete user.account.email; // remove undefined, null, or empty string
+  if (!user.account.primaryEmail || user.account.primaryEmail.toLowerCase().trim() === "") {
+    delete user.account.primaryEmail; // remove undefined, null, or empty string
   } else {
-    user.account.email = user.account.email.toLowerCase().trim();
+    user.account.primaryEmail = user.account.primaryEmail.toLowerCase().trim();
   }
 
   // Only generate regNo for students who don't have it yet
@@ -158,9 +169,5 @@ UserSchema.pre<IUser>("save", async function (next) {
 
   next();
 });
-
-// ------------------ Indexes ------------------
-// Unique, but only for documents that have an email
-// UserSchema.index({ "account.email": 1 }, { unique: true, sparse: true });
 
 export default mongoose.model<IUser>("Users", UserSchema);

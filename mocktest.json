@@ -1,0 +1,38 @@
+{
+  "_id": "admin-1",
+  "tenantId": "14b131c5-60f2-4b86-8a64-1377abaa1e5e",
+  "schoolId": "689ff304f390b0b172ae0d8c",
+  "userType": "admin",
+  "profile": {
+    "firstName": "Admin",
+    "lastName": "User",
+    "dob": "1990-01-01",
+    "gender": "other",
+    "photoUrl": "",
+    "address": "123 Admin Street",
+    "contact": {
+      "phone": "9999999999",
+      "email": "admin@example.com"
+    }
+  },
+  "account": {
+    "email": "admin1@example.com",
+    "username": "admin",
+    "passwordHash": "admin123456",
+    "status": "active"
+  },
+  "roles": [
+    "689ff9f3e77444aff3f0061c"
+  ],
+  "linkedStudentIds": [],
+  "employment": {
+    "staffId": "staff-001",
+    "deptId": "admin-dept",
+    "hireDate": "2020-01-01T00:00:00.000Z"
+  },
+  "enrollment": {
+    "classId": "689ffe5bb796bbfb6f933caa",
+    "sectionId": "68a009c454056380cfd7b469"
+  },
+  "createdAt": "2025-08-21T06:52:49.754Z"
+}

@@ -1,8 +1,8 @@
-import { Request, Response } from "express";
-import User from "../models/users.schema";
-import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import { serialize } from "cookie";
+import { Request, Response } from "express";
+import mongoose from "mongoose";
+import User from "../models/users.schema";
 
 import School from "../models/schools.schema";
 import { generateToken } from "../utils/genarateToken";
@@ -48,7 +48,7 @@ export const createUser = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Account information is required" });
     }
 
-    const { email: userEmail, username, passwordHash, status } = account;
+    const { primaryEmail: userEmail, username, passwordHash, status } = account;
 
     if (!userEmail && !username) {
       return res
@@ -66,7 +66,7 @@ export const createUser = async (req: Request, res: Response) => {
       }
 
       // Check for duplicate email
-      const existingUser = await User.findOne({ "account.email": normalizedEmail });
+      const existingUser = await User.findOne({ "account.primaryEmail": normalizedEmail });
       if (existingUser) {
         return res
           .status(400)
@@ -81,32 +81,16 @@ export const createUser = async (req: Request, res: Response) => {
       hashedPassword = await bcrypt.hash(passwordHash, saltRounds);
     }
 
-    // Guardian must have linkedStudentIds
-    if (
-      userType === "guardian" &&
-      (!linkedStudentIds || !Array.isArray(linkedStudentIds) || linkedStudentIds.length === 0)
-    ) {
-      return res.status(400).json({ error: "Guardian must have linkedStudentIds" });
-    }
-
-    // Employment check for staff
-    if (["teacher", "admin", "librarian"].includes(userType) && !employment) {
-      return res
-        .status(400)
-        .json({ error: `${userType} must have employment details` });
-    }
 
     // Enrollment check for students
     if (userType === "student" && !enrollment) {
       return res.status(400).json({ error: "Student must have enrollment details" });
     }
 
-    // Build account object safely
     const userAccount: any = { username, status: status || "active" };
-    if (normalizedEmail) userAccount.email = normalizedEmail;
+    if (normalizedEmail) userAccount.primaryEmail = normalizedEmail;
     if (hashedPassword) userAccount.passwordHash = hashedPassword;
 
-    // Construct user object
     const userData = {
       tenantId,
       schoolId,
@@ -118,6 +102,8 @@ export const createUser = async (req: Request, res: Response) => {
       enrollment: enrollment || {},
       account: userAccount,
     };
+
+    console.log("first",userData)
 
     // Save user
     const user = new User(userData);
@@ -208,7 +194,7 @@ export const loginUser = async (req: Request, res: Response) => {
     }
 
     // Find user by email
-    const user = await User.findOne({ "account.email": email.toLowerCase().trim() });
+    const user = await User.findOne({ "account.primaryEmail": email.toLowerCase().trim() });
     if (!user) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
@@ -223,7 +209,7 @@ export const loginUser = async (req: Request, res: Response) => {
     }
 
     // Generate token 
-    const token = await generateToken({ _id : user?._id as string, email: user.account.email!, role: user.userType });
+    const token = await generateToken({ _id : user?._id as string, email: user.account.primaryEmail!, role: user.userType });
 
     // Set cookie
     const cookie = serialize("token", token, {
@@ -240,7 +226,7 @@ export const loginUser = async (req: Request, res: Response) => {
       message: "Login successful",
       user: {
         id: user._id,
-        email: user.account?.email ?? null,
+        email: user.account?.primaryEmail ?? null,
         role: user.userType,
         token : token
       },

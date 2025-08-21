@@ -30,7 +30,6 @@ const checkIn = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             userId: new mongoose_1.default.Types.ObjectId(userId),
             date: { $gte: todayStart, $lte: todayEnd },
         });
-        // ✅ If already checked in today
         if (existingCheckIn) {
             if (existingCheckIn.status === 'pending') {
                 return res.status(200).json({
@@ -48,7 +47,6 @@ const checkIn = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 });
             }
         }
-        // ✅ New check-in entry
         const attendance = yield attendence_user_1.default.create({
             userId,
             date: new Date(),
