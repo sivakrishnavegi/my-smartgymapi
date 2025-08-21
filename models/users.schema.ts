@@ -57,6 +57,13 @@ export interface IEnrollment {
   regNo?: string;
 }
 
+export type IntegrationPermissionStatus = "granted" | "not-granted";
+
+export interface IIntegrationPermissions {
+  googleSignInAuth: IntegrationPermissionStatus;
+  googleCalender: IntegrationPermissionStatus;
+  googleMeet: IntegrationPermissionStatus;
+}
 export interface IUser extends Document {
   tenantId: string;
   schoolId: Types.ObjectId;
@@ -65,6 +72,7 @@ export interface IUser extends Document {
   account?: IAccount;
   roles: Types.ObjectId[];
   linkedStudentIds: Types.ObjectId[];
+  integrationPermissions? : IIntegrationPermissions;
   employment?: IEmployment;
   enrollment?: IEnrollment;
   createdAt: Date;
@@ -73,6 +81,7 @@ export interface IAuthProvider {
   provider: "local" | "google";
   providerId?: string; // google sub id
 }
+
 
 export interface IUser extends Document {
   tenantId: string;
@@ -128,6 +137,11 @@ const UserSchema = new Schema<IUser>({
       providerId: String,
     },
   ],
+  integrationPermissions : {
+    googleSignInAuth : { type : String , enum: ["granted", "not-granted"]},
+    googleCalender :  { type : String , enum: ["granted", "not-granted"]},
+    googleMeet  :  { type : String , enum: ["granted", "not-granted"]},
+  },
   roles: [{ type: ObjectId, ref: "Role" }],
   linkedStudentIds: [{ type: ObjectId, ref: "User" }],
   employment: { staffId: String, deptId: String, hireDate: Date },

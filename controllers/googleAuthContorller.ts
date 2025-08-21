@@ -12,43 +12,42 @@ export const googleAuthCallbackSignInButton = async (
     const { account, profile, user: userData } = req.body;
 
     if (!userData?.email) {
-      console.error("User email is missing");
       return res.status(400).json({ error: "User email is required" });
     }
     // 1. Find existing user
     let user = await User.findOne({ "account.primaryEmail": userData.email });
- 
-        const updatedProfile: IProfile = {
-        firstName: profile?.firstName,
-        lastName: profile?.family_name,
-        dob: profile?.dob,
-        gender: profile?.gender,
-        photoUrl: userData?.image,
-        address: profile?.address,
-        contact: profile?.contact,
-      };
 
-      const updateGoogleData: IGoogleAuth = {
-        accessToken: account?.access_token,
-        expiryDate: account?.expires_at, // usually epoch timestamp (ms or s)
-        idToken: account?.id_token,
-        tokenType: account?.type,
-        scope: account?.scope,
-      };
-      
-    console.log("first user", user);
+    const updatedProfile: IProfile = {
+      firstName: profile?.firstName,
+      lastName: profile?.family_name,
+      dob: profile?.dob,
+      gender: profile?.gender,
+      photoUrl: userData?.image,
+      address: profile?.address,
+      contact: profile?.contact,
+    };
+
+    const updateGoogleData: IGoogleAuth = {
+      accessToken: account?.access_token,
+      expiryDate: account?.expires_at, // usually epoch timestamp (ms or s)
+      idToken: account?.id_token,
+      tokenType: account?.type,
+      scope: account?.scope,
+    };
+
     if (!user) {
-  
-
       // 2. Create new user
       user = await User.create({
         tenantId: "default",
         schoolId: null,
         userType: userData.role ?? "guest",
-        profile: {...updatedProfile},
+        profile: { ...updatedProfile },
         account: {
           primaryEmail: userData.email,
-          google: {...updateGoogleData},
+          google: { ...updateGoogleData },
+        },
+        integrationPermissions: {
+          googleSignInAuth: "granted",
         },
         providers: [
           {
@@ -58,24 +57,6 @@ export const googleAuthCallbackSignInButton = async (
         ],
       });
     } else {
-
-      //       const updatedProfile: IProfile = {
-      //   firstName: profile?.firstName,
-      //   lastName: profile?.family_name,
-      //   dob: profile?.dob,
-      //   gender: profile?.gender,
-      //   photoUrl: userData?.image,
-      //   address: profile?.address,
-      //   contact: profile?.contact,
-      // };
-
-      // const updateGoogleData: IGoogleAuth = {
-      //   accessToken: account?.access_token,
-      //   expiryDate: account?.expires_at, // usually epoch timestamp (ms or s)
-      //   idToken: account?.id_token,
-      //   tokenType: account?.type,
-      //   scope: account?.scope,
-      // };
       const provider = account?.provider ?? "google";
 
       // Update user atomically
@@ -85,6 +66,9 @@ export const googleAuthCallbackSignInButton = async (
           $set: {
             "account.primaryEmail": userData.email,
             "account.google": updateGoogleData,
+            integrationPermissions: {
+              googleSignInAuth: "granted",
+            },
             profile: updatedProfile,
             "providers.$[elem]": {
               provider,
@@ -99,7 +83,6 @@ export const googleAuthCallbackSignInButton = async (
         }
       );
       await updatedUsr?.save();
-      console.log(" updated user ", updatedUsr);
     }
     // 4. Generate JWT
     const token = generateToken({
@@ -145,7 +128,6 @@ export const googleAuthCallbackSignInButton = async (
 export const googleAuthCallbacks = async (req: Request, res: Response) => {
   try {
     const code = req.query.code as string;
-
     if (!code) {
       return res.status(400).send("Code not provided");
     }
@@ -168,68 +150,81 @@ export const googleAuthCallbacks = async (req: Request, res: Response) => {
       );
     }
 
-    // Prepare profile and account objects
-    const profile = {
-      firstName: payload.given_name,
-      lastName: payload.family_name,
-      photoUrl: payload.picture,
-      contact: { secondaryEmail: payload.email },
+    const updatedProfile = {
+      firstName: payload?.name,
+      lastName: payload?.family_name,
+      photoUrl: payload?.picture,
     };
 
-    const account = {
-      primaryEmail: payload.email,
-      status: "active",
-      google: {
-        accessToken: tokens.access_token,
-        refreshToken: tokens.refresh_token,
-        expiryDate: tokens.expiry_date,
-        idToken: tokens.id_token,
-        tokenType: tokens.token_type,
-        scope: tokens.scope,
-      },
+    const updateGoogleData = {
+      accessToken: tokens?.access_token,
+      expiryDate: tokens?.expiry_date, // usually epoch timestamp (ms or s)
+      idToken: tokens?.id_token,
+      tokenType: tokens?.token_type,
+      scope: tokens?.scope,
+      refreshToken: tokens?.refresh_token,
     };
 
     // Find existing user
-    let user = await User.findOne({ "account.email": payload.email });
+    let user = await User.findOne({ "account.primaryEmail": payload.email });
 
     if (!user) {
-      // Create new user
-      user = await User.create({
+      // 2. Create new user
+      await User.create({
         tenantId: "default",
         schoolId: null,
-        userType: "guest",
-        profile,
-        account,
+        integrationPermissions: {
+          googleSignInAuth: "granted",
+          googleCalender: "granted",
+        },
+        //@ts-ignore
+        userType: user?.userType ?? "guest",
+        profile: { ...updatedProfile },
+        account: {
+          primaryEmail: payload.email,
+          google: { ...updateGoogleData },
+        },
         providers: [
           {
             provider: "google",
-            providerId: payload.sub,
           },
         ],
-        roles: [],
-        linkedStudentIds: [],
       });
     } else {
-      // Update existing user
-      user.profile = profile;
-      //@ts-ignore
-      user?.account = account;
-      if (!user.providers.some((p) => p.providerId === payload.sub)) {
-        user.providers.push({
-          provider: "google",
-          providerId: payload.sub,
-        });
-      }
-      await user.save();
+      const provider = "google";
+      // Update user atomically
+      const updatedUsr = await User.findByIdAndUpdate(
+        user._id,
+        {
+          $set: {
+            "account.primaryEmail": payload.email,
+            "account.google": updateGoogleData,
+            profile: updatedProfile,
+            "providers.$[elem]": {
+              provider,
+              providerId: user.id,
+            },
+            integrationPermissions: {
+              googleSignInAuth: "granted",
+              googleCalender: "granted",
+            },
+          },
+        },
+        {
+          new: true,
+          arrayFilters: [{ "elem.provider": provider }], // match provider inside array
+          upsert: false,
+        }
+      );
+      await updatedUsr?.save();
     }
 
     // Generate JWT
     const token = await generateToken({
       //@ts-ignore
-      _id: user._id.toString(),
-      //@ts-ignore
-      email: user.account.email,
-      role: user.userType || "guest",
+      _id: user?._id.toString(),
+      email: payload.email,
+      role: user?.userType || "guest",
     });
 
     // Set HttpOnly cookie
