@@ -27,8 +27,9 @@ router.get("/auth", (req, res) => {
       "https://www.googleapis.com/auth/calendar.events", // manage events on all calendars
       "https://www.googleapis.com/auth/calendar.readonly", // read-only access
       "https://www.googleapis.com/auth/calendar.events.readonly", // read-only events
-
-      // 🎥 Google Meet (conferenceData)
+      "https://www.googleapis.com/auth/meetings.space.created",
+      "https://www.googleapis.com/auth/meetings.space.readonly",
+      "https://www.googleapis.com/auth/meetings.space.settings",
       "https://www.googleapis.com/auth/calendar.addons.execute", // needed for Meet Add-ons
       "https://www.googleapis.com/auth/calendar.calendars", // manage calendar list
       "https://www.googleapis.com/auth/calendar.settings.readonly", // read settings

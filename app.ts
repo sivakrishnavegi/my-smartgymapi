@@ -12,6 +12,8 @@ import sectionRoutes from './routes/section.routes';
 import tenantRoutes from "./routes/tenantRoutes";
 import userRoutes from './routes/user.routes';
 import googleAuthRoutes from './routes/googleAuthRoutes';
+import googleMeetRoutes from './routes/googleMeetRoutes';
+
 import { limiter } from "./utils/rateLimter";
 import helmet from "helmet";
 import slowDown from "express-slow-down";
@@ -70,6 +72,8 @@ app.use("/api/users", userRoutes);
 app.use('/api/events', eventRoutes);
 
 app.use("/api/google", googleAuthRoutes);
+
+app.use("/api/googleMeet/", googleAuthRoutes);
 
 
 // Health check

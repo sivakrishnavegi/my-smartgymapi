@@ -5,6 +5,8 @@ import calendar, {
   getGoogleCalendarClient,
 } from "../utils/google/googleCalendar";
 import User from "../models/users.schema";
+import GoogleMeetEvent from "../models/GoogleMeetSchema";
+
 export const createEvent = async (req: Request, res: Response) => {
   try {
     const { title, description, startDate, endDate, bannerUrl } = req.body;
@@ -78,7 +80,7 @@ console.log("first ggg",user)
 
     // Call Google Calendar API directly
     const response = await fetch(
-      "https://www.googleapis.com/calendar/v3/calendars/primary/events",
+      "https://www.googleapis.com/calendar/v3/calendars/primary/events?singleEvents=true",
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -109,3 +111,9 @@ console.log("first ggg",user)
     });
   }
 };
+
+
+
+
+
+

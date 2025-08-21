@@ -98,4 +98,4 @@ router.post("/", createEvent);
  */
 router.get("/",protect, getEvents);
 
-export default router;
+export default router
