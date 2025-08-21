@@ -70,7 +70,7 @@ const router = Router();
  *       401:
  *         description: Unauthorized
  */
-router.post("/", protect, createEvent);
+router.post("/", createEvent);
 
 /**
  * @swagger
@@ -96,6 +96,6 @@ router.post("/", protect, createEvent);
  *       500:
  *         description: Server error
  */
-router.get("/", getEvents);
+router.get("/",protect, getEvents);
 
 export default router;

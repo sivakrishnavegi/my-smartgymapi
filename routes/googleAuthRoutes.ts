@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { google } from "googleapis";
-import { googleAuthCallbackSignInButton, googleAuthCallbacks } from "../controllers/googleAuthContorller";
+import {
+  googleAuthCallbackSignInButton,
+  googleAuthCallbacks,
+} from "../controllers/googleAuthContorller";
 
 const router = Router();
 
@@ -14,15 +17,25 @@ router.get("/auth", (req, res) => {
   const url = oauth2Client.generateAuthUrl({
     access_type: "offline",
     scope: [
-      "https://www.googleapis.com/auth/calendar.events",
+      // 🔑 Identity & profile scopes
       "openid",
       "email",
       "profile",
-      "https://www.googleapis.com/auth/calendar",
+
+      // 📅 Google Calendar scopes
+      "https://www.googleapis.com/auth/calendar", // full access (read/write all calendars/events)
+      "https://www.googleapis.com/auth/calendar.events", // manage events on all calendars
+      "https://www.googleapis.com/auth/calendar.readonly", // read-only access
+      "https://www.googleapis.com/auth/calendar.events.readonly", // read-only events
+
+      // 🎥 Google Meet (conferenceData)
+      "https://www.googleapis.com/auth/calendar.addons.execute", // needed for Meet Add-ons
+      "https://www.googleapis.com/auth/calendar.calendars", // manage calendar list
+      "https://www.googleapis.com/auth/calendar.settings.readonly", // read settings
     ],
     prompt: "consent",
   });
-  console.log("first google ::",url)
+  console.log("first google ::", url);
   res.redirect(url);
 });
 
@@ -31,6 +44,5 @@ router.get("/callback", googleAuthCallbacks);
 
 //ui frontend google btn
 router.post("/callbackUi", googleAuthCallbackSignInButton);
-
 
 export default router;

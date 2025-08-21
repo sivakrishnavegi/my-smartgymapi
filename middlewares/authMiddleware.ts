@@ -29,13 +29,12 @@ export const protect = async (
 
       // Verify token
       const decoded = jwt.verify(token, JWT_SECRET) as {
-        id: string;
+        _id: string;
         email: string;
         role: string;
       };
-
       // Optional: Fetch user details from DB (can be omitted for speed)
-      const user = await User.findById(decoded.id).select('-password');
+      const user = await User.findById(decoded._id).select('-password');
       if (!user) {
         return res.status(401).json({ message: 'User not found' });
       }

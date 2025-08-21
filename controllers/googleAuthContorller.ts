@@ -87,7 +87,7 @@ export const googleAuthCallbackSignInButton = async (
     // 4. Generate JWT
     const token = generateToken({
       //@ts-ignore
-      _id: user._id.toString(),
+      _id: user?._id,
       email: user.account?.primaryEmail!,
       role: user.userType,
     });
@@ -222,7 +222,7 @@ export const googleAuthCallbacks = async (req: Request, res: Response) => {
     // Generate JWT
     const token = await generateToken({
       //@ts-ignore
-      _id: user?._id.toString(),
+      _id: user?._id,
       email: payload.email,
       role: user?.userType || "guest",
     });
