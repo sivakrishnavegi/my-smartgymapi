@@ -29,4 +29,8 @@ router.get("/auth", (req, res) => {
 // Step 2: Handle callback
 router.get("/callback", googleAuthCallbacks);
 
+//ui frontend google btn
+router.post("/callbackUi", googleAuthCallback);
+
+
 export default router;

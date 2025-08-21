@@ -1,10 +1,8 @@
 import { serialize } from "cookie";
 import { Request, Response } from "express";
 import User from "../models/users.schema";
-import { generateToken } from "../utils/genarateToken";
 import { oauth2Client } from "../routes/googleAuthRoutes";
-import { randomUUID } from "crypto";
-
+import { generateToken } from "../utils/genarateToken";
 
 export const googleAuthCallback = async (req: Request, res: Response) => {
   try {
@@ -14,8 +12,6 @@ export const googleAuthCallback = async (req: Request, res: Response) => {
       console.error("User email is missing");
       return res.status(400).json({ error: "User email is required" });
     }
-  console.log("first google  Auth ::")
-
     // 1. Find existing user
     let user = await User.findOne({ "account.email": userData.email });
 
@@ -54,7 +50,6 @@ export const googleAuthCallback = async (req: Request, res: Response) => {
       role: user.userType,
     });
 
-
     // 5. Set HttpOnly cookie
     res.setHeader(
       "Set-Cookie",
@@ -82,10 +77,11 @@ export const googleAuthCallback = async (req: Request, res: Response) => {
     });
   } catch (err) {
     console.error("Google Auth Callback Error:", err);
-    return res.status(500).json({ error: "Authentication failed", details: err });
+    return res
+      .status(500)
+      .json({ error: "Authentication failed", details: err });
   }
 };
-
 
 export const googleAuthCallbacks = async (req: Request, res: Response) => {
   try {
@@ -108,7 +104,9 @@ export const googleAuthCallbacks = async (req: Request, res: Response) => {
     const payload = ticket.getPayload();
 
     if (!payload || !payload.email) {
-      return res.redirect("http://localhost:3001/login?error=invalid_google_payload");
+      return res.redirect(
+        "http://localhost:3001/login?error=invalid_google_payload"
+      );
     }
 
     // Prepare profile and account objects
@@ -168,11 +166,11 @@ export const googleAuthCallbacks = async (req: Request, res: Response) => {
 
     // Generate JWT
     const token = await generateToken({
-              //@ts-ignore
+      //@ts-ignore
       _id: user._id.toString(),
-            //@ts-ignore
+      //@ts-ignore
       email: user.account.email,
-      role:  user.userType ||  "guest",
+      role: user.userType || "guest",
     });
 
     // Set HttpOnly cookie
@@ -194,5 +192,3 @@ export const googleAuthCallbacks = async (req: Request, res: Response) => {
     return res.redirect("http://localhost:3001/login?error=google_auth_failed");
   }
 };
-
-
