@@ -2,17 +2,21 @@ import crypto from "crypto";
 import { Request, Response } from "express";
 import Tenant from "../models/tenant.schema";
 
-
-// 🔑 Create a new Tenant (school onboarding)
 export const createTenant = async (req: Request, res: Response) => {
   try {
     const { name, domain, plan, subscription } = req.body;
+
+    // Check if tenant with same domain already exists
+    const existingTenant = await Tenant.findOne({ domain });
+    if (existingTenant) {
+      return res.status(400).json({ error: "Tenant with this domain already exists" });
+    }
 
     const tenant = new Tenant({
       name,
       domain,
       plan,
-      subscription
+      subscription,
     });
 
     await tenant.save();
@@ -21,6 +25,7 @@ export const createTenant = async (req: Request, res: Response) => {
     res.status(400).json({ error: err.message });
   }
 };
+
 
 // 📌 Get all tenants
 export const listTenants = async (_req: Request, res: Response) => {
@@ -34,11 +39,32 @@ export const listTenants = async (_req: Request, res: Response) => {
 
 // 📌 Get tenant by ID
 export const getTenantById = async (req: Request, res: Response) => {
+      console.log("first get by id")
+
   try {
     const tenant = await Tenant.findOne({ tenantId: req.params.tenantId });
     if (!tenant) return res.status(404).json({ error: "Tenant not found" });
     res.json(tenant);
   } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// 📌 Get tenant by DomainName
+export const getTenantByDomainId = async (req: Request, res: Response) => {
+  try {
+    // Use path parameter
+    const { domainId } = await req?.params;
+
+    const tenant = await Tenant.findOne({ domain: domainId });
+
+    if (!tenant) {
+      return res.status(404).json({ status: 404, error: "Tenant not found" });
+    }
+
+    res.json({ tenant });
+  } catch (err: any) {
+    console.error("Error fetching tenant by domain:", err);
     res.status(500).json({ error: err.message });
   }
 };

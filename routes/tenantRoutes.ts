@@ -7,10 +7,13 @@ import {
   listTenants,
   issueApiKey,
   revokeApiKey,
-  updateSubscription
+  updateSubscription,
+  getTenantByDomainId
 } from "../controllers/tenantController";
 
 const router = Router();
+
+
 
 /**
  * @swagger
@@ -18,6 +21,26 @@ const router = Router();
  *   name: Tenants
  *   description: Tenant management & subscription APIs
  */
+
+/**
+ * @swagger
+ * /api/tenants/d/{domainId}:
+ *   get:
+ *     summary: Get tenant domain by URL
+ *     tags: [Tenants]
+ *     parameters:
+ *       - in: path
+ *         name: domainId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Tenant details
+ */
+
+router.get("/d/:domainId", getTenantByDomainId);
+
 
 /**
  * @swagger
@@ -43,6 +66,8 @@ const router = Router();
  */
 router.post("/", createTenant);
 router.get("/", listTenants);
+
+
 
 /**
  * @swagger
@@ -87,6 +112,8 @@ router.get("/", listTenants);
 router.get("/:tenantId", getTenantById);
 router.put("/:tenantId", updateTenant);
 router.delete("/:tenantId", deleteTenant);
+
+
 
 /**
  * @swagger
