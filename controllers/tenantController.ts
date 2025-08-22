@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { Request, Response } from "express";
+import School from "../models/schools.schema";
 import Tenant from "../models/tenant.schema";
 
 export const createTenant = async (req: Request, res: Response) => {
@@ -61,8 +62,15 @@ export const getTenantByDomainId = async (req: Request, res: Response) => {
     if (!tenant) {
       return res.status(404).json({ status: 404, error: "Tenant not found" });
     }
+      // Find school(s) associated with this tenant
+    const school = await School.findOne({ tenantId: tenant?.tenantId });
+    const schoolId =  school && school?._id?.toString()
+console.log("first schoolId::",schoolId)
+   await res.json({
+      tenant,
+      schoolId,
+    });
 
-    res.json({ tenant });
   } catch (err: any) {
     console.error("Error fetching tenant by domain:", err);
     res.status(500).json({ error: err.message });

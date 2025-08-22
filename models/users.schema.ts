@@ -5,15 +5,15 @@ import Counter from "./counter.schema";
 export interface IGoogleAuth {
   accessToken?: string;
   refreshToken?: string;
-  expiryDate?: number;   // usually epoch timestamp (ms or s)
+  expiryDate?: number; // usually epoch timestamp (ms or s)
   idToken?: string;
   tokenType?: string;
   scope?: string;
 }
 
-
 export type UserType =
   | "admin"
+  | "superadmin"
   | "guest"
   | "teacher"
   | "student"
@@ -41,7 +41,7 @@ export interface IAccount {
   username?: string;
   passwordHash?: string;
   status: AccountStatus;
-  google? : IGoogleAuth;
+  google?: IGoogleAuth;
 }
 
 export interface IEmployment {
@@ -72,7 +72,7 @@ export interface IUser extends Document {
   account?: IAccount;
   roles: Types.ObjectId[];
   linkedStudentIds: Types.ObjectId[];
-  integrationPermissions? : IIntegrationPermissions;
+  integrationPermissions?: IIntegrationPermissions;
   employment?: IEmployment;
   enrollment?: IEnrollment;
   createdAt: Date;
@@ -81,7 +81,6 @@ export interface IAuthProvider {
   provider: "local" | "google";
   providerId?: string; // google sub id
 }
-
 
 export interface IUser extends Document {
   tenantId: string;
@@ -99,10 +98,19 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>({
   tenantId: { type: String, required: true },
-  schoolId: { type: Schema.Types.ObjectId, ref: "School" },
+  schoolId: { type: Schema.Types.ObjectId, ref: "School", required: true },
   userType: {
     type: String,
-    enum: ["admin", "teacher", "student", "librarian", "guardian", "guest"],
+    enum: [
+      "admin",
+      "teacher",
+      "student",
+      "librarian",
+      "guardian",
+      "guest",
+      "superadmin",
+    ],
+    required: true,
   },
   profile: {
     firstName: String,
@@ -114,13 +122,15 @@ const UserSchema = new Schema<IUser>({
     contact: { phone: String, email: String },
   },
   account: {
-    primaryEmail: { type: String, lowercase: true, trim: true },
+    primaryEmail: {
+      type: String,
+    }, // sparse allows null
     username: String,
     passwordHash: String,
     status: {
       type: String,
       enum: ["active", "inactive", "suspended"],
-      default: "active",
+      default: "inactive",
     },
     google: {
       accessToken: { type: String },
@@ -137,10 +147,10 @@ const UserSchema = new Schema<IUser>({
       providerId: String,
     },
   ],
-  integrationPermissions : {
-    googleSignInAuth : { type : String , enum: ["granted", "not-granted"]},
-    googleCalender :  { type : String , enum: ["granted", "not-granted"]},
-    googleMeet  :  { type : String , enum: ["granted", "not-granted"]},
+  integrationPermissions: {
+    googleSignInAuth: { type: String, enum: ["granted", "not-granted"] },
+    googleCalender: { type: String, enum: ["granted", "not-granted"] },
+    googleMeet: { type: String, enum: ["granted", "not-granted"] },
   },
   roles: [{ type: ObjectId, ref: "Role" }],
   linkedStudentIds: [{ type: ObjectId, ref: "User" }],
@@ -162,7 +172,10 @@ UserSchema.pre<IUser>("save", async function (next) {
   user.account = user.account || { status: "active" };
 
   // Normalize email
-  if (!user.account.primaryEmail || user.account.primaryEmail.toLowerCase().trim() === "") {
+  if (
+    !user.account.primaryEmail ||
+    user.account.primaryEmail.toLowerCase().trim() === ""
+  ) {
     delete user.account.primaryEmail; // remove undefined, null, or empty string
   } else {
     user.account.primaryEmail = user.account.primaryEmail.toLowerCase().trim();
@@ -184,4 +197,18 @@ UserSchema.pre<IUser>("save", async function (next) {
   next();
 });
 
-export default mongoose.model<IUser>("Users", UserSchema);
+// Ensure correct index
+UserSchema.index(
+  { "account.primaryEmail": 1 },
+  { unique: true, sparse: true }
+);
+
+const UserModel = mongoose.model<IUser>("Users", UserSchema);
+
+// Sync indexes on startup
+UserModel.syncIndexes().then(() => {
+  console.log("✅ User indexes synced");
+});
+
+export default UserModel
+

@@ -31,22 +31,22 @@ import Tenant from "../models/tenant.schema";
  *       400:
  *         description: Invalid request
  */
+
 export const createSchool = async (req: Request, res: Response) => {
   try {
-    const { tenantId, name, address, contact, academicYears } = req.body;
+    const { tenantId, name, address, contact, academicYears, settings } = req.body;
 
-    // 1️⃣ Basic field validation
     if (!tenantId || !name || !address) {
+      console.warn("[CreateSchool] Missing required fields", req.body);
       return res.status(400).json({ error: "tenantId, name, and address are required" });
     }
 
-    // 2️⃣ Check if tenant exists
     const tenantExists = await Tenant.findOne({ tenantId });
     if (!tenantExists) {
+      console.warn(`[CreateSchool] Tenant not found: ${tenantId}`);
       return res.status(404).json({ error: "Tenant not found" });
     }
 
-    // 3️⃣ Optional: Validate contact format if provided
     if (contact) {
       const { phone, email } = contact;
       const phoneRegex = /^\+?\d{10,15}$/;
@@ -55,33 +55,41 @@ export const createSchool = async (req: Request, res: Response) => {
       if (phone && !phoneRegex.test(phone)) {
         return res.status(400).json({ error: "Invalid phone number format" });
       }
-
       if (email && !emailRegex.test(email)) {
         return res.status(400).json({ error: "Invalid email format" });
       }
     }
 
-    // 4️⃣ Check for duplicate school by tenantId + name
-    const existingSchool = await School.findOne({ tenantId, name });
+    const existingSchool = await School.findOne({ tenantId });
     if (existingSchool) {
-      return res.status(409).json({ error: "A school with this name already exists for the tenant" });
+      console.warn(`[CreateSchool] Duplicate school name for tenant ${tenantId}: ${name}`);
+      return res.status(409).json({ error: "A school with this name already exists for this tenant" });
     }
 
-    // 5️⃣ Optional: Validate academicYears if provided
     if (academicYears && !Array.isArray(academicYears)) {
       return res.status(400).json({ error: "academicYears must be an array" });
     }
 
-    // 6️⃣ Create and save school
-    const school = new School(req.body);
+    const school = new School({
+      tenantId,
+      name,
+      address,
+      contact: contact || {},
+      academicYears: academicYears || [],
+      settings: settings || {},
+      createdAt: new Date(),
+    });
+
     await school.save();
 
-    res.status(201).json({ message: "School created successfully", school });
+    console.log(`[CreateSchool] School created successfully: ${school._id} for tenant ${tenantId}`);
+    return res.status(201).json({ message: "School created successfully", school });
   } catch (err: any) {
-    console.error("Error creating school:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("[CreateSchool] Error creating school:", err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 /**
  * @swagger
