@@ -26,7 +26,7 @@ export const protect = async (
       req.headers.authorization.startsWith('Bearer ')
     ) {
       token = req.headers.authorization.split(' ')[1];
-
+      
       // Verify token
       const decoded = jwt.verify(token, JWT_SECRET) as {
         _id: string;

@@ -1,11 +1,12 @@
 import { Router } from "express";
 import {
   createRole,
-  getRoles,
-  getRoleById,
-  updateRole,
   deleteRole,
+  getRoleById,
+  getRoles,
+  updateRole,
 } from "../controllers/roleController";
+import { protect } from "../middlewares/authMiddleware";
 
 const router = Router();
 
@@ -74,7 +75,7 @@ router.post("/", createRole);
  *       200:
  *         description: List of roles
  */
-router.get("/", getRoles);
+router.get("/", protect, getRoles);
 
 /**
  * @swagger
