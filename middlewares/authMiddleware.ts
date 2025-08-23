@@ -1,7 +1,7 @@
 // middleware/authMiddleware.ts
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import User from '../models/auth.user'; 
+import User from '../models/users.schema'; 
 interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
@@ -41,9 +41,10 @@ export const protect = async (
 
       // Attach user to req object
       req.user = {
+        //@ts-ignore
         id: user._id.toString(),
-        role: user.role as "admin" | "user" | "trainer",
-        email: user.email,
+        role: user.userType as "admin" | "user" | "trainer",
+        email: user.account?.primaryEmail,
       };
 
       next();

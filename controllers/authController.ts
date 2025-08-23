@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import User from "../models/auth.user";
+import User from "../models/users.schema";
 import { generateToken } from "../utils/genarateToken";
 import bcrypt from "bcrypt";
 import { serialize } from "cookie";
@@ -13,16 +13,17 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user?.account?.passwordHash!);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
     // Generate JWT
     const token = generateToken({
+      //@ts-ignore
       _id: user._id.toString(),
-      email: user.email,
-      role: user.role,
+      email: user.account?.primaryEmail!,
+      role: user.userType,
     });
 
     // Set secure HTTP-only cookie
@@ -42,8 +43,8 @@ export const login = async (req: Request, res: Response) => {
       message: "Login successful",
       user: {
         id: user._id,
-        email: user.email,
-        role: user.role,
+        email: user.account?.primaryEmail,
+        role: user.userType,
         token: token,
       },
     });
@@ -67,13 +68,14 @@ export const signup = async (req: Request, res: Response) => {
     const newUser = await User.create({
       email,
       password: hashedPassword,
-      role: role || "user",
+      role: role || "guest",
     });
 
     const token = generateToken({
+      //@ts-ignore
       _id: newUser._id.toString(),
-      email: newUser.email,
-      role: newUser.role,
+      email: newUser.account?.primaryEmail!,
+      role: newUser.userType,
     });
 
     res.status(201).json({
@@ -81,8 +83,8 @@ export const signup = async (req: Request, res: Response) => {
       token,
       user: {
         id: newUser._id,
-        email: newUser.email,
-        role: newUser.role,
+        email: newUser.account?.primaryEmail,
+        role: newUser.userType,
       },
     });
   } catch (error) {

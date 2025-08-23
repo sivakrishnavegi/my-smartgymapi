@@ -1,12 +1,15 @@
 import mongoose, { Schema } from 'mongoose';
 import { v4 as uuidv4 } from "uuid";
+import { ObjectId } from "mongodb";
 
 import { Document } from "mongoose";
 
 export interface IApiKey {
   keyHash: string;
   issuedAt: Date;
+  keySecret : string;
   revoked: boolean;
+  issuedBy : string;
 }
 
 export interface ISubscription {
@@ -40,7 +43,9 @@ const TenantSchema = new Schema({
   domain: String,
   apiKeys: [{
     keyHash: String,
+    keySecret : String,
     issuedAt: Date,
+    issuedBy :{ type: ObjectId, ref: "User" } ,
     revoked: { type: Boolean, default: false }
   }],
   plan: { type: String, enum: ['free','pro','enterprise'], default: 'free' },

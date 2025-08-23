@@ -8,8 +8,10 @@ import {
   issueApiKey,
   revokeApiKey,
   updateSubscription,
-  getTenantByDomainId
+  getTenantByDomainId,
+  verifyApiKey
 } from "../controllers/tenantController";
+import { protect } from "../middlewares/authMiddleware";
 
 const router = Router();
 
@@ -117,7 +119,7 @@ router.delete("/:tenantId", deleteTenant);
 
 /**
  * @swagger
- * /api/tenants/{tenantId}/api-keys:
+ * /api/tenants/{tenantId}/verify:
  *   post:
  *     summary: Issue a new API key for tenant
  *     tags: [Tenants]
@@ -131,7 +133,7 @@ router.delete("/:tenantId", deleteTenant);
  *       201:
  *         description: API key issued
  */
-router.post("/:tenantId/api-keys", issueApiKey);
+router.post("/:tenantId/api-keys", protect, issueApiKey);
 
 /**
  * @swagger
@@ -173,5 +175,60 @@ router.put("/:tenantId/api-keys/:keyHash/revoke", revokeApiKey);
  *         description: Subscription updated
  */
 router.put("/:tenantId/subscription", updateSubscription);
+
+/**
+ * @swagger
+ * /api/tenants/verify-keys:
+ *   post:
+ *     summary: Verify an issued API key for a tenant
+ *     description: |
+ *       Verifies if the provided API key is valid, not revoked, and belongs to the given tenant.  
+ *       Requires user authentication (JWT in Authorization header).
+ *     tags: [API Keys]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               tenantId:
+ *                 type: string
+ *                 example: tenant_12345
+ *               apiKey:
+ *                 type: string
+ *                 example: sk_live_abcd1234_deadbeefcafefeed12345678
+ *     responses:
+ *       200:
+ *         description: API key is valid
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 valid:
+ *                   type: boolean
+ *                   example: true
+ *                 tenantId:
+ *                   type: string
+ *                   example: tenant_12345
+ *                 issuedBy:
+ *                   type: string
+ *                   example: 64f8b12345a1e2c3d4e5f678
+ *                 issuedAt:
+ *                   type: string
+ *                   format: date-time
+ *       400:
+ *         description: Missing apiKey or tenantId
+ *       403:
+ *         description: API key revoked or invalid
+ *       404:
+ *         description: Tenant or API key not found
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/verify-keys", protect, verifyApiKey);
 
 export default router;
