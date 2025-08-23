@@ -12,8 +12,10 @@ import sectionRoutes from "./section.routes";
 import superAdminRoutes from "./superadminRoutes";
 import tenantRoutes from "./tenantRoutes";
 import userRoutes from "./user.routes";
+import appConfigRoutes from "./appConfigRoutes";
 
 const routes = {
+  appConfigRoutes,
   attendanceRoutes,
   authRoutes,
   classesRoutes,

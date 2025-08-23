@@ -1,4 +1,4 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Schema } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { ObjectId } from "mongodb";
 
@@ -7,9 +7,9 @@ import { Document } from "mongoose";
 export interface IApiKey {
   keyHash: string;
   issuedAt: Date;
-  keySecret : string;
+  keySecret: string;
   revoked: boolean;
-  issuedBy : string;
+  issuedBy: string;
 }
 
 export interface ISubscription {
@@ -26,38 +26,49 @@ export interface ITenant extends Document {
   domain?: string;
   apiKeys: IApiKey[];
   plan: "free" | "pro" | "enterprise";
+  isSassSetupCompleted? : boolean;
+  isApiKeysVerified? :boolean;
+  isSchoolSetupCompleted? : boolean;
   subscription: ISubscription;
   createdAt: Date;
   updatedAt?: Date;
 }
 
-
 const TenantSchema = new Schema({
   tenantId: {
-      type: String,
-      unique: true,
-      default: uuidv4, 
-      index: true
-    },
+    type: String,
+    unique: true,
+    default: uuidv4,
+    index: true,
+  },
   name: String,
   domain: String,
-  apiKeys: [{
-    keyHash: String,
-    keySecret : String,
-    issuedAt: Date,
-    issuedBy :{ type: ObjectId, ref: "User" } ,
-    revoked: { type: Boolean, default: false }
-  }],
-  plan: { type: String, enum: ['free','pro','enterprise'], default: 'free' },
+  apiKeys: [
+    {
+      keyHash: String,
+      keySecret: String,
+      issuedAt: Date,
+      issuedBy: { type: ObjectId, ref: "User" },
+      revoked: { type: Boolean, default: false },
+    },
+  ],
+  plan: { type: String, enum: ["free", "pro", "enterprise"], default: "free" },
   subscription: {
     startDate: Date,
     endDate: Date,
-    status: { type: String, enum: ['active','expired','grace'], default: 'active' },
+    status: {
+      type: String,
+      enum: ["active", "expired", "grace"],
+      default: "active",
+    },
     maxUsers: Number,
-    maxStudents: Number
+    maxStudents: Number,
   },
+  isSassSetupCompleted: { type: Boolean, default: false },
+  isApiKeysVerified: { type: Boolean, default: false },
+  isSchoolSetupCompleted :{ type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
-  updatedAt: Date
+  updatedAt: Date,
 });
 
-export default mongoose.model<ITenant>('Tenant', TenantSchema);
+export default mongoose.model<ITenant>("Tenant", TenantSchema);

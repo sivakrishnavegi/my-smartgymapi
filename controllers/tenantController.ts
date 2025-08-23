@@ -151,7 +151,6 @@ export const issueApiKey = async (req: Request, res: Response) => {
 
 export const verifyApiKey = async (req: Request, res: Response) => {
   try {
-    // API key passed in body instead of header
     const { apiKey, tenantId } = req.body;
 
     if (!apiKey || !tenantId) {
@@ -175,19 +174,23 @@ export const verifyApiKey = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Tenant or API key not found" });
     }
 
-    // 2. Get the matching API key entry
     const apiKeyEntry = tenant.apiKeys.find((k) => k.keySecret === keyId);
     if (!apiKeyEntry || apiKeyEntry.revoked) {
       return res.status(403).json({ error: "API key revoked or invalid" });
     }
 
-    // 3. Hash provided secret and compare with stored hash
     const secretHash = crypto.createHash("sha256").update(secret).digest("hex");
     if (secretHash !== apiKeyEntry.keyHash) {
       return res.status(403).json({ error: "Invalid API key secret" });
     }
 
-    // 4. Success → Attach tenant info
+    await Tenant.findOneAndUpdate(
+      { tenantId },
+      { isApiKeysVerified: true },
+      { upsert: true, new: true }
+    );
+
+    // 5. Success → attach tenant info
     (req as any).tenant = tenant;
 
     return res.status(200).json({

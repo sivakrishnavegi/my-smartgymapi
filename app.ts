@@ -23,6 +23,7 @@ const {
   classesRoutes,
   sectionRoutes,
   superAdminRoutes,
+  appConfigRoutes
 } = routes;
 
 const app = express();
@@ -89,6 +90,9 @@ app.use("/api/google", googleAuthRoutes);
 app.use("/api/googleMeet/", googleMeetRoutes);
 
 app.use("/api/superadmin", superAdminRoutes);
+
+app.use("/api/app-config", appConfigRoutes);
+
 
 // Health check
 app.get("/", (_req, res) => {
