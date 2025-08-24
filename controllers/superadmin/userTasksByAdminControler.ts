@@ -44,7 +44,6 @@ export interface AddUserPayload {
   createdAt: string;
 }
 
-// ------------------ Add User Controller ------------------
 export const addUser = async (req: Request, res: Response) => {
   try {
     const payload: AddUserPayload = req.body;
@@ -150,20 +149,16 @@ export const addUser = async (req: Request, res: Response) => {
 
 
 
-// ------------------ Get All Users ------------------
 export const getAllUsers = async (req: Request, res: Response) => {
     try {
-    // -------- Pagination --------
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const skip = (page - 1) * limit;
 
-    // -------- Filters --------
     const filters: any = {};
     if (req.query.userType) filters.userType = req.query.userType.toString().toLowerCase();
     if (req.query.status) filters["account.status"] = req.query.status;
 
-    // Optional search by name or email
     if (req.query.search) {
       const search = req.query.search.toString();
       filters.$or = [
@@ -174,11 +169,9 @@ export const getAllUsers = async (req: Request, res: Response) => {
       ];
     }
 
-    // -------- Sorting --------
     const sortBy = (req.query.sortBy as string) || "createdAt";
     const order = req.query.order === "asc" ? 1 : -1;
 
-    // -------- Query Users --------
     const [users, total] = await Promise.all([
       UserModel.find(filters)
         .sort({ [sortBy]: order })
