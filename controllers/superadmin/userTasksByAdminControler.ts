@@ -1,9 +1,9 @@
 // controllers/user.controller.ts
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
-import mongoose, { Types } from "mongoose";
-import UserModel, { IUser } from "../../models/users.schema";
+import mongoose from "mongoose";
 import { RoleModel } from "../../models/roles.schema";
+import UserModel, { IUser } from "../../models/users.schema";
 
 // ------------------ Type for Payload ------------------
 export interface AddUserPayload {
