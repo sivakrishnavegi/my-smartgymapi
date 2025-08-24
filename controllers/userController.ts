@@ -330,7 +330,7 @@ export const refreshToken = async (req: Request, res: Response) => {
     matchedSession.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await matchedSession.save();
     // Set new cookies
-    res.setHeader("Set-Cookie", [
+    await res.setHeader("Set-Cookie", [
       serialize("token", newAccessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -338,7 +338,7 @@ export const refreshToken = async (req: Request, res: Response) => {
         maxAge: 15 * 60,
         path: "/",
       }),
-      serialize("refreshToken", newRefreshToken, {
+      await serialize("refreshToken", newRefreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
@@ -347,7 +347,7 @@ export const refreshToken = async (req: Request, res: Response) => {
       }),
     ]);
 
-    return res.json({ token: newAccessToken });
+    return res.json({ token: newAccessToken, refreshToken: newRefreshToken });
   } catch (err) {
     console.error("Refresh token error:", err);
     return res.status(500).json({ error: "Internal server error" });
