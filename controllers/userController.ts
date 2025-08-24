@@ -38,7 +38,7 @@ export const createUser = async (req: Request, res: Response) => {
     }
 
     // Validate userType
-    const validUserTypes = ["admin", "teacher", "student", "librarian", "guardian"];
+    const validUserTypes = ["admin", "teacher", "student", "librarian", "guardian","guest","superadmin"];
     if (!validUserTypes.includes(userType)) {
       return res.status(400).json({ error: "Invalid userType" });
     }
