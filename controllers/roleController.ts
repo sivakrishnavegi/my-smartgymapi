@@ -36,7 +36,6 @@ export const createRole = async (req: Request, res: Response) => {
 export const getRoles = async (req: Request, res: Response) => {
   try {
     const { tenantId, schoolId } = req.query;
-    console.log("first role",tenantId, schoolId )
     const filter: any = {};
     if (tenantId) filter.tenantId = tenantId;
     if (schoolId) filter.schoolId = schoolId;
@@ -44,7 +43,6 @@ export const getRoles = async (req: Request, res: Response) => {
     const roles = await RoleModel.find(filter);
     res.status(200).json({ roles });
   } catch (err: any) {
-    console.log("first role err",err)
     res.status(500).json({ error: err.message });
   }
 };

@@ -34,7 +34,7 @@ export const createTenant = async (req: Request, res: Response) => {
 //  Get all tenants
 export const listTenants = async (_req: Request, res: Response) => {
   try {
-    const tenants = await Tenant.find();
+    const tenants = await Tenant.find({}, { apiKeys: 0 }).lean();
     res.json(tenants);
   } catch (err: any) {
     res.status(500).json({ error: err.message });

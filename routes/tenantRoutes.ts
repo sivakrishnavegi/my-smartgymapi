@@ -1,14 +1,14 @@
 import { Router } from "express";
-import { 
-  createTenant, 
-  getTenantById, 
-  updateTenant, 
-  deleteTenant, 
-  listTenants,
+import {
+  createTenant,
+  deleteTenant,
+  getTenantByDomainId,
+  getTenantById,
   issueApiKey,
+  listTenants,
   revokeApiKey,
   updateSubscription,
-  getTenantByDomainId,
+  updateTenant,
   verifyApiKey
 } from "../controllers/tenantController";
 import { protect } from "../middlewares/authMiddleware";
@@ -67,7 +67,7 @@ router.get("/d/:domainId", getTenantByDomainId);
  *         description: List of tenants
  */
 router.post("/", createTenant);
-router.get("/", listTenants);
+router.get("/",protect, listTenants);
 
 
 
