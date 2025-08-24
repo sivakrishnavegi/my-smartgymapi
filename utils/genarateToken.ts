@@ -8,3 +8,7 @@ export const generateToken = (user: IUser) => {
     { expiresIn: '2h' }
   )
 }
+
+export const generateRefreshToken = (payload: object) => {
+  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, { expiresIn: "7d" });
+};

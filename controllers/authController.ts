@@ -3,6 +3,7 @@ import User from "../models/users.schema";
 import { generateToken } from "../utils/genarateToken";
 import bcrypt from "bcrypt";
 import { serialize } from "cookie";
+import { SessionModel } from "../models/SessionSchema";
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -13,7 +14,10 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const isMatch = await bcrypt.compare(password, user?.account?.passwordHash!);
+    const isMatch = await bcrypt.compare(
+      password,
+      user?.account?.passwordHash!
+    );
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
@@ -93,10 +97,13 @@ export const signup = async (req: Request, res: Response) => {
   }
 };
 
-export const logout = (req: Request, res: Response) => {
+export const logout = async (req: Request, res: Response) => {
   try {
     const cookies = req.cookies || {};
-
+    const token = req.cookies.refreshToken;
+    if (token) {
+      await SessionModel.deleteOne({ refreshToken: token });
+    }
     Object.keys(cookies).forEach((cookieName) => {
       res.clearCookie(cookieName, {
         httpOnly: true,
@@ -107,7 +114,10 @@ export const logout = (req: Request, res: Response) => {
       console.log(`Cleared cookie: ${cookieName}`);
     });
 
-
+    // res.setHeader("Set-Cookie", [
+    //   serialize("token", "", { maxAge: 0, path: "/" }),
+    //   serialize("refreshToken", "", { maxAge: 0, path: "/" }),
+    // ]);
     return res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     return res.status(500).json({ message: "Server error" });

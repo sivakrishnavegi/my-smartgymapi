@@ -5,8 +5,10 @@ import {
   updateUser,
   deleteUser,
   listUsers,
-  loginUser
+  loginUser,
+  refreshToken
 } from "../controllers/userController";
+import { protect } from "../middlewares/authMiddleware";
 
 const router = Router();
 
@@ -182,5 +184,40 @@ router.delete("/:id", deleteUser);
  *         description: Internal server error
  */
 router.post("/login", loginUser);
+
+/**
+ * @swagger
+ * /api/users/refresh-token:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Refresh access token using refresh token
+ *     description: Generates a new access token and optionally rotates the refresh token.
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: New access token generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 accessToken:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *       401:
+ *         description: Refresh token not provided
+ *       403:
+ *         description: Refresh token invalid or expired
+ *       500:
+ *         description: Internal server error
+ */
+
+router.post("/refresh-token",protect, refreshToken);
 
 export default router;
