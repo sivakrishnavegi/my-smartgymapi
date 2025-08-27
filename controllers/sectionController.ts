@@ -7,30 +7,36 @@ import UserModel from "../models/users.schema";
 // Create a new section
 export const createSection = async (req: Request, res: Response) => {
   try {
-    const { tenantId, schoolId, 
-      sectionName,
-      sectionCode,
-      isActive,
-    } = req.body;
+    const { tenantId, schoolId, sectionName, sectionCode, isActive } = req.body;
 
     // Validation
     if (!tenantId || !schoolId || !sectionName) {
-      return res.status(400).json({ message: "tenantId, schoolId,  and name are required!" });
+      return res
+        .status(400)
+        .json({ message: "tenantId, schoolId,  and name are required!" });
     }
 
     if (!mongoose.Types.ObjectId.isValid(schoolId)) {
       return res.status(400).json({ message: "Invalid schoolId " });
     }
 
-
     // Check if school exists
     const schoolExists = await SchoolModel.findById(schoolId);
-    if (!schoolExists) return res.status(404).json({ message: "School not found!" });
+    if (!schoolExists)
+      return res.status(404).json({ message: "School not found!" });
 
- 
     // Check duplicate section name for the same class
-    const existingSection = await SectionModel.findOne({  sectionName , sectionCode });
-    if (existingSection) return res.status(409).json({ message: "Section with this name ,sectionCode already exists in the class!" });
+    const existingSection = await SectionModel.findOne({
+      sectionName,
+      sectionCode,
+    });
+    if (existingSection)
+      return res
+        .status(409)
+        .json({
+          message:
+            "Section with this name ,sectionCode already exists in the class!",
+        });
 
     const newSection = await SectionModel.create({
       tenantId,
@@ -38,10 +44,12 @@ export const createSection = async (req: Request, res: Response) => {
       sectionName,
       sectionCode,
       isActive,
-      createdBy : req?.user?.id
+      createdBy: req?.user?.id,
     });
 
-    return res.status(201).json({ message: "Section created successfully", data: newSection });
+    return res
+      .status(201)
+      .json({ message: "Section created successfully", data: newSection });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server Error" });
@@ -58,7 +66,7 @@ export const getSections = async (req: Request, res: Response) => {
     if (classId) filter.classId = classId;
 
     const sections = await SectionModel.find(filter).sort({ createdAt: -1 });
-    return res.status(200).json({ sections : sections });
+    return res.status(200).json({ sections: sections });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server Error" });
@@ -75,7 +83,8 @@ export const getSectionById = async (req: Request, res: Response) => {
     }
 
     const section = await SectionModel.findById(id);
-    if (!section) return res.status(404).json({ message: "Section not found!" });
+    if (!section)
+      return res.status(404).json({ message: "Section not found!" });
 
     return res.status(200).json({ data: section });
   } catch (error) {
@@ -88,26 +97,37 @@ export const getSectionById = async (req: Request, res: Response) => {
 export const updateSection = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { sectionName } = req.body;
+    const { sectionName, isActive, sectionCode } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid section ID!" });
     }
-
     const section = await SectionModel.findById(id);
-    if (!section) return res.status(404).json({ message: "Section not found!" });
+    if (!section)
+      return res.status(404).json({ message: "Section not found!" });
 
     // Check duplicate name if updating
     if (sectionName && sectionName !== section.sectionName) {
-      const existingSection = await SectionModel.findOne({ sectionCode: section.sectionCode, sectionName });
-      if (existingSection) return res.status(409).json({ message: "Section with this name already exists in the class!" });
+      const existingSection = await SectionModel.findOne({
+        sectionCode: section.sectionCode,
+        sectionName,
+      });
+      if (existingSection)
+        return res
+          .status(409)
+          .json({
+            message: "Section with this name already exists in the class!",
+          });
     }
 
-
-    section.sectionName = sectionName || section.sectionName;
+    section.sectionName = (await sectionName) || section.sectionName;
+    section.isActive = (await isActive) || section.isActive;
+    section.sectionCode = (await sectionCode) || section.sectionCode;
 
     await section.save();
-    return res.status(200).json({ message: "Section updated successfully", data: section });
+    return res
+      .status(200)
+      .json({ message: "Section updated successfully", data: section });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server Error" });
@@ -124,7 +144,8 @@ export const deleteSection = async (req: Request, res: Response) => {
     }
 
     const section = await SectionModel.findById(id);
-    if (!section) return res.status(404).json({ message: "Section not found!" });
+    if (!section)
+      return res.status(404).json({ message: "Section not found!" });
 
     await section.deleteOne();
     return res.status(200).json({ message: "Section deleted successfully" });
@@ -139,9 +160,9 @@ export const assignHomeroomTeacher = async (req: Request, res: Response) => {
     const { sectionId, teacherId } = req.body;
 
     // Check if teacher exists and is of type "teacher"
-    const teacher = await UserModel.findOne({ 
-      _id: teacherId, 
-      userType: "teacher" 
+    const teacher = await UserModel.findOne({
+      _id: teacherId,
+      userType: "teacher",
     });
     if (!teacher) return res.status(404).json({ message: "Teacher not found" });
 
