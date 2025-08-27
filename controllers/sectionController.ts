@@ -102,29 +102,30 @@ export const updateSection = async (req: Request, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid section ID!" });
     }
-    const section = await SectionModel.findById(id);
-    if (!section)
-      return res.status(404).json({ message: "Section not found!" });
 
-    // Check duplicate name if updating
+    const section = await SectionModel.findById(id);
+    if (!section) {
+      return res.status(404).json({ message: "Section not found!" });
+    }
+
     if (sectionName && sectionName !== section.sectionName) {
       const existingSection = await SectionModel.findOne({
         sectionCode: section.sectionCode,
         sectionName,
       });
-      if (existingSection)
-        return res
-          .status(409)
-          .json({
-            message: "Section with this name already exists in the class!",
-          });
+      if (existingSection) {
+        return res.status(409).json({
+          message: "Section with this name already exists in the class!",
+        });
+      }
     }
 
-    section.sectionName = (await sectionName) || section.sectionName;
-    section.isActive = (await isActive) || section.isActive;
-    section.sectionCode = (await sectionCode) || section.sectionCode;
+    if (sectionName !== undefined) section.sectionName = sectionName;
+    if (isActive !== undefined) section.isActive = isActive;
+    if (sectionCode !== undefined) section.sectionCode = sectionCode;
 
     await section.save();
+
     return res
       .status(200)
       .json({ message: "Section updated successfully", data: section });
@@ -133,6 +134,7 @@ export const updateSection = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Server Error" });
   }
 };
+
 
 // Delete a section
 export const deleteSection = async (req: Request, res: Response) => {
