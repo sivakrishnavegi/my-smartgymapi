@@ -188,7 +188,7 @@ router.get("/:id", getSectionById);
  *       404:
  *         description: Section not found
  */
-router.put("/:id", updateSection);
+router.put("/:id",protect, updateSection);
 
 /**
  * @swagger
@@ -209,7 +209,7 @@ router.put("/:id", updateSection);
  *       404:
  *         description: Section not found
  */
-router.delete("/:id", deleteSection);
+router.delete("/:id",protect, deleteSection);
 
 /**
  * @swagger
