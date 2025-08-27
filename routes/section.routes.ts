@@ -1,12 +1,13 @@
 import { Router } from "express";
 import {
-  createSection,
-  getSections,
-  getSectionById,
-  updateSection,
-  deleteSection,
   assignHomeroomTeacher,
+  createSection,
+  deleteSection,
+  getSectionById,
+  getSections,
+  updateSection,
 } from "../controllers/sectionController";
+import { protect } from "../middlewares/authMiddleware";
 
 const router = Router();
 
@@ -30,18 +31,12 @@ const router = Router();
  *         schoolId:
  *           type: string
  *           example: "64fc3c8f8af92b001ea9a444"
- *         classId:
- *           type: string
- *           example: "64fc3d8f8af92b001ea9a555"
- *         name:
+ *         sectionName:
  *           type: string
  *           example: "Section A"
- *         capacity:
- *           type: number
- *           example: 30
- *         homeroomTeacherId:
+ *         sectionCode:
  *           type: string
- *           example: "64fc3e8f8af92b001ea9a666"
+ *           example: D1503
  *         createdAt:
  *           type: string
  *           format: date-time
@@ -49,8 +44,7 @@ const router = Router();
  *       required:
  *         - tenantId
  *         - schoolId
- *         - classId
- *         - name
+ *         - sectionName
  */
 
 /**
@@ -75,7 +69,7 @@ const router = Router();
  *       400:
  *         description: Invalid input data
  */
-router.post("/", createSection);
+router.post("/", protect, createSection);
 
 /**
  * @swagger
@@ -136,7 +130,7 @@ router.post("/", createSection);
  *       500:
  *         description: Internal server error
  */
-router.get("/", getSections);
+router.get("/",protect, getSections);
 
 /**
  * @swagger

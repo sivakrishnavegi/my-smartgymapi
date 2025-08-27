@@ -72,22 +72,17 @@ const options: swaggerJSDoc.Options = {
           type: "object",
           properties: {
             _id: { type: "string", example: "64fc4d8b8af92b001ea9a3f1" },
-            tenantId: { type: "string", example: "tenant123" },
+            tenantId: { type: "string", example: "tenavvvnt123" },
             schoolId: { type: "string", example: "64fc3c8f8af92b001ea9a444" },
-            classId: { type: "string", example: "64fc3d8f8af92b001ea9a555" },
-            name: { type: "string", example: "Section A" },
-            capacity: { type: "number", example: 30 },
-            homeroomTeacherId: {
-              type: "string",
-              example: "64fc3e8f8af92b001ea9a666",
-            },
+            sectionName: { type: "string", example: "Section A" },
+            sectionCode: { type: "string", example: "D1503" },
             createdAt: {
               type: "string",
               format: "date-time",
               example: "2025-08-05T08:30:00Z",
             },
           },
-          required: ["tenantId", "schoolId", "classId", "name"],
+          required: ["tenantId", "schoolId", "sectionName"],
         },
         // 🔹 Add User schemas here
         User: {
