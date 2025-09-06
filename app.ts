@@ -1,9 +1,9 @@
 import cors from "cors";
-import express from "express";
+import express, { Router } from "express";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./docs/swager";
 
-import routes from "./routes";
+import AppRoutes from "./routes";
 
 import { limiter } from "./utils/rateLimter";
 import helmet from "helmet";
@@ -23,8 +23,9 @@ const {
   classesRoutes,
   sectionRoutes,
   superAdminRoutes,
-  appConfigRoutes
-} = routes;
+  appConfigRoutes,
+  academicYearRoutes
+} = AppRoutes;
 
 const app = express();
 
@@ -67,32 +68,32 @@ const speedLimiter = slowDown({
   delayMs: () => 500,
 });
 
-app.use("/api/auth", speedLimiter, authRoutes);
+//APP ROUTES
+const routes: { path: string; router: Router; middlewares?: any[] }[] = [
+  { path: "/api/auth", router: authRoutes, middlewares: [speedLimiter] },
+  { path: "/api/attendance", router: attendanceRoutes },
+  { path: "/api/tenants", router: tenantRoutes },
+  { path: "/api/schools", router: schoolRoutes },
+  { path: "/api/roles", router: rolesRoutes },
+  { path: "/api/classes", router: classesRoutes },
+  { path: "/api/sections", router: sectionRoutes },
+  { path: "/api/users", router: userRoutes },
+  { path: "/api/events", router: eventRoutes },
+  { path: "/api/google", router: googleAuthRoutes },
+  { path: "/api/googleMeet", router: googleMeetRoutes },
+  { path: "/api/superadmin", router: superAdminRoutes },
+  { path: "/api/app-config", router: appConfigRoutes },
+  { path: "/api/academic-years", router: academicYearRoutes },
+];
 
-app.use("/api/attendance", attendanceRoutes);
-
-app.use("/api/tenants", tenantRoutes);
-
-app.use("/api/schools", schoolRoutes);
-
-app.use("/api/roles", rolesRoutes);
-
-app.use("/api/classes", classesRoutes);
-
-app.use("/api/sections", sectionRoutes);
-
-app.use("/api/users", userRoutes);
-
-app.use("/api/events", eventRoutes);
-
-app.use("/api/google", googleAuthRoutes);
-
-app.use("/api/googleMeet/", googleMeetRoutes);
-
-app.use("/api/superadmin", superAdminRoutes);
-
-app.use("/api/app-config", appConfigRoutes);
-
+// Register routes dynamically
+routes?.forEach(({ path, router, middlewares }) => {
+  if (middlewares) {
+    app.use(path, ...middlewares, router);
+  } else {
+    app.use(path, router);
+  }
+});
 
 // Health check
 app.get("/", (_req, res) => {

@@ -13,6 +13,7 @@ import superAdminRoutes from "./superadminRoutes";
 import tenantRoutes from "./tenantRoutes";
 import userRoutes from "./user.routes";
 import appConfigRoutes from "./appConfigRoutes";
+import academicYearRoutes from "./academicYearRoutes";
 
 const routes = {
   appConfigRoutes,
@@ -21,6 +22,7 @@ const routes = {
   classesRoutes,
   eventRoutes,
   rolesRoutes,
+  academicYearRoutes,
   schoolRoutes,
   sectionRoutes,
   tenantRoutes,
