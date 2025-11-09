@@ -90,4 +90,45 @@ router.post('/login', authController_1.login);
  *         description: Server error
  */
 router.post('/signup', authController_1.signup);
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout the current user and clear the auth cookie
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Logout successful
+ *       500:
+ *         description: Server error during logout
+ */
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout the current user and clear the auth cookie
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Logout successful
+ *       500:
+ *         description: Server error during logout
+ */
+router.get('/logout', authController_1.logout);
 exports.default = router;

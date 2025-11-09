@@ -33,6 +33,9 @@ const app = express();
 app.use(limiter);
 
 const allowedOrigins = [
+  "https://www.skoolelite.com/",
+  "http://skoolelite.com/",
+  "https://skoolelite.com:3000",
   "http://localhost:3000",
   "http://localhost:3001",
   "http://192.168.29.22",
