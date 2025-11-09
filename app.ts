@@ -5,10 +5,10 @@ import swaggerSpec from "./docs/swager";
 
 import AppRoutes from "./routes";
 
-import { limiter } from "./utils/rateLimter";
-import helmet from "helmet";
-import slowDown from "express-slow-down";
 import cookieParser from "cookie-parser";
+import slowDown from "express-slow-down";
+import helmet from "helmet";
+import { limiter } from "./utils/rateLimter";
 
 const {
   attendanceRoutes,
