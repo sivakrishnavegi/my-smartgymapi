@@ -33,6 +33,7 @@ const app = express();
 app.use(limiter);
 
 const allowedOrigins = [
+  "https://anyway-rackety-marylee.ngrok-free.dev/",
   "https://www.skoolelite.com/",
   "http://skoolelite.com/",
   "https://skoolelite.com:3000",
