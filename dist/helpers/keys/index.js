@@ -7,7 +7,7 @@ const parseApiKey = (apiKey) => {
     if (parts.length < 4)
         return null;
     return {
-        prefix: `${parts[0]}_${parts[1]}`,
+        prefix: `${parts[0]}_${parts[1]}`, // e.g. sk_live
         keyId: parts[2],
         secret: parts[3],
     };

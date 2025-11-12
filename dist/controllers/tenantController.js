@@ -119,11 +119,11 @@ const deleteTenant = (req, res) => __awaiter(void 0, void 0, void 0, function* (
 });
 exports.deleteTenant = deleteTenant;
 const issueApiKey = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b;
+    var _a;
     try {
         const { tenantId } = req.params;
         //@ts-ignore
-        const userId = (_b = req.user) === null || _b === void 0 ? void 0 : _b.id;
+        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
         const tenant = yield tenant_schema_1.default.findOne({ tenantId });
         if (!tenant)
             return res.status(404).json({ error: "Tenant not found" });

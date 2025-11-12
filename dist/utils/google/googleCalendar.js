@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getGoogleCalendarClient = void 0;
+exports.getGoogleCalendarClient = getGoogleCalendarClient;
 const googleapis_1 = require("googleapis");
 const path_1 = __importDefault(require("path"));
 // Load service account credentials
@@ -18,5 +18,4 @@ function getGoogleCalendarClient(accessToken) {
     auth.setCredentials({ access_token: accessToken });
     return googleapis_1.google.calendar({ version: "v3", auth });
 }
-exports.getGoogleCalendarClient = getGoogleCalendarClient;
 exports.default = calendar;
