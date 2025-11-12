@@ -65,7 +65,7 @@ const addUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             tenantId: payload.tenantId,
             schoolId: mongoose_1.default.Types.ObjectId.isValid(payload.schoolId)
                 ? new mongoose_1.default.Types.ObjectId(payload.schoolId)
-                : undefined, // validate schoolId
+                : undefined,
             userType: payload.userType,
             profile: {
                 firstName,
@@ -85,7 +85,7 @@ const addUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 passwordHash: hashedPassword,
                 status: ((_a = payload === null || payload === void 0 ? void 0 : payload.account) === null || _a === void 0 ? void 0 : _a.status) || "inactive",
             },
-            createdAt: payload.createdAt ? new Date(payload.createdAt) : new Date(), // ✅ Date object
+            createdAt: payload.createdAt ? new Date(payload.createdAt) : new Date(),
             createdBy: req.user && mongoose_1.default.Types.ObjectId.isValid(req.user.id)
                 ? new mongoose_1.default.Types.ObjectId(req.user.id)
                 : undefined,

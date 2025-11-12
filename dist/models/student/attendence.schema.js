@@ -8,13 +8,13 @@ const studentAttendanceSchema = new mongoose_1.Schema({
     classId: { type: mongoose_1.Types.ObjectId, ref: "Class", required: true },
     sectionId: { type: mongoose_1.Types.ObjectId, ref: "Section", required: true },
     studentId: { type: mongoose_1.Types.ObjectId, ref: "Student", required: true },
-    date: { type: Date, required: true }, // e.g., 2025-08-25
+    date: { type: Date, required: true },
     status: {
         type: String,
         enum: ["Present", "Absent", "Leave", "Late", "Half-Day"],
         default: "Present",
     },
-    markedBy: { type: mongoose_1.Types.ObjectId, ref: "User" }, // Teacher/Admin
+    markedBy: { type: mongoose_1.Types.ObjectId, ref: "User" },
     remarks: { type: String },
     session: { type: String }, // academic year, e.g. "2025-26"
 }, { timestamps: true });

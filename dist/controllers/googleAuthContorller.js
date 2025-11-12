@@ -37,7 +37,7 @@ const googleAuthCallbackSignInButton = (req, res) => __awaiter(void 0, void 0, v
         };
         const updateGoogleData = {
             accessToken: account === null || account === void 0 ? void 0 : account.access_token,
-            expiryDate: account === null || account === void 0 ? void 0 : account.expires_at, // usually epoch timestamp (ms or s)
+            expiryDate: account === null || account === void 0 ? void 0 : account.expires_at,
             idToken: account === null || account === void 0 ? void 0 : account.id_token,
             tokenType: account === null || account === void 0 ? void 0 : account.type,
             scope: account === null || account === void 0 ? void 0 : account.scope,
@@ -82,7 +82,7 @@ const googleAuthCallbackSignInButton = (req, res) => __awaiter(void 0, void 0, v
                 },
             }, {
                 new: true,
-                arrayFilters: [{ "elem.provider": provider }], // match provider inside array
+                arrayFilters: [{ "elem.provider": provider }],
                 upsert: false,
             });
             yield (updatedUsr === null || updatedUsr === void 0 ? void 0 : updatedUsr.save());
@@ -98,8 +98,8 @@ const googleAuthCallbackSignInButton = (req, res) => __awaiter(void 0, void 0, v
         res.setHeader("Set-Cookie", (0, cookie_1.serialize)("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax", // Lax allows localhost
-            maxAge: 60 * 60 * 24, // 1 day
+            sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+            maxAge: 60 * 60 * 24,
             path: "/",
         }));
         const redirectUrl = `http://localhost:3001/dashboard/${user.userType}`;
@@ -124,7 +124,7 @@ const googleAuthCallbackSignInButton = (req, res) => __awaiter(void 0, void 0, v
 });
 exports.googleAuthCallbackSignInButton = googleAuthCallbackSignInButton;
 const googleAuthCallbacks = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
+    var _f;
     try {
         const code = req.query.code;
         if (!code) {
@@ -149,7 +149,7 @@ const googleAuthCallbacks = (req, res) => __awaiter(void 0, void 0, void 0, func
         };
         const updateGoogleData = {
             accessToken: tokens === null || tokens === void 0 ? void 0 : tokens.access_token,
-            expiryDate: tokens === null || tokens === void 0 ? void 0 : tokens.expiry_date, // usually epoch timestamp (ms or s)
+            expiryDate: tokens === null || tokens === void 0 ? void 0 : tokens.expiry_date,
             idToken: tokens === null || tokens === void 0 ? void 0 : tokens.id_token,
             tokenType: tokens === null || tokens === void 0 ? void 0 : tokens.token_type,
             scope: tokens === null || tokens === void 0 ? void 0 : tokens.scope,
@@ -167,7 +167,7 @@ const googleAuthCallbacks = (req, res) => __awaiter(void 0, void 0, void 0, func
                     googleCalender: "granted",
                 },
                 //@ts-ignore
-                userType: (_a = user === null || user === void 0 ? void 0 : user.userType) !== null && _a !== void 0 ? _a : "guest",
+                userType: (_f = user === null || user === void 0 ? void 0 : user.userType) !== null && _f !== void 0 ? _f : "guest",
                 profile: Object.assign({}, updatedProfile),
                 account: {
                     primaryEmail: payload.email,
@@ -199,7 +199,7 @@ const googleAuthCallbacks = (req, res) => __awaiter(void 0, void 0, void 0, func
                 },
             }, {
                 new: true,
-                arrayFilters: [{ "elem.provider": provider }], // match provider inside array
+                arrayFilters: [{ "elem.provider": provider }],
                 upsert: false,
             });
             yield (updatedUsr === null || updatedUsr === void 0 ? void 0 : updatedUsr.save());

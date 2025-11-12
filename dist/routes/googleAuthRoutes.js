@@ -16,15 +16,15 @@ router.get("/auth", (req, res) => {
             "email",
             "profile",
             // 📅 Google Calendar scopes
-            "https://www.googleapis.com/auth/calendar", // full access (read/write all calendars/events)
-            "https://www.googleapis.com/auth/calendar.events", // manage events on all calendars
-            "https://www.googleapis.com/auth/calendar.readonly", // read-only access
-            "https://www.googleapis.com/auth/calendar.events.readonly", // read-only events
+            "https://www.googleapis.com/auth/calendar",
+            "https://www.googleapis.com/auth/calendar.events",
+            "https://www.googleapis.com/auth/calendar.readonly",
+            "https://www.googleapis.com/auth/calendar.events.readonly",
             "https://www.googleapis.com/auth/meetings.space.created",
             "https://www.googleapis.com/auth/meetings.space.readonly",
             "https://www.googleapis.com/auth/meetings.space.settings",
-            "https://www.googleapis.com/auth/calendar.addons.execute", // needed for Meet Add-ons
-            "https://www.googleapis.com/auth/calendar.calendars", // manage calendar list
+            "https://www.googleapis.com/auth/calendar.addons.execute",
+            "https://www.googleapis.com/auth/calendar.calendars",
             "https://www.googleapis.com/auth/calendar.settings.readonly", // read settings
         ],
         prompt: "consent",

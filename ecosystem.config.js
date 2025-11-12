@@ -9,7 +9,7 @@ module.exports = {
       exec_mode: "fork", // simpler for small servers
       autorestart: true,
       watch: false,
-      node_args: "--max-old-space-size=4096", // allocate more memory
+      node_args: "--max-old-space-size=8192", // allocate more memory
       max_memory_restart: "1G",
       env: {
         NODE_ENV: "production",

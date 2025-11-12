@@ -6,7 +6,8 @@
     "strict": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "baseUrl": "./server.ts"
+    "baseUrl": "./server.ts",
+    "skipLibCheck": true  
   },
   "exclude": ["node_modules"]
 }

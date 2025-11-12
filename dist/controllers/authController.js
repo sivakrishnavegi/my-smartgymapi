@@ -42,7 +42,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
-            maxAge: 60 * 60 * 24, // 1 day
+            maxAge: 60 * 60 * 24,
             path: "/",
         }));
         // Respond with user data (no token in body)
@@ -63,7 +63,7 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.login = login;
 const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _d, _e;
     const { email, password, role } = req.body;
     try {
         const existingUser = yield users_schema_1.default.findOne({ email });
@@ -79,7 +79,7 @@ const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const token = (0, genarateToken_1.generateToken)({
             //@ts-ignore
             _id: newUser._id.toString(),
-            email: (_a = newUser.account) === null || _a === void 0 ? void 0 : _a.primaryEmail,
+            email: (_d = newUser.account) === null || _d === void 0 ? void 0 : _d.primaryEmail,
             role: newUser.userType,
         });
         res.status(201).json({
@@ -87,7 +87,7 @@ const signup = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             token,
             user: {
                 id: newUser._id,
-                email: (_b = newUser.account) === null || _b === void 0 ? void 0 : _b.primaryEmail,
+                email: (_e = newUser.account) === null || _e === void 0 ? void 0 : _e.primaryEmail,
                 role: newUser.userType,
             },
         });

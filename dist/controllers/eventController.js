@@ -63,10 +63,10 @@ const createEvent = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
 });
 exports.createEvent = createEvent;
 const getEvents = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c;
+    var _b, _c, _d;
     try {
         // get user id from auth middleware (e.g., req.user.id)
-        const userId = (_a = req === null || req === void 0 ? void 0 : req.user) === null || _a === void 0 ? void 0 : _a.id;
+        const userId = (_b = req === null || req === void 0 ? void 0 : req.user) === null || _b === void 0 ? void 0 : _b.id;
         console.log("first ggg", userId);
         if (!userId) {
             return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -80,7 +80,7 @@ const getEvents = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             });
         }
         console.log("first ggg", user);
-        const accessToken = (_c = (_b = user === null || user === void 0 ? void 0 : user.account) === null || _b === void 0 ? void 0 : _b.google) === null || _c === void 0 ? void 0 : _c.accessToken;
+        const accessToken = (_d = (_c = user === null || user === void 0 ? void 0 : user.account) === null || _c === void 0 ? void 0 : _c.google) === null || _d === void 0 ? void 0 : _d.accessToken;
         // Call Google Calendar API directly
         const response = yield fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events?singleEvents=true", {
             headers: {

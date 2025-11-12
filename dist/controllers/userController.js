@@ -191,7 +191,7 @@ const deleteUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
 });
 exports.deleteUser = deleteUser;
 const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _b, _c;
     try {
         const { email, password } = req.body;
         if (!email || !password) {
@@ -237,14 +237,14 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
-            maxAge: 60 * 60 * 24, // 1 day
+            maxAge: 60 * 60 * 24,
             path: "/",
         });
         const refreshCookie = (0, cookie_1.serialize)("refreshToken", refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
-            maxAge: 7 * 24 * 60 * 60, // 7 days
+            maxAge: 7 * 24 * 60 * 60,
             path: "/",
         });
         res.setHeader("Set-Cookie", [cookie, refreshCookie]);
@@ -253,7 +253,7 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             message: "Login successful",
             user: {
                 id: user._id,
-                email: (_b = (_a = user.account) === null || _a === void 0 ? void 0 : _a.primaryEmail) !== null && _b !== void 0 ? _b : null,
+                email: (_c = (_b = user.account) === null || _b === void 0 ? void 0 : _b.primaryEmail) !== null && _c !== void 0 ? _c : null,
                 role: user.userType,
                 token: token,
             },
@@ -266,7 +266,7 @@ const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.loginUser = loginUser;
 const refreshToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _d, _e;
     try {
         const token = req.cookies.refreshToken;
         if (!token)
@@ -297,12 +297,12 @@ const refreshToken = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         // Generate token
         const newAccessToken = yield (0, genarateToken_1.generateToken)({
             _id: user === null || user === void 0 ? void 0 : user._id,
-            email: (_a = user === null || user === void 0 ? void 0 : user.account) === null || _a === void 0 ? void 0 : _a.primaryEmail,
+            email: (_d = user === null || user === void 0 ? void 0 : user.account) === null || _d === void 0 ? void 0 : _d.primaryEmail,
             role: user.userType,
         });
         const newRefreshToken = (0, genarateToken_1.generateRefreshToken)({
             _id: user === null || user === void 0 ? void 0 : user._id,
-            email: (_b = user === null || user === void 0 ? void 0 : user.account) === null || _b === void 0 ? void 0 : _b.primaryEmail,
+            email: (_e = user === null || user === void 0 ? void 0 : user.account) === null || _e === void 0 ? void 0 : _e.primaryEmail,
             role: user.userType,
         });
         matchedSession.refreshToken = yield bcrypt_1.default.hash(newRefreshToken, 10);
