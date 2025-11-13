@@ -24,7 +24,7 @@ const {
   sectionRoutes,
   superAdminRoutes,
   appConfigRoutes,
-  academicYearRoutes
+  academicYearRoutes,
 } = AppRoutes;
 
 const app = express();
@@ -39,20 +39,34 @@ const allowedOrigins = [
   "https://skoolelite.com:3000",
   "http://localhost:3000",
   "http://localhost:3001",
-  "http://192.168.29.22"
+  "http://192.168.29.22",
 ];
 
 // Middleware
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+      try {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          console.warn("CORS blocked:", origin);
+          callback(new Error("Not allowed by CORS"));
+        }
+      } catch (err) {
+        console.error("CORS error:", err);
+        callback(null, false);
       }
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Origin",
+      "X-Requested-With",
+      "Content-Type",
+      "Accept",
+      "Authorization",
+    ],
   })
 );
 
@@ -60,8 +74,6 @@ app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(helmet());
 app.use(cookieParser());
-
-
 
 // API Documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
