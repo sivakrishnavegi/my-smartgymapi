@@ -33,19 +33,14 @@ const app = express();
 app.use(limiter);
 
 const allowedOrigins = [
-  "https://anyway-rackety-marylee.ngrok-free.dev/",
-  "https://www.skoolelite.com/",
-  "http://skoolelite.com/",
+  "https://anyway-rackety-marylee.ngrok-free.dev",
+  "https://www.skoolelite.com",
+  "http://skoolelite.com",
   "https://skoolelite.com:3000",
   "http://localhost:3000",
   "http://localhost:3001",
-  "http://192.168.29.22",
+  "http://192.168.29.22"
 ];
-
-app.use(express.json({ limit: "10kb" }));
-app.use(express.urlencoded({ extended: true, limit: "10kb" }));
-app.use(helmet());
-app.use(cookieParser());
 
 // Middleware
 app.use(
@@ -60,6 +55,13 @@ app.use(
     credentials: true,
   })
 );
+
+app.use(express.json({ limit: "10kb" }));
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+app.use(helmet());
+app.use(cookieParser());
+
+
 
 // API Documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
