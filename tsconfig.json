@@ -8,7 +8,8 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "baseUrl": "./server.ts",
-    "skipLibCheck": true  
+    "skipLibCheck": true,
+    "types": ["node", "uuid"]
   },
   "exclude": ["node_modules"]
 }
