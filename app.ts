@@ -27,11 +27,6 @@ const {
   academicYearRoutes,
 } = AppRoutes;
 
-const app = express();
-app.set('trust proxy', 1);
-//rate limiter
-app.use(limiter);
-
 const allowedOrigins: string[] = [
   "https://anyway-rackety-marylee.ngrok-free.dev",
   "https://www.skoolelite.com",
@@ -42,30 +37,35 @@ const allowedOrigins: string[] = [
   "http://192.168.29.22",
 ];
 
+const app = express();
+app.set("trust proxy", 1);
+
+//rate limiter
+app.use(limiter);
 
 // Middleware
+
 const corsOptions: CorsOptions = {
-  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    try {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.warn("CORS blocked:", origin);
-        callback(new Error("Not allowed by CORS"));
-      }
-    } catch (err) {
-      console.error("CORS error:", err);
-      callback(null, false);
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn("🚫 Not allowed by CORS:", origin);
+      callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
+  allowedHeaders: [
+    "Origin",
+    "X-Requested-With",
+    "Content-Type",
+    "Accept",
+    "Authorization",
+  ],
+  exposedHeaders: ["set-cookie"],
 };
-
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
-
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(helmet());
