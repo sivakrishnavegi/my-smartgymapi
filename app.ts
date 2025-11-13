@@ -1,4 +1,4 @@
-import cors from "cors";
+import cors , { CorsOptions } from "cors";
 import express, { Router } from "express";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./docs/swager";
@@ -28,11 +28,11 @@ const {
 } = AppRoutes;
 
 const app = express();
-
+app.set('trust proxy', 1);
 //rate limiter
 app.use(limiter);
 
-const allowedOrigins = [
+const allowedOrigins: string[] = [
   "https://anyway-rackety-marylee.ngrok-free.dev",
   "https://www.skoolelite.com",
   "http://skoolelite.com",
@@ -42,33 +42,29 @@ const allowedOrigins = [
   "http://192.168.29.22",
 ];
 
+
 // Middleware
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      try {
-        if (!origin || allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          console.warn("CORS blocked:", origin);
-          callback(new Error("Not allowed by CORS"));
-        }
-      } catch (err) {
-        console.error("CORS error:", err);
-        callback(null, false);
+const corsOptions: CorsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    try {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.warn("CORS blocked:", origin);
+        callback(new Error("Not allowed by CORS"));
       }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Origin",
-      "X-Requested-With",
-      "Content-Type",
-      "Accept",
-      "Authorization",
-    ],
-  })
-);
+    } catch (err) {
+      console.error("CORS error:", err);
+      callback(null, false);
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
