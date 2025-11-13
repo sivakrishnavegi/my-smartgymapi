@@ -12,34 +12,47 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const express_slow_down_1 = __importDefault(require("express-slow-down"));
 const helmet_1 = __importDefault(require("helmet"));
 const rateLimter_1 = require("./utils/rateLimter");
-const { attendanceRoutes, userRoutes, authRoutes, schoolRoutes, tenantRoutes, googleAuthRoutes, googleMeetRoutes, rolesRoutes, eventRoutes, classesRoutes, sectionRoutes, superAdminRoutes, appConfigRoutes, academicYearRoutes } = routes_1.default;
+const { attendanceRoutes, userRoutes, authRoutes, schoolRoutes, tenantRoutes, googleAuthRoutes, googleMeetRoutes, rolesRoutes, eventRoutes, classesRoutes, sectionRoutes, superAdminRoutes, appConfigRoutes, academicYearRoutes, } = routes_1.default;
 const app = (0, express_1.default)();
+app.set('trust proxy', 1);
 //rate limiter
 app.use(rateLimter_1.limiter);
 const allowedOrigins = [
-    "https://www.skoolelite.com/",
-    "http://skoolelite.com/",
+    "https://anyway-rackety-marylee.ngrok-free.dev",
+    "https://www.skoolelite.com",
+    "http://skoolelite.com",
     "https://skoolelite.com:3000",
     "http://localhost:3000",
     "http://localhost:3001",
     "http://192.168.29.22",
 ];
+// Middleware
+const corsOptions = {
+    origin: (origin, callback) => {
+        try {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            }
+            else {
+                console.warn("CORS blocked:", origin);
+                callback(new Error("Not allowed by CORS"));
+            }
+        }
+        catch (err) {
+            console.error("CORS error:", err);
+            callback(null, false);
+        }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
+};
+app.use((0, cors_1.default)(corsOptions));
+app.options("*", (0, cors_1.default)(corsOptions));
 app.use(express_1.default.json({ limit: "10kb" }));
 app.use(express_1.default.urlencoded({ extended: true, limit: "10kb" }));
 app.use((0, helmet_1.default)());
 app.use((0, cookie_parser_1.default)());
-// Middleware
-app.use((0, cors_1.default)({
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        }
-        else {
-            callback(new Error("Not allowed by CORS"));
-        }
-    },
-    credentials: true,
-}));
 // API Documentation
 app.use("/api-docs", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swager_1.default));
 // Routes
