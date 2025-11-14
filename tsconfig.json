@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "incremental": true,
     "target": "ES6",
     "module": "commonjs",
     "outDir": "./dist",
@@ -8,8 +7,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "baseUrl": "./server.ts",
-    "skipLibCheck": true,
-    "types": ["node", "uuid"]
+    "skipLibCheck": true  
   },
   "exclude": ["node_modules"]
 }
