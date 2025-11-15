@@ -30,12 +30,11 @@ const {
 const allowedOrigins: string[] = [
   "https://anyway-rackety-marylee.ngrok-free.dev",
   "https://www.skoolelite.com",
-  "http://skoolelite.com",
-  "https://skoolelite.com:3000",
+  "https://skoolelite.com",
   "http://localhost:3000",
   "http://localhost:3001",
-  "http://192.168.29.22",
 ];
+
 
 const app = express();
 app.set("trust proxy", 1);
@@ -44,7 +43,6 @@ app.set("trust proxy", 1);
 app.use(limiter);
 
 // Middleware
-
 const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -65,7 +63,9 @@ const corsOptions: CorsOptions = {
   ],
   exposedHeaders: ["set-cookie"],
 };
+
 app.use(cors(corsOptions));
+
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(helmet());
