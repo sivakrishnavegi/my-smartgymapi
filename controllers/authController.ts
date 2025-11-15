@@ -1,9 +1,9 @@
-import { Request, Response } from "express";
-import User from "../models/users.schema";
-import { generateToken } from "../utils/genarateToken";
 import bcrypt from "bcrypt";
 import { serialize } from "cookie";
+import { Request, Response } from "express";
 import { SessionModel } from "../models/SessionSchema";
+import User from "../models/users.schema";
+import { generateToken } from "../utils/genarateToken";
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -36,9 +36,13 @@ export const login = async (req: Request, res: Response) => {
       serialize("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 60 * 60 * 24, // 1 day
+        sameSite: process.env.NODE_ENV === "production" ? "lax" : "strict",
+        maxAge: 60 * 60 * 24,
         path: "/",
+        domain:
+          process.env.NODE_ENV === "production"
+            ? ".skoolelite.com"
+            : "localhost",
       })
     );
 
