@@ -36,7 +36,7 @@ export const login = async (req: Request, res: Response) => {
       serialize("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "lax" : "strict",
+        sameSite: "none", // allow cross-site cookies
         maxAge: 60 * 60 * 24,
         path: "/",
         domain:
