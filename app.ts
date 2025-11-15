@@ -42,6 +42,14 @@ app.set("trust proxy", 1);
 //rate limiter
 app.use(limiter);
 
+app.use(
+  helmet({
+    crossOriginOpenerPolicy: false,           // must disable
+    crossOriginResourcePolicy: { policy: "cross-origin" },  
+    contentSecurityPolicy: false,             // disable CSP for APIs
+  })
+);
+
 // Middleware
 const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
@@ -68,7 +76,7 @@ app.use(cors(corsOptions));
 
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
-app.use(helmet());
+
 app.use(cookieParser());
 
 // API Documentation
