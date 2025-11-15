@@ -35,14 +35,11 @@ export const login = async (req: Request, res: Response) => {
       "Set-Cookie",
       serialize("token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
         sameSite: "none", // allow cross-site cookies
         maxAge: 60 * 60 * 24,
         path: "/",
-        domain:
-          process.env.NODE_ENV === "production"
-            ? ".skoolelite.com"
-            : "localhost",
+        domain: ".skoolelite.com",
       })
     );
 
