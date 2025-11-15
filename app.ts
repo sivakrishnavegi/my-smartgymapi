@@ -48,10 +48,10 @@ app.use(limiter);
 // ---------------------------------------------
 app.use(
   helmet({
-    crossOriginOpenerPolicy: false,       // REQUIRED for cross-site cookies
-    crossOriginResourcePolicy: { policy: "cross-origin" }, 
-    contentSecurityPolicy: false,         // DISABLE CSP for APIs
-    frameguard: false,                    // MUST remove X-Frame-Options SAMEORIGIN
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: false,
+    frameguard: false,
   })
 );
 
@@ -63,7 +63,7 @@ const corsOptions: CorsOptions = {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.warn(" Not allowed by CORS:", origin);
+      console.warn("Not allowed by CORS:", origin);
       callback(new Error("Not allowed by CORS"));
     }
   },
@@ -78,19 +78,23 @@ const corsOptions: CorsOptions = {
   ],
   exposedHeaders: ["set-cookie"],
 };
-
 app.use(cors(corsOptions));
 
 // ---------------------------------------------
-//  BODY PARSERS (JSON + URLENCODED)
+// BODY PARSERS
 // ---------------------------------------------
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
 // ---------------------------------------------
-// COOKIES (AFTER CORS)
+// COOKIE PARSER
 // ---------------------------------------------
 app.use(cookieParser());
+
+// ---------------------------------------------
+// OPTIONS PRE-FLIGHT HANDLER
+// ---------------------------------------------
+app.options("*", (_req, res) => res.sendStatus(200));
 
 // ---------------------------------------------
 // API DOCS
@@ -98,7 +102,7 @@ app.use(cookieParser());
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // ---------------------------------------------
-// ROUTES (LAST BEFORE HEALTH CHECK)
+// SLOW DOWN FOR AUTH ROUTES
 // ---------------------------------------------
 const speedLimiter = slowDown({
   windowMs: 15 * 60 * 1000,
@@ -106,6 +110,9 @@ const speedLimiter = slowDown({
   delayMs: () => 500,
 });
 
+// ---------------------------------------------
+// REGISTER APP ROUTES
+// ---------------------------------------------
 const routes: { path: string; router: Router; middlewares?: any[] }[] = [
   { path: "/api/auth", router: authRoutes, middlewares: [speedLimiter] },
   { path: "/api/attendance", router: attendanceRoutes },
