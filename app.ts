@@ -1,4 +1,4 @@
-import cors , { CorsOptions } from "cors";
+import cors, { CorsOptions } from "cors";
 import express, { Router } from "express";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./docs/swager";
@@ -35,28 +35,35 @@ const allowedOrigins: string[] = [
   "http://localhost:3001",
 ];
 
-
 const app = express();
 app.set("trust proxy", 1);
 
-//rate limiter
+// ---------------------------------------------
+// RATE LIMITER FIRST
+// ---------------------------------------------
 app.use(limiter);
 
+// ---------------------------------------------
+// HELMET (MUST COME BEFORE CORS)
+// ---------------------------------------------
 app.use(
   helmet({
-    crossOriginOpenerPolicy: false,           // must disable
-    crossOriginResourcePolicy: { policy: "cross-origin" },  
-    contentSecurityPolicy: false,             // disable CSP for APIs
+    crossOriginOpenerPolicy: false,       // REQUIRED for cross-site cookies
+    crossOriginResourcePolicy: { policy: "cross-origin" }, 
+    contentSecurityPolicy: false,         // DISABLE CSP for APIs
+    frameguard: false,                    // MUST remove X-Frame-Options SAMEORIGIN
   })
 );
 
-// Middleware
+// ---------------------------------------------
+// CORS — MUST BE AFTER HELMET
+// ---------------------------------------------
 const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      console.warn("🚫 Not allowed by CORS:", origin);
+      console.warn(" Not allowed by CORS:", origin);
       callback(new Error("Not allowed by CORS"));
     }
   },
@@ -74,23 +81,31 @@ const corsOptions: CorsOptions = {
 
 app.use(cors(corsOptions));
 
+// ---------------------------------------------
+//  BODY PARSERS (JSON + URLENCODED)
+// ---------------------------------------------
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
+// ---------------------------------------------
+// COOKIES (AFTER CORS)
+// ---------------------------------------------
 app.use(cookieParser());
 
-// API Documentation
+// ---------------------------------------------
+// API DOCS
+// ---------------------------------------------
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Routes
-// Slow down brute force (only for auth routes is good :))
+// ---------------------------------------------
+// ROUTES (LAST BEFORE HEALTH CHECK)
+// ---------------------------------------------
 const speedLimiter = slowDown({
   windowMs: 15 * 60 * 1000,
   delayAfter: 50,
   delayMs: () => 500,
 });
 
-//APP ROUTES
 const routes: { path: string; router: Router; middlewares?: any[] }[] = [
   { path: "/api/auth", router: authRoutes, middlewares: [speedLimiter] },
   { path: "/api/attendance", router: attendanceRoutes },
@@ -108,8 +123,7 @@ const routes: { path: string; router: Router; middlewares?: any[] }[] = [
   { path: "/api/academic-years", router: academicYearRoutes },
 ];
 
-// Register routes dynamically
-routes?.forEach(({ path, router, middlewares }) => {
+routes.forEach(({ path, router, middlewares }) => {
   if (middlewares) {
     app.use(path, ...middlewares, router);
   } else {
@@ -117,7 +131,9 @@ routes?.forEach(({ path, router, middlewares }) => {
   }
 });
 
-// Health check
+// ---------------------------------------------
+// HEALTH CHECK
+// ---------------------------------------------
 app.get("/", (_req, res) => {
   res.status(200).json({
     success: true,
