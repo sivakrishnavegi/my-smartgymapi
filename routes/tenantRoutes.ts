@@ -116,12 +116,11 @@ router.put("/:tenantId", updateTenant);
 router.delete("/:tenantId", deleteTenant);
 
 
-
 /**
  * @swagger
- * /api/tenants/{tenantId}/verify:
+ * /api/tenants/{tenantId}/api-keys:
  *   post:
- *     summary: Issue a new API key for tenant
+ *     summary: Issue a new API key for a tenant
  *     tags: [Tenants]
  *     parameters:
  *       - in: path
@@ -129,9 +128,14 @@ router.delete("/:tenantId", deleteTenant);
  *         required: true
  *         schema:
  *           type: string
+ *         description: ID of the tenant
  *     responses:
  *       201:
- *         description: API key issued
+ *         description: API key issued successfully
+ *       404:
+ *         description: Tenant not found
+ *       500:
+ *         description: Server error
  */
 router.post("/:tenantId/api-keys", protect, issueApiKey);
 
