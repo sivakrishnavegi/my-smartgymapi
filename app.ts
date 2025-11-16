@@ -92,11 +92,6 @@ app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(cookieParser());
 
 // ---------------------------------------------
-// OPTIONS PRE-FLIGHT HANDLER
-// ---------------------------------------------
-app.options("*", (_req, res) => res.sendStatus(200));
-
-// ---------------------------------------------
 // API DOCS
 // ---------------------------------------------
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
