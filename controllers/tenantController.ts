@@ -1,9 +1,8 @@
 import crypto from "crypto";
 import { Request, Response } from "express";
+import { parseApiKey } from "../helpers/keys";
 import School from "../models/schools.schema";
 import Tenant from "../models/tenant.schema";
-import { Types } from "mongoose";
-import { parseApiKey } from "../helpers/keys";
 
 export const createTenant = async (req: Request, res: Response) => {
   try {
@@ -25,7 +24,10 @@ export const createTenant = async (req: Request, res: Response) => {
     });
 
     await tenant.save();
-    res.status(201).json(tenant);
+    res.status(201).json({
+      message: "Tenant created successfully",
+      tenant,
+    });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
@@ -35,7 +37,11 @@ export const createTenant = async (req: Request, res: Response) => {
 export const listTenants = async (_req: Request, res: Response) => {
   try {
     const tenants = await Tenant.find({}, { apiKeys: 0 }).lean();
-    res.json(tenants);
+    res.status(200).json({
+      success: true,
+      message: "Tenants fetched successfully",
+      tenants,
+    });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -129,7 +135,7 @@ export const issueApiKey = async (req: Request, res: Response) => {
     // 4. Save in DB
     tenant.apiKeys.push({
       keyHash,
-      keySecret: keyId, 
+      keySecret: keyId,
       issuedAt: new Date(),
       issuedBy: userId!,
       revoked: false,
@@ -140,9 +146,9 @@ export const issueApiKey = async (req: Request, res: Response) => {
     // 5. Return full key once
     res.status(201).json({
       apiKey: rawApiKey,
-      message: "API key issued successfully. Store it securely, it won't be shown again.",
+      message:
+        "API key issued successfully. Store it securely, it won't be shown again.",
     });
-
   } catch (err: any) {
     console.error("Error issuing API key:", err);
     res.status(500).json({ error: "Failed to issue API key" });
@@ -154,7 +160,9 @@ export const verifyApiKey = async (req: Request, res: Response) => {
     const { apiKey, tenantId } = req.body;
 
     if (!apiKey || !tenantId) {
-      return res.status(400).json({ error: "apiKey and tenantId are required in body" });
+      return res
+        .status(400)
+        .json({ error: "apiKey and tenantId are required in body" });
     }
 
     const parsed = parseApiKey(apiKey);
@@ -205,7 +213,6 @@ export const verifyApiKey = async (req: Request, res: Response) => {
   }
 };
 
-
 //  Revoke API Key
 export const revokeApiKey = async (req: Request, res: Response) => {
   try {
@@ -224,7 +231,7 @@ export const revokeApiKey = async (req: Request, res: Response) => {
   }
 };
 
-// 📅 Update subscription plan
+// Update subscription plan
 export const updateSubscription = async (req: Request, res: Response) => {
   try {
     const { startDate, endDate, status, maxUsers, maxStudents, plan } =
