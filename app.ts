@@ -25,6 +25,7 @@ const {
   superAdminRoutes,
   appConfigRoutes,
   academicYearRoutes,
+  manageStaffRoutes,
 } = AppRoutes;
 
 const allowedOrigins: string[] = [
@@ -121,6 +122,7 @@ const routes: { path: string; router: Router; middlewares?: any[] }[] = [
   { path: "/api/google", router: googleAuthRoutes },
   { path: "/api/googleMeet", router: googleMeetRoutes },
   { path: "/api/superadmin", router: superAdminRoutes },
+  { path: "/api/admin", router: manageStaffRoutes },
   { path: "/api/app-config", router: appConfigRoutes },
   { path: "/api/academic-years", router: academicYearRoutes },
 ];

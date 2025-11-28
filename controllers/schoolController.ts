@@ -212,3 +212,4 @@ export const deleteSchool = async (req: Request, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+

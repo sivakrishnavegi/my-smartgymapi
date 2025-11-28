@@ -14,7 +14,7 @@ import tenantRoutes from "./tenantRoutes";
 import userRoutes from "./user.routes";
 import appConfigRoutes from "./appConfigRoutes";
 import academicYearRoutes from "./academicYearRoutes";
-
+import manageStaffRoutes from "./admin/manageStaffRoutes";
 const routes = {
   appConfigRoutes,
   attendanceRoutes,
@@ -30,6 +30,7 @@ const routes = {
   googleAuthRoutes,
   googleMeetRoutes,
   superAdminRoutes,
+  manageStaffRoutes
 };
 
 export default routes;
