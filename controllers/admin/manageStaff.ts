@@ -131,7 +131,7 @@ export const addNewStaffMemberToSchool = async (
     const userData = {
       tenantId,
       schoolId: schoolObjectId,
-      userType: roleDoc.name, 
+      userType: roleDoc.name,
       profile: {
         fullName: profile?.fullName,
         email: normalizedEmail,
@@ -160,11 +160,9 @@ export const addNewStaffMemberToSchool = async (
     if (err.code === 11000) {
       const duplicateField = Object.keys(err.keyPattern || {})[0];
       const duplicateValue = err.keyValue?.[duplicateField];
-      return res
-        .status(400)
-        .json({
-          error: `Duplicate value for ${duplicateField}: ${duplicateValue}`,
-        });
+      return res.status(400).json({
+        error: `Duplicate value for ${duplicateField}: ${duplicateValue}`,
+      });
     }
 
     console.error("Add staff error:", err);
