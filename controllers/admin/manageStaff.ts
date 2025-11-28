@@ -169,3 +169,113 @@ export const addNewStaffMemberToSchool = async (
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const listStaffMembersForSchool = async (req: Request, res: Response) => {
+  try {
+    const tenantId = req.query.tenantId as string;
+    const schoolId = req.query.schoolId as string;
+
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
+
+    const search = (req.query.search as string) || "";
+    const roleFilter = (req.query.role as string) || "";
+
+    if (!tenantId || !schoolId) {
+      return res.status(400).json({
+        error: "tenantId and schoolId are required",
+      });
+    }
+
+    const schoolObjectId = new Types.ObjectId(schoolId);
+
+    // -----------------------------------------
+    // 1. Validate school exists
+    // -----------------------------------------
+    const schoolExists = await School.findOne({
+      _id: schoolObjectId,
+      tenantId,
+    });
+
+    if (!schoolExists) {
+      return res.status(404).json({
+        error: "School not found for this tenant",
+      });
+    }
+
+    // -----------------------------------------
+    // 2. Build Filters
+    // -----------------------------------------
+    const filter: any = {
+      tenantId,
+      schoolId: schoolObjectId,
+    };
+
+    // Search by name or email (case-insensitive)
+    if (search) {
+      filter.$or = [
+        { "profile.fullName": { $regex: search, $options: "i" } },
+        { "profile.email": { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Optional role filter
+    if (roleFilter) {
+      const roleDoc = await RoleModel.findOne({
+        tenantId,
+        schoolId: schoolObjectId,
+        name: roleFilter,
+      });
+
+      if (!roleDoc) {
+        return res.status(400).json({
+          error: `Role '${roleFilter}' does not exist`,
+        });
+      }
+
+      filter.roles = roleDoc._id;
+    }
+
+    // -----------------------------------------
+    // 3. Projection (secure)
+    // -----------------------------------------
+    const projection = {
+      passwordHash: 0,
+      "account.passwordHash": 0,
+      "account.password": 0,
+      resetToken: 0,
+    };
+
+    // -----------------------------------------
+    // 4. Fetch data with pagination
+    // -----------------------------------------
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      UserModel.find(filter, projection)
+        .populate("roles", "name permissions") // safe populate
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+
+      UserModel.countDocuments(filter),
+    ]);
+
+    // -----------------------------------------
+    // 5. Response
+    // -----------------------------------------
+    return res.json({
+      success: true,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      data: items,
+    });
+  } catch (err) {
+    console.error("List staff error:", err);
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};

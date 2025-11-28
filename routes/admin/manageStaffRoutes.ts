@@ -1,5 +1,5 @@
 import express from "express";
-import { addNewStaffMemberToSchool } from "../../controllers/admin/manageStaff";
+import { addNewStaffMemberToSchool , listStaffMembersForSchool } from "../../controllers/admin/manageStaff";
 
 const router = express.Router();
 
@@ -87,5 +87,106 @@ const router = express.Router();
  *         description: Internal server error
  */
 router.post("/addNewStaffMemberToSchool", addNewStaffMemberToSchool);
+
+/**
+ * @swagger
+ * /api/admin/getStaffMembers:
+ *   get:
+ *     summary: Get list of staff members for a school
+ *     description: |
+ *       Returns paginated staff members for a given tenant and school.  
+ *       Supports filters like role.
+ *     tags:
+ *       - Staff Management
+ * 
+ *     parameters:
+ *       - in: query
+ *         name: tenantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Tenant ID
+ *         example: 66f013bc395e410b8b6ef321
+ * 
+ *       - in: query
+ *         name: schoolId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: School ID
+ *         example: 66ff12cd5a33400998eec442
+ *
+ *       - in: query
+ *         name: role
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Filter staff by role (e.g., TEACHER, ADMIN)
+ *         example: TEACHER
+ *
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Page number (pagination)
+ *         example: 1
+ * 
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page
+ *         example: 10
+ * 
+ *     responses:
+ *       200:
+ *         description: Staff members fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total:
+ *                   type: number
+ *                   example: 42
+ *                 page:
+ *                   type: number
+ *                   example: 1
+ *                 limit:
+ *                   type: number
+ *                   example: 10
+ *                 totalPages:
+ *                   type: number
+ *                   example: 5
+ *                 staff:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       _id:
+ *                         type: string
+ *                         example: "6701aa99b33ab23d887fd119"
+ *                       name:
+ *                         type: string
+ *                         example: "Arjun Reddy"
+ *                       email:
+ *                         type: string
+ *                         example: "arjun@school.com"
+ *                       role:
+ *                         type: string
+ *                         example: "TEACHER"
+ *                       department:
+ *                         type: string
+ *                         example: "Science"
+ * 
+ *       400:
+ *         description: Missing or invalid parameters
+ *
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/getStaffMembers", listStaffMembersForSchool);
 
 export default router;

@@ -284,72 +284,81 @@ export const loginUser = async (req: Request, res: Response) => {
 export const refreshToken = async (req: Request, res: Response) => {
   try {
     const token = req.cookies.refreshToken;
-    if (!token)
-      return res.status(401).json({ error: "No refresh token provided" });
 
-    // 1. Find all sessions that are not expired
+    if (!token) {
+      return res.status(401).json({ error: "No refresh token provided" });
+    }
+
+    // 1. Find all active sessions
     const sessions = await SessionModel.find({
       expiresAt: { $gt: new Date() },
     });
-    if (!sessions.length)
-      return res.status(403).json({ error: "No valid sessions found" });
 
-    // 2. Find the session that matches hashed token
+    // 2. Find session matching the hashed refresh token
     let matchedSession: any = null;
-    for (const s of sessions) {
-      const isMatch = await bcrypt.compare(token, s.refreshToken);
+    for (const sess of sessions) {
+      const isMatch = await bcrypt.compare(token, sess.refreshToken);
       if (isMatch) {
-        matchedSession = s;
+        matchedSession = sess;
         break;
       }
     }
 
-    if (!matchedSession)
-      return res
-        .status(403)
-        .json({ error: "Refresh token expired or invalid" });
+    if (!matchedSession) {
+      return res.status(403).json({ error: "Refresh token expired or invalid" });
+    }
 
-    // 3. Get user
+    // 3. Load the user
     const user = await User.findById(matchedSession.userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user || !user.account) {
+      return res.status(404).json({ error: "User not found or account missing" });
+    }
 
-    // Generate token
-    const newAccessToken = await generateToken({
-      _id: user?._id as string,
-      email: user?.account?.primaryEmail!,
+    // 4. Generate new tokens
+    const newAccessToken = generateToken({
+      _id: user._id as string,
+      email: user.account.primaryEmail ?? "",
       role: user.userType,
     });
 
     const newRefreshToken = generateRefreshToken({
-      _id: user?._id as string,
-      email: user?.account?.primaryEmail!,
+      _id: user._id,
+      email: user.account.primaryEmail ?? "",
       role: user.userType,
     });
 
+    // 5. Rotate refresh token in DB
     matchedSession.refreshToken = await bcrypt.hash(newRefreshToken, 10);
     matchedSession.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     await matchedSession.save();
-    // Set new cookies
-    await res.setHeader("Set-Cookie", [
-      serialize("token", newAccessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 15 * 60,
-        path: "/",
-      }),
-      await serialize("refreshToken", newRefreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60,
-        path: "/",
-      }),
-    ]);
 
-    return res.json({ token: newAccessToken, refreshToken: newRefreshToken });
-  } catch (err) {
+    // 6. Set cookies exactly like loginUser
+    const tokenCookie = serialize("token", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60, // 15 minutes
+      path: "/",
+    });
+
+    const refreshCookie = serialize("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: "/",
+    });
+
+    res.setHeader("Set-Cookie", [tokenCookie, refreshCookie]);
+
+    // 7. Return tokens in response
+    return res.json({
+      token: newAccessToken,
+      refreshToken: newRefreshToken,
+    });
+  } catch (err: any) {
     console.error("Refresh token error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
+
