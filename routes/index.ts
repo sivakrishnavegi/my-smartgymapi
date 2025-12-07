@@ -12,7 +12,7 @@ import googleMeetRoutes from "./googleMeetRoutes";
 import rolesRoutes from "./roleRoutes";
 import schoolRoutes from "./school.routes";
 import sectionRoutes from "./section.routes";
-import socketRoutes from "./socket/onlineUsersRoutes";
+import socketRoutes from "./socket/socketRoutes";
 import superAdminRoutes from "./superadminRoutes";
 import tenantRoutes from "./tenantRoutes";
 import userRoutes from "./user.routes";
