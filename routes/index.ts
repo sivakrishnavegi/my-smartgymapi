@@ -1,5 +1,8 @@
 // routes/index.js
 
+import academicYearRoutes from "./academicYearRoutes";
+import manageStaffRoutes from "./admin/manageStaffRoutes";
+import appConfigRoutes from "./appConfigRoutes";
 import attendanceRoutes from "./attendanceRoutes";
 import authRoutes from "./authRoutes";
 import classesRoutes from "./classRoutes";
@@ -9,12 +12,11 @@ import googleMeetRoutes from "./googleMeetRoutes";
 import rolesRoutes from "./roleRoutes";
 import schoolRoutes from "./school.routes";
 import sectionRoutes from "./section.routes";
+import socketRoutes from "./socket/onlineUsersRoutes";
 import superAdminRoutes from "./superadminRoutes";
 import tenantRoutes from "./tenantRoutes";
 import userRoutes from "./user.routes";
-import appConfigRoutes from "./appConfigRoutes";
-import academicYearRoutes from "./academicYearRoutes";
-import manageStaffRoutes from "./admin/manageStaffRoutes";
+
 const routes = {
   appConfigRoutes,
   attendanceRoutes,
@@ -30,7 +32,8 @@ const routes = {
   googleAuthRoutes,
   googleMeetRoutes,
   superAdminRoutes,
-  manageStaffRoutes
+  manageStaffRoutes,
+  socketRoutes,
 };
 
 export default routes;

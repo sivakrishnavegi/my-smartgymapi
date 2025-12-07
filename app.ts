@@ -26,6 +26,7 @@ const {
   appConfigRoutes,
   academicYearRoutes,
   manageStaffRoutes,
+  socketRoutes,
 } = AppRoutes;
 
 const allowedOrigins: string[] = [
@@ -125,6 +126,7 @@ const routes: { path: string; router: Router; middlewares?: any[] }[] = [
   { path: "/api/admin", router: manageStaffRoutes },
   { path: "/api/app-config", router: appConfigRoutes },
   { path: "/api/academic-years", router: academicYearRoutes },
+  { path: "/api/socket", router: socketRoutes },
 ];
 
 routes.forEach(({ path, router, middlewares }) => {
