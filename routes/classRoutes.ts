@@ -31,17 +31,26 @@ const router = Router();
  *             required:
  *               - tenantId
  *               - schoolId
- *               - name
- *               - code
+ *               - className
  *             properties:
  *               tenantId:
  *                 type: string
  *               schoolId:
  *                 type: string
- *               name:
+ *               className:
  *                 type: string
- *               code:
+ *               classTeacher:
  *                 type: string
+ *                 description: class teacher ID
+ *               description:
+ *                 type: string
+ *               medium:
+ *                 type: string
+ *               shift:
+ *                 type: string
+ *                 enum: [Morning, Evening]
+ *               isActive:
+ *                 type: boolean
  *     responses:
  *       201:
  *         description: Class created successfully

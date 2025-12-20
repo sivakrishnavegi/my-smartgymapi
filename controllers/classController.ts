@@ -1,16 +1,44 @@
 import { Request, Response } from "express";
 import { ClassModel } from "../models/class.model";
-import  SchoolModel  from "../models/schools.schema"; 
+import SchoolModel from "../models/schools.schema";
 import mongoose from "mongoose";
 
 
+const generateUniqueCode = async (): Promise<string> => {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
+  let isUnique = false;
+
+  while (!isUnique) {
+    code = "";
+    for (let i = 0; i < 6; i++) {
+      code += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    const existingClass = await ClassModel.findOne({ code });
+    if (!existingClass) {
+      isUnique = true;
+    }
+  }
+  return code;
+};
+
 export const createClass = async (req: Request, res: Response) => {
   try {
-    const { tenantId, schoolId, name, code } = req.body;
+    const {
+      tenantId,
+      schoolId,
+      className,
+      // section, // TODO: Handle section separately if needed
+      classTeacher,
+      description,
+      medium,
+      shift,
+      isActive
+    } = req.body;
 
     // Check all required fields
-    if (!tenantId || !schoolId || !name || !code) {
-      return res.status(400).json({ message: "All fields are required!" });
+    if (!tenantId || !schoolId || !className) {
+      return res.status(400).json({ message: "tenantId, schoolId, and className are required!" });
     }
 
     // Validate ObjectId
@@ -24,13 +52,21 @@ export const createClass = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "School not found for this tenant!" });
     }
 
-    // Check for duplicate class code within the same school
-    const existingClass = await ClassModel.findOne({ schoolId, code });
-    if (existingClass) {
-      return res.status(409).json({ message: "Class code already exists in this school." });
-    }
+    // Generate unique code
+    const code = await generateUniqueCode();
 
-    const newClass = await ClassModel.create({ tenantId, schoolId, name, code });
+    const newClass = await ClassModel.create({
+      tenantId,
+      schoolId,
+      name: className,
+      code,
+      description,
+      medium,
+      shift,
+      classTeacher: classTeacher || undefined, // Only add if present
+      status: isActive === true ? "Active" : "Inactive"
+    });
+
     return res.status(201).json({ message: "Class created successfully", data: newClass });
   } catch (error) {
     console.error(error);
