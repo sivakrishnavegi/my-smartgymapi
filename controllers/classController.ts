@@ -4,6 +4,7 @@ import SchoolModel from "../models/schools.schema";
 import mongoose from "mongoose";
 import { buildPaginationResponse, getPagination, getQueryParam } from "../utils/pagination";
 import UserModel from '../models/users.schema';
+import { SectionModel } from "../models/section.model";
 
 
 const generateUniqueCode = async (): Promise<string> => {
@@ -196,6 +197,66 @@ export const deleteClass = async (req: Request, res: Response) => {
     return res.status(200).json({ message: "Class deleted successfully" });
   } catch (error) {
     console.error(error);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const assignTeacher = async (req: Request, res: Response) => {
+  try {
+    const { tenantId, schoolId, classId, teacherId, sectionId } = req.body;
+
+    // 1. Basic validation
+    if (!tenantId || !schoolId || !classId || !teacherId) {
+      return res.status(400).json({ message: "tenantId, schoolId, classId, and teacherId are required!" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(classId) || !mongoose.Types.ObjectId.isValid(teacherId)) {
+      return res.status(400).json({ message: "Invalid classId or teacherId!" });
+    }
+
+    if (sectionId && !mongoose.Types.ObjectId.isValid(sectionId)) {
+      return res.status(400).json({ message: "Invalid sectionId!" });
+    }
+
+    // 2. Verify Teacher
+    const teacher = await UserModel.findOne({ _id: teacherId, tenantId, userType: 'teacher' });
+    if (!teacher) {
+      return res.status(404).json({ message: "Teacher not found or is not a teacher for this tenant!" });
+    }
+
+    // 3. Verify Class
+    const classObj = await ClassModel.findOne({ _id: classId, tenantId, schoolId });
+    if (!classObj) {
+      return res.status(404).json({ message: "Class not found for this tenant and school!" });
+    }
+
+    // 4. Verify Section (if provided)
+    if (sectionId) {
+      const sectionExists = classObj.sections?.map(id => id.toString()).includes(sectionId);
+      if (!sectionExists) {
+        return res.status(400).json({ message: "Section does not belong to this class!" });
+      }
+    }
+
+    // 5. Update Assignment
+    classObj.classTeacher = new mongoose.Types.ObjectId(teacherId) as any;
+    await classObj.save();
+
+    if (sectionId) {
+      await SectionModel.findByIdAndUpdate(sectionId, { homeroomTeacherId: teacherId });
+    }
+
+    return res.status(200).json({
+      message: "Teacher assigned successfully",
+      data: {
+        classId,
+        teacherId,
+        sectionId: sectionId || null
+      }
+    });
+
+  } catch (error) {
+    console.error('Assign Teacher Error:', error);
     return res.status(500).json({ message: "Server Error" });
   }
 };

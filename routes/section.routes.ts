@@ -7,6 +7,7 @@ import {
   getSections,
   updateSection,
   getSectionsByClass,
+  updateSectionsByClass,
 } from "../controllers/sectionController";
 import { protect } from "../middlewares/authMiddleware";
 
@@ -308,5 +309,50 @@ router.put("/:id/assign-teacher", assignHomeroomTeacher);
  *         description: Internal server error
  */
 router.get("/class/:classId", getSectionsByClass);
+
+/**
+ * @swagger
+ * /api/sections/class/{classId}:
+ *   put:
+ *     summary: Update sections for a particular class
+ *     tags: [Sections]
+ *     parameters:
+ *       - in: path
+ *         name: classId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Class ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - sections
+ *             properties:
+ *               tenantId:
+ *                 type: string
+ *               schoolId:
+ *                 type: string
+ *               sections:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of Section ObjectIds
+ *     responses:
+ *       200:
+ *         description: Sections updated successfully
+ *       400:
+ *         description: Invalid input or missing fields
+ *       403:
+ *         description: Unauthorized access (tenant/school mismatch)
+ *       404:
+ *         description: Class or Section not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/class/:classId", protect, updateSectionsByClass);
 
 export default router;

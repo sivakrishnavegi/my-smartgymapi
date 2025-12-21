@@ -210,3 +210,57 @@ export const getSectionsByClass = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Server Error" });
   }
 };
+
+// Update sections for a particular class
+export const updateSectionsByClass = async (req: Request, res: Response) => {
+  try {
+    const { classId } = req.params;
+    const { sections, tenantId, schoolId } = req.body;
+
+    // 1. Validation
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+      return res.status(400).json({ message: "Invalid class ID!" });
+    }
+
+    if (!Array.isArray(sections)) {
+      return res.status(400).json({ message: "sections must be an array of IDs!" });
+    }
+
+    // 2. Find Class
+    const classObj = await ClassModel.findById(classId);
+    if (!classObj) {
+      return res.status(404).json({ message: "Class not found!" });
+    }
+
+    // 3. Ownership Validation
+    if (tenantId && classObj.tenantId !== tenantId) {
+      return res.status(403).json({ message: "Unauthorized tenant access for this class!" });
+    }
+    if (schoolId && classObj.schoolId.toString() !== schoolId) {
+      return res.status(403).json({ message: "Unauthorized school access for this class!" });
+    }
+
+    // 4. Verify that all section IDs are valid and exist
+    for (const sectionId of sections) {
+      if (!mongoose.Types.ObjectId.isValid(sectionId)) {
+        return res.status(400).json({ message: `Invalid section ID: ${sectionId}` });
+      }
+      const sectionExists = await SectionModel.exists({ _id: sectionId });
+      if (!sectionExists) {
+        return res.status(404).json({ message: `Section not found: ${sectionId}` });
+      }
+    }
+
+    // 5. Update
+    classObj.sections = sections;
+    await classObj.save();
+
+    return res.status(200).json({
+      message: "Sections updated successfully",
+      data: classObj.sections,
+    });
+  } catch (error) {
+    console.error("Update Sections By Class Error:", error);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};

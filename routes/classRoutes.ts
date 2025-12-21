@@ -5,6 +5,7 @@ import {
   getClassById,
   updateClass,
   deleteClass,
+  assignTeacher,
 } from "../controllers/classController";
 
 const router = Router();
@@ -195,5 +196,44 @@ router.put("/:id", updateClass);
  *         description: Class not found
  */
 router.delete("/:id", deleteClass);
+
+/**
+ * @swagger
+ * /api/classes/assign-teacher:
+ *   post:
+ *     summary: Assign a teacher to a class and optionally a section
+ *     tags: [Classes]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - tenantId
+ *               - schoolId
+ *               - classId
+ *               - teacherId
+ *             properties:
+ *               tenantId:
+ *                 type: string
+ *               schoolId:
+ *                 type: string
+ *               classId:
+ *                 type: string
+ *               teacherId:
+ *                 type: string
+ *               sectionId:
+ *                 type: string
+ *                 description: Optional section ID to assign as homeroom teacher
+ *     responses:
+ *       200:
+ *         description: Teacher assigned successfully
+ *       400:
+ *         description: Bad request or validation error
+ *       404:
+ *         description: Teacher or Class not found
+ */
+router.post("/assign-teacher", assignTeacher);
 
 export default router;
