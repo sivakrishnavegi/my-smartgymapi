@@ -9,7 +9,7 @@ export interface IAdminProfile extends Document {
 }
 
 const AdminProfileSchema = new Schema<IAdminProfile>({
-  userId: { type: Schema.Types.ObjectId, ref: "Users", required: true, unique: true },
+  userId: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: true },
   staffId: { type: String, required: true },
   deptId: { type: Schema.Types.ObjectId, ref: "Department" },
   hireDate: Date,

@@ -35,7 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const TeacherProfileSchema = new mongoose_1.Schema({
-    userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Users", required: true, unique: true },
+    userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
     staffId: { type: String, required: true },
     deptId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Department" },
     hireDate: Date,

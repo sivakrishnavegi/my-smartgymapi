@@ -35,12 +35,12 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const StudentProfileSchema = new mongoose_1.Schema({
-    userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Users", required: true, unique: true },
+    userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
     admissionDate: Date,
     regNo: String,
     classId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Class" },
     sectionId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Section" },
-    guardianId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Users" },
+    guardianId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User" },
     bloodGroup: String,
     emergencyContact: String,
     transportation: {

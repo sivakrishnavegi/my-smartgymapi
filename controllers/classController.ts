@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { ClassModel } from "../models/class.model";
 import SchoolModel from "../models/schools.schema";
 import mongoose from "mongoose";
+import { buildPaginationResponse, getPagination, getQueryParam } from "../utils/pagination";
+import UserModel from '../models/users.schema';
 
 
 const generateUniqueCode = async (): Promise<string> => {
@@ -74,27 +76,50 @@ export const createClass = async (req: Request, res: Response) => {
   }
 };
 
-
 export const getClasses = async (req: Request, res: Response) => {
   try {
-    const { tenantId, schoolId } = req.query;
+    const tenantId = getQueryParam(req, 'tenantId');
+    const schoolId = getQueryParam(req, 'schoolId');
 
     const filter: any = {};
     if (tenantId) filter.tenantId = tenantId;
+
     if (schoolId) {
       if (!mongoose.Types.ObjectId.isValid(String(schoolId))) {
-        return res.status(400).json({ message: "Invalid schoolId!" });
+        return res.status(400).json({ message: 'Invalid schoolId!' });
       }
       filter.schoolId = schoolId;
     }
 
-    const classes = await ClassModel.find(filter).sort({ createdAt: -1 });
-    return res.status(200).json({ data: classes });
+    const { page, limit, skip } = getPagination(req);
+
+    const [classes, totalCount] = await Promise.all([
+      ClassModel.find(filter)
+        .populate({
+          path: 'classTeacher',
+          select: 'account.primaryEmail', // 👈 only fetch email
+        })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(), // 👈 converts to plain JS object (recommended)
+      ClassModel.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Classes fetched successfully",
+      data: classes,
+      pagination: buildPaginationResponse(page, limit, totalCount),
+
+    });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Server Error" });
+    console.error('Get Classes Error:', error);
+    return res.status(500).json({ message: 'Server Error' });
   }
 };
+
+
 
 
 export const getClassById = async (req: Request, res: Response) => {

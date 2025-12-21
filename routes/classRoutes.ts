@@ -76,6 +76,36 @@ router.post("/", createClass);
  *         name: schoolId
  *         schema:
  *           type: string
+ *       - in: query
+ *         name: "params[tenantId]"
+ *         schema:
+ *           type: string
+ *         description: Tenant ID (nested format)
+ *       - in: query
+ *         name: "params[schoolId]"
+ *         schema:
+ *           type: string
+ *         description: School ID (nested format)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page
+ *       - in: query
+ *         name: "params[page]"
+ *         schema:
+ *           type: integer
+ *         description: Page number (nested format)
+ *       - in: query
+ *         name: "params[limit]"
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page (nested format)
  *     responses:
  *       200:
  *         description: List of classes

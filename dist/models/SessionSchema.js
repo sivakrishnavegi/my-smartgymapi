@@ -36,7 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SessionModel = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
 const SessionSchema = new mongoose_1.Schema({
-    userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "Users", required: true },
+    userId: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
     refreshToken: { type: String, required: true },
     userAgent: String,
     ip: String,

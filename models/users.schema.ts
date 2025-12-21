@@ -205,12 +205,13 @@ UserSchema.index(
   { unique: true, sparse: true }
 );
 
-const UserModel = mongoose.model<IUser>("Users", UserSchema);
+const UserModel =
+  mongoose.models.User ||
+  mongoose.model<IUser>('User', UserSchema);
 
-// Sync indexes on startup
+// Sync indexes
 UserModel.syncIndexes().then(() => {
-  console.log("✅ User indexes synced");
+  console.log('✅ User indexes synced');
 });
 
-export default UserModel
-
+export default UserModel;

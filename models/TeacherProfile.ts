@@ -11,7 +11,7 @@ export interface ITeacherProfile extends Document {
 }
 
 const TeacherProfileSchema = new Schema<ITeacherProfile>({
-  userId: { type: Schema.Types.ObjectId, ref: "Users", required: true, unique: true },
+  userId: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: true },
   staffId: { type: String, required: true },
   deptId: { type: Schema.Types.ObjectId, ref: "Department" },
   hireDate: Date,

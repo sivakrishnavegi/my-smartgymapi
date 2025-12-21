@@ -16,12 +16,12 @@ export interface IStudentProfile extends Document {
 }
 
 const StudentProfileSchema = new Schema<IStudentProfile>({
-  userId: { type: Schema.Types.ObjectId, ref: "Users", required: true, unique: true },
+  userId: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: true },
   admissionDate: Date,
   regNo: String,
   classId: { type: Schema.Types.ObjectId, ref: "Class" },
   sectionId: { type: Schema.Types.ObjectId, ref: "Section" },
-  guardianId: { type: Schema.Types.ObjectId, ref: "Users" },
+  guardianId: { type: Schema.Types.ObjectId, ref: "User" },
   bloodGroup: String,
   emergencyContact: String,
   transportation: {
