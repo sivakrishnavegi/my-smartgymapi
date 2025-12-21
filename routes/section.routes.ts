@@ -6,6 +6,7 @@ import {
   getSectionById,
   getSections,
   updateSection,
+  getSectionsByClass,
 } from "../controllers/sectionController";
 import { protect } from "../middlewares/authMiddleware";
 
@@ -130,7 +131,7 @@ router.post("/", protect, createSection);
  *       500:
  *         description: Internal server error
  */
-router.get("/",protect, getSections);
+router.get("/", protect, getSections);
 
 /**
  * @swagger
@@ -188,7 +189,7 @@ router.get("/:id", getSectionById);
  *       404:
  *         description: Section not found
  */
-router.put("/:id",protect, updateSection);
+router.put("/:id", protect, updateSection);
 
 /**
  * @swagger
@@ -209,7 +210,7 @@ router.put("/:id",protect, updateSection);
  *       404:
  *         description: Section not found
  */
-router.delete("/:id",protect, deleteSection);
+router.delete("/:id", protect, deleteSection);
 
 /**
  * @swagger
@@ -272,5 +273,40 @@ router.delete("/:id",protect, deleteSection);
  */
 router.put("/:id/assign-teacher", assignHomeroomTeacher);
 
+/**
+ * @swagger
+ * /api/sections/class/{classId}:
+ *   get:
+ *     summary: Get all sections assigned to a particular class
+ *     tags: [Sections]
+ *     parameters:
+ *       - in: path
+ *         name: classId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Class ID
+ *     responses:
+ *       200:
+ *         description: List of sections for the class
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Section'
+ *       400:
+ *         description: Invalid class ID
+ *       404:
+ *         description: Class not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/class/:classId", getSectionsByClass);
 
 export default router;

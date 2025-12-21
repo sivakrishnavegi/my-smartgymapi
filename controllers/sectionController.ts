@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import SchoolModel from "../models/schools.schema";
 import { SectionModel } from "../models/section.model";
 import UserModel from "../models/users.schema";
+import { ClassModel } from "../models/class.model";
 
 // Create a new section
 export const createSection = async (req: Request, res: Response) => {
@@ -180,5 +181,32 @@ export const assignHomeroomTeacher = async (req: Request, res: Response) => {
     res.status(200).json({ message: "Teacher assigned successfully", section });
   } catch (err) {
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Get sections assigned to a particular class
+export const getSectionsByClass = async (req: Request, res: Response) => {
+  try {
+    const { classId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+      return res.status(400).json({ message: "Invalid class ID!" });
+    }
+
+    const classWithSections = await ClassModel.findById(classId)
+      .populate("sections")
+      .lean();
+
+    if (!classWithSections) {
+      return res.status(404).json({ message: "Class not found!" });
+    }
+
+    return res.status(200).json({
+      message: "Sections fetched successfully",
+      data: classWithSections.sections || [],
+    });
+  } catch (error) {
+    console.error("Get Sections By Class Error:", error);
+    return res.status(500).json({ message: "Server Error" });
   }
 };

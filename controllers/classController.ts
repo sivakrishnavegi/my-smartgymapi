@@ -144,7 +144,7 @@ export const getClassById = async (req: Request, res: Response) => {
 export const updateClass = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, code } = req.body;
+    const { name, code, sections } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid class ID!" });
@@ -155,17 +155,25 @@ export const updateClass = async (req: Request, res: Response) => {
 
     // Check for duplicate code if updating
     if (code && code !== classObj.code) {
-      const existingClass = await ClassModel.findOne({ schoolId: classObj.schoolId, code });
+      const existingClass = await ClassModel.findOne({
+        schoolId: classObj.schoolId,
+        code,
+      });
       if (existingClass) {
-        return res.status(409).json({ message: "Class code already exists in this school." });
+        return res
+          .status(409)
+          .json({ message: "Class code already exists in this school." });
       }
     }
 
     classObj.name = name || classObj.name;
     classObj.code = code || classObj.code;
+    if (sections) classObj.sections = sections;
 
     await classObj.save();
-    return res.status(200).json({ message: "Class updated successfully", data: classObj });
+    return res
+      .status(200)
+      .json({ message: "Class updated successfully", data: classObj });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server Error" });

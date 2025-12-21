@@ -157,6 +157,11 @@ router.get("/:id", getClassById);
  *                 type: string
  *               code:
  *                 type: string
+ *               sections:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of section IDs
  *     responses:
  *       200:
  *         description: Class updated
