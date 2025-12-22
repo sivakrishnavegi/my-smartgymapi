@@ -138,7 +138,8 @@ router.get("/", protect, getSections);
  * @swagger
  * /api/sections/{id}:
  *   get:
- *     summary: Get a single section by ID
+ *     summary: Get complete section information by ID
+ *     description: Retrieve detailed section information including homeroom teacher, students, and school details. Requires tenant and school validation.
  *     tags: [Sections]
  *     parameters:
  *       - in: path
@@ -146,16 +147,207 @@ router.get("/", protect, getSections);
  *         required: true
  *         schema:
  *           type: string
- *         description: Section ID
+ *         description: Section ID (MongoDB ObjectId)
+ *         example: "64fc4d8b8af92b001ea9a3f1"
+ *       - in: query
+ *         name: tenantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Tenant ID for ownership validation
+ *         example: "tenant123"
+ *       - in: query
+ *         name: schoolId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: School ID (MongoDB ObjectId) for ownership validation
+ *         example: "64fc3c8f8af92b001ea9a444"
  *     responses:
  *       200:
- *         description: Section details
+ *         description: Section details with complete information
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Section'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Section fetched successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                       example: "64fc4d8b8af92b001ea9a3f1"
+ *                     tenantId:
+ *                       type: string
+ *                       example: "tenant123"
+ *                     schoolId:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         code:
+ *                           type: string
+ *                         address:
+ *                           type: string
+ *                     sectionName:
+ *                       type: string
+ *                       example: "Section A"
+ *                     sectionCode:
+ *                       type: string
+ *                       example: "D1503"
+ *                     description:
+ *                       type: string
+ *                       example: "Morning shift section"
+ *                     isActive:
+ *                       type: boolean
+ *                       example: true
+ *                     homeroomTeacherId:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                         userType:
+ *                           type: string
+ *                           example: "teacher"
+ *                         profile:
+ *                           type: object
+ *                           properties:
+ *                             firstName:
+ *                               type: string
+ *                               example: "John"
+ *                             lastName:
+ *                               type: string
+ *                               example: "Doe"
+ *                             photoUrl:
+ *                               type: string
+ *                               example: "https://example.com/photo.jpg"
+ *                             contact:
+ *                               type: object
+ *                               properties:
+ *                                 phone:
+ *                                   type: string
+ *                                   example: "+1234567890"
+ *                                 email:
+ *                                   type: string
+ *                                   example: "teacher@example.com"
+ *                         account:
+ *                           type: object
+ *                           properties:
+ *                             primaryEmail:
+ *                               type: string
+ *                               example: "teacher@school.com"
+ *                         employment:
+ *                           type: object
+ *                           properties:
+ *                             staffId:
+ *                               type: string
+ *                             deptId:
+ *                               type: string
+ *                             hireDate:
+ *                               type: string
+ *                               format: date
+ *                     createdBy:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                         profile:
+ *                           type: object
+ *                           properties:
+ *                             firstName:
+ *                               type: string
+ *                             lastName:
+ *                               type: string
+ *                         account:
+ *                           type: object
+ *                           properties:
+ *                             primaryEmail:
+ *                               type: string
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                       example: "2025-08-05T08:30:00Z"
+ *                     students:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                           admissionNo:
+ *                             type: string
+ *                           rollNo:
+ *                             type: string
+ *                           firstName:
+ *                             type: string
+ *                           middleName:
+ *                             type: string
+ *                           lastName:
+ *                             type: string
+ *                           dob:
+ *                             type: string
+ *                             format: date
+ *                           gender:
+ *                             type: string
+ *                             enum: [Male, Female, Other]
+ *                           contact:
+ *                             type: object
+ *                             properties:
+ *                               email:
+ *                                 type: string
+ *                               phone:
+ *                                 type: string
+ *                           status:
+ *                             type: string
+ *                             enum: [Active, Inactive, Transferred, Graduated]
+ *                     studentCount:
+ *                       type: integer
+ *                       example: 25
+ *       400:
+ *         description: Bad request - Invalid ID format or missing required parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "tenantId and schoolId are required!"
+ *       403:
+ *         description: Forbidden - Unauthorized access (tenant/school mismatch)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Unauthorized: Section does not belong to this tenant!"
  *       404:
- *         description: Section not found
+ *         description: Section or school not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Section not found!"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Server Error"
  */
 router.get("/:id", getSectionById);
 

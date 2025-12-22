@@ -4,6 +4,7 @@ import SchoolModel from "../models/schools.schema";
 import { SectionModel } from "../models/section.model";
 import UserModel from "../models/users.schema";
 import { ClassModel } from "../models/class.model";
+import { Student } from "../models/student/student.schema";
 
 // Create a new section
 export const createSection = async (req: Request, res: Response) => {
@@ -78,18 +79,93 @@ export const getSections = async (req: Request, res: Response) => {
 export const getSectionById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const { tenantId, schoolId } = req.query;
 
+    // Validate section ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid section ID!" });
     }
 
-    const section = await SectionModel.findById(id);
-    if (!section)
-      return res.status(404).json({ message: "Section not found!" });
+    // Validate required query parameters
+    if (!tenantId || !schoolId) {
+      return res.status(400).json({
+        message: "tenantId and schoolId are required!"
+      });
+    }
 
-    return res.status(200).json({ data: section });
+    // Validate schoolId format
+    if (!mongoose.Types.ObjectId.isValid(schoolId as string)) {
+      return res.status(400).json({ message: "Invalid schoolId format!" });
+    }
+
+    // Check if school exists
+    const schoolExists = await SchoolModel.findById(schoolId);
+    if (!schoolExists) {
+      return res.status(404).json({ message: "School not found!" });
+    }
+
+    // Verify school belongs to tenant
+    if (schoolExists.tenantId !== tenantId) {
+      return res.status(403).json({
+        message: "Unauthorized: School does not belong to this tenant!"
+      });
+    }
+
+    // Find section and populate related data
+    const section = await SectionModel.findById(id)
+      .populate({
+        path: "homeroomTeacherId",
+        select: "userType profile.firstName profile.lastName profile.photoUrl profile.contact account.primaryEmail employment",
+      })
+      .populate({
+        path: "schoolId",
+        select: "name code address",
+      })
+      .populate({
+        path: "createdBy",
+        select: "profile.firstName profile.lastName account.primaryEmail",
+      })
+      .lean();
+
+    if (!section) {
+      return res.status(404).json({ message: "Section not found!" });
+    }
+
+    // Verify section belongs to the specified tenant and school
+    if (section.tenantId !== tenantId) {
+      return res.status(403).json({
+        message: "Unauthorized: Section does not belong to this tenant!"
+      });
+    }
+
+    if (section.schoolId._id.toString() !== schoolId) {
+      return res.status(403).json({
+        message: "Unauthorized: Section does not belong to this school!"
+      });
+    }
+
+    // Get all students in this section
+    const students = await Student.find({
+      sectionId: id,
+      status: "Active"
+    })
+      .select("admissionNo rollNo firstName middleName lastName dob gender contact.email contact.phone status")
+      .sort({ rollNo: 1 })
+      .lean();
+
+    // Construct complete section response
+    const sectionResponse = {
+      ...section,
+      students: students,
+      studentCount: students.length,
+    };
+
+    return res.status(200).json({
+      message: "Section fetched successfully",
+      data: sectionResponse
+    });
   } catch (error) {
-    console.error(error);
+    console.error("Get Section By ID Error:", error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
