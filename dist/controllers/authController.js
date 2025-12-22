@@ -13,11 +13,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.logout = exports.signup = exports.login = void 0;
-const users_schema_1 = __importDefault(require("../models/users.schema"));
-const genarateToken_1 = require("../utils/genarateToken");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const cookie_1 = require("cookie");
 const SessionSchema_1 = require("../models/SessionSchema");
+const users_schema_1 = __importDefault(require("../models/users.schema"));
+const genarateToken_1 = require("../utils/genarateToken");
 const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c;
     const { email, password } = req.body;
@@ -41,8 +41,8 @@ const login = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         res.setHeader("Set-Cookie", (0, cookie_1.serialize)("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-            maxAge: 60 * 60 * 24, // 1 day
+            sameSite: "none", // cross-site cookies
+            maxAge: 60 * 60 * 24,
             path: "/",
         }));
         // Respond with user data (no token in body)
@@ -112,7 +112,7 @@ const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 sameSite: "strict",
                 path: "/", // must match the cookie path
             });
-            console.log(`Cleared cookie: ${cookieName}`);
+            console.log(`Cleared cookie>>: ${cookieName}`);
         });
         // res.setHeader("Set-Cookie", [
         //   serialize("token", "", { maxAge: 0, path: "/" }),

@@ -256,7 +256,11 @@ const options = {
         },
         security: [{ bearerAuth: [] }],
     },
-    apis: ["./routes/*.ts"],
+    apis: [
+        "./routes/**/*.ts", // all TS files inside routes and subfolders
+        "./src/routes/**/*.ts", // if your project has src folder
+        "./src/**/*.ts", // safest option
+    ],
 };
 const swaggerSpec = (0, swagger_jsdoc_1.default)(options);
 exports.default = swaggerSpec;

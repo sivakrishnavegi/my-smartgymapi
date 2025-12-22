@@ -143,9 +143,10 @@ UserSchema.pre("save", function (next) {
 });
 // Ensure correct index
 UserSchema.index({ "account.primaryEmail": 1 }, { unique: true, sparse: true });
-const UserModel = mongoose_1.default.model("User", UserSchema);
-// Sync indexes on startup
+const UserModel = mongoose_1.default.models.User ||
+    mongoose_1.default.model('User', UserSchema);
+// Sync indexes
 UserModel.syncIndexes().then(() => {
-    console.log("✅ User indexes synced");
+    console.log('✅ User indexes synced');
 });
 exports.default = UserModel;

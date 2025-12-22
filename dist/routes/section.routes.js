@@ -258,4 +258,83 @@ router.delete("/:id", authMiddleware_1.protect, sectionController_1.deleteSectio
  *                   type: string
  */
 router.put("/:id/assign-teacher", sectionController_1.assignHomeroomTeacher);
+/**
+ * @swagger
+ * /api/sections/class/{classId}:
+ *   get:
+ *     summary: Get all sections assigned to a particular class
+ *     tags: [Sections]
+ *     parameters:
+ *       - in: path
+ *         name: classId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Class ID
+ *     responses:
+ *       200:
+ *         description: List of sections for the class
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Section'
+ *       400:
+ *         description: Invalid class ID
+ *       404:
+ *         description: Class not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/class/:classId", sectionController_1.getSectionsByClass);
+/**
+ * @swagger
+ * /api/sections/class/{classId}:
+ *   put:
+ *     summary: Update sections for a particular class
+ *     tags: [Sections]
+ *     parameters:
+ *       - in: path
+ *         name: classId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Class ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - sections
+ *             properties:
+ *               tenantId:
+ *                 type: string
+ *               schoolId:
+ *                 type: string
+ *               sections:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of Section ObjectIds
+ *     responses:
+ *       200:
+ *         description: Sections updated successfully
+ *       400:
+ *         description: Invalid input or missing fields
+ *       403:
+ *         description: Unauthorized access (tenant/school mismatch)
+ *       404:
+ *         description: Class or Section not found
+ *       500:
+ *         description: Internal server error
+ */
+router.put("/class/:classId", authMiddleware_1.protect, sectionController_1.updateSectionsByClass);
 exports.default = router;

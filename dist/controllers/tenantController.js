@@ -14,9 +14,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateSubscription = exports.revokeApiKey = exports.verifyApiKey = exports.issueApiKey = exports.deleteTenant = exports.updateTenant = exports.getTenantByDomainId = exports.getTenantById = exports.listTenants = exports.createTenant = void 0;
 const crypto_1 = __importDefault(require("crypto"));
+const keys_1 = require("../helpers/keys");
 const schools_schema_1 = __importDefault(require("../models/schools.schema"));
 const tenant_schema_1 = __importDefault(require("../models/tenant.schema"));
-const keys_1 = require("../helpers/keys");
 const createTenant = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, domain, plan, subscription } = req.body;
@@ -34,7 +34,10 @@ const createTenant = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             subscription,
         });
         yield tenant.save();
-        res.status(201).json(tenant);
+        res.status(201).json({
+            message: "Tenant created successfully",
+            tenant,
+        });
     }
     catch (err) {
         res.status(400).json({ error: err.message });
@@ -45,7 +48,11 @@ exports.createTenant = createTenant;
 const listTenants = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const tenants = yield tenant_schema_1.default.find({}, { apiKeys: 0 }).lean();
-        res.json(tenants);
+        res.status(200).json({
+            success: true,
+            message: "Tenants fetched successfully",
+            tenants,
+        });
     }
     catch (err) {
         res.status(500).json({ error: err.message });
@@ -160,7 +167,9 @@ const verifyApiKey = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     try {
         const { apiKey, tenantId } = req.body;
         if (!apiKey || !tenantId) {
-            return res.status(400).json({ error: "apiKey and tenantId are required in body" });
+            return res
+                .status(400)
+                .json({ error: "apiKey and tenantId are required in body" });
         }
         const parsed = (0, keys_1.parseApiKey)(apiKey);
         if (!parsed) {
@@ -217,7 +226,7 @@ const revokeApiKey = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.revokeApiKey = revokeApiKey;
-// 📅 Update subscription plan
+// Update subscription plan
 const updateSubscription = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { startDate, endDate, status, maxUsers, maxStudents, plan } = req.body;

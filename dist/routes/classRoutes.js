@@ -24,17 +24,26 @@ const router = (0, express_1.Router)();
  *             required:
  *               - tenantId
  *               - schoolId
- *               - name
- *               - code
+ *               - className
  *             properties:
  *               tenantId:
  *                 type: string
  *               schoolId:
  *                 type: string
- *               name:
+ *               className:
  *                 type: string
- *               code:
+ *               classTeacher:
  *                 type: string
+ *                 description: class teacher ID
+ *               description:
+ *                 type: string
+ *               medium:
+ *                 type: string
+ *               shift:
+ *                 type: string
+ *                 enum: [Morning, Evening]
+ *               isActive:
+ *                 type: boolean
  *     responses:
  *       201:
  *         description: Class created successfully
@@ -59,6 +68,36 @@ router.post("/", classController_1.createClass);
  *         name: schoolId
  *         schema:
  *           type: string
+ *       - in: query
+ *         name: "params[tenantId]"
+ *         schema:
+ *           type: string
+ *         description: Tenant ID (nested format)
+ *       - in: query
+ *         name: "params[schoolId]"
+ *         schema:
+ *           type: string
+ *         description: School ID (nested format)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page
+ *       - in: query
+ *         name: "params[page]"
+ *         schema:
+ *           type: integer
+ *         description: Page number (nested format)
+ *       - in: query
+ *         name: "params[limit]"
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page (nested format)
  *     responses:
  *       200:
  *         description: List of classes
@@ -108,6 +147,11 @@ router.get("/:id", classController_1.getClassById);
  *                 type: string
  *               code:
  *                 type: string
+ *               sections:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of section IDs
  *     responses:
  *       200:
  *         description: Class updated
@@ -140,4 +184,42 @@ router.put("/:id", classController_1.updateClass);
  *         description: Class not found
  */
 router.delete("/:id", classController_1.deleteClass);
+/**
+ * @swagger
+ * /api/classes/assign-teacher:
+ *   post:
+ *     summary: Assign a teacher to a class and optionally a section
+ *     tags: [Classes]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - tenantId
+ *               - schoolId
+ *               - classId
+ *               - teacherId
+ *             properties:
+ *               tenantId:
+ *                 type: string
+ *               schoolId:
+ *                 type: string
+ *               classId:
+ *                 type: string
+ *               teacherId:
+ *                 type: string
+ *               sectionId:
+ *                 type: string
+ *                 description: Optional section ID to assign as homeroom teacher
+ *     responses:
+ *       200:
+ *         description: Teacher assigned successfully
+ *       400:
+ *         description: Bad request or validation error
+ *       404:
+ *         description: Teacher or Class not found
+ */
+router.post("/assign-teacher", classController_1.assignTeacher);
 exports.default = router;
