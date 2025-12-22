@@ -340,3 +340,128 @@ export const updateSectionsByClass = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Server Error" });
   }
 };
+
+// Get students by section with pagination and search
+export const getStudentsBySection = async (req: Request, res: Response) => {
+  try {
+    const { sectionId } = req.params;
+    const { tenantId, schoolId, classId, page = "1", limit = "10", search } = req.query;
+
+    // 1. Validation
+    if (!mongoose.Types.ObjectId.isValid(sectionId)) {
+      return res.status(400).json({ message: "Invalid section ID!" });
+    }
+
+    if (!tenantId || !schoolId || !classId) {
+      return res.status(400).json({
+        message: "tenantId, schoolId, and classId are required!",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(schoolId as string)) {
+      return res.status(400).json({ message: "Invalid schoolId format!" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(classId as string)) {
+      return res.status(400).json({ message: "Invalid classId format!" });
+    }
+
+    // 2. Verify school exists and belongs to tenant
+    const schoolExists = await SchoolModel.findById(schoolId);
+    if (!schoolExists) {
+      return res.status(404).json({ message: "School not found!" });
+    }
+
+    if (schoolExists.tenantId !== tenantId) {
+      return res.status(403).json({
+        message: "Unauthorized: School does not belong to this tenant!",
+      });
+    }
+
+    // 3. Verify class exists and belongs to school
+    const classExists = await ClassModel.findById(classId);
+    if (!classExists) {
+      return res.status(404).json({ message: "Class not found!" });
+    }
+
+    if (classExists.schoolId.toString() !== schoolId) {
+      return res.status(403).json({
+        message: "Unauthorized: Class does not belong to this school!",
+      });
+    }
+
+    // 4. Verify section exists and belongs to tenant/school/class
+    const section = await SectionModel.findById(sectionId);
+    if (!section) {
+      return res.status(404).json({ message: "Section not found!" });
+    }
+
+    if (section.tenantId !== tenantId) {
+      return res.status(403).json({
+        message: "Unauthorized: Section does not belong to this tenant!",
+      });
+    }
+
+    if (section.schoolId.toString() !== schoolId) {
+      return res.status(403).json({
+        message: "Unauthorized: Section does not belong to this school!",
+      });
+    }
+
+    // 5. Build query for students
+    const query: any = {
+      sectionId: sectionId,
+      classId: classId,
+      schoolId: schoolId,
+      tenantId: tenantId,
+      status: "Active",
+    };
+
+    // Add search filter if provided
+    if (search && typeof search === "string") {
+      query.$or = [
+        { firstName: { $regex: search, $options: "i" } },
+        { lastName: { $regex: search, $options: "i" } },
+        { admissionNo: { $regex: search, $options: "i" } },
+        { rollNo: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // 6. Pagination
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // 7. Fetch students with pagination
+    const [students, totalRecords] = await Promise.all([
+      Student.find(query)
+        .select(
+          "admissionNo rollNo firstName middleName lastName dob gender contact guardians status academic documents"
+        )
+        .sort({ rollNo: 1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      Student.countDocuments(query),
+    ]);
+
+    // 8. Calculate pagination metadata
+    const totalPages = Math.ceil(totalRecords / limitNum);
+
+    return res.status(200).json({
+      message: "Students fetched successfully",
+      data: {
+        students,
+        pagination: {
+          currentPage: pageNum,
+          totalPages,
+          totalRecords,
+          limit: limitNum,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get Students By Section Error:", error);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};

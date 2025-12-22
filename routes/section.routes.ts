@@ -8,6 +8,7 @@ import {
   updateSection,
   getSectionsByClass,
   updateSectionsByClass,
+  getStudentsBySection,
 } from "../controllers/sectionController";
 import { protect } from "../middlewares/authMiddleware";
 
@@ -546,5 +547,230 @@ router.get("/class/:classId", getSectionsByClass);
  *         description: Internal server error
  */
 router.put("/class/:classId", protect, updateSectionsByClass);
+
+/**
+ * @swagger
+ * /api/sections/{sectionId}/students:
+ *   get:
+ *     summary: Get all students in a specific section
+ *     description: Retrieve a paginated list of students belonging to a specific section with optional search functionality. Requires tenant, school, and class validation.
+ *     tags: [Sections]
+ *     parameters:
+ *       - in: path
+ *         name: sectionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Section ID (MongoDB ObjectId)
+ *         example: "64fc4d8b8af92b001ea9a3f1"
+ *       - in: query
+ *         name: tenantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Tenant ID for ownership validation
+ *         example: "tenant123"
+ *       - in: query
+ *         name: schoolId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: School ID (MongoDB ObjectId) for ownership validation
+ *         example: "64fc3c8f8af92b001ea9a444"
+ *       - in: query
+ *         name: classId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Class ID (MongoDB ObjectId) for ownership validation
+ *         example: "64fc3c8f8af92b001ea9a555"
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of records per page
+ *         example: 10
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term to filter students by name, admission number, or roll number
+ *         example: "John"
+ *     responses:
+ *       200:
+ *         description: Students fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Students fetched successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     students:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           _id:
+ *                             type: string
+ *                             example: "64fc5d8b8af92b001ea9a666"
+ *                           admissionNo:
+ *                             type: string
+ *                             example: "ADM2024001"
+ *                           rollNo:
+ *                             type: string
+ *                             example: "1"
+ *                           firstName:
+ *                             type: string
+ *                             example: "John"
+ *                           middleName:
+ *                             type: string
+ *                             example: "Michael"
+ *                           lastName:
+ *                             type: string
+ *                             example: "Doe"
+ *                           dob:
+ *                             type: string
+ *                             format: date
+ *                             example: "2010-05-15"
+ *                           gender:
+ *                             type: string
+ *                             enum: [Male, Female, Other]
+ *                             example: "Male"
+ *                           contact:
+ *                             type: object
+ *                             properties:
+ *                               phone:
+ *                                 type: string
+ *                                 example: "+1234567890"
+ *                               email:
+ *                                 type: string
+ *                                 example: "john.doe@example.com"
+ *                               address:
+ *                                 type: object
+ *                                 properties:
+ *                                   line1:
+ *                                     type: string
+ *                                   line2:
+ *                                     type: string
+ *                                   city:
+ *                                     type: string
+ *                                   state:
+ *                                     type: string
+ *                                   pincode:
+ *                                     type: string
+ *                                   country:
+ *                                     type: string
+ *                           guardians:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 name:
+ *                                   type: string
+ *                                 relation:
+ *                                   type: string
+ *                                   enum: [Father, Mother, Guardian]
+ *                                 phone:
+ *                                   type: string
+ *                                 email:
+ *                                   type: string
+ *                                 occupation:
+ *                                   type: string
+ *                                 address:
+ *                                   type: string
+ *                           status:
+ *                             type: string
+ *                             enum: [Active, Inactive, Transferred, Graduated]
+ *                             example: "Active"
+ *                           academic:
+ *                             type: object
+ *                             properties:
+ *                               currentClass:
+ *                                 type: string
+ *                               currentSection:
+ *                                 type: string
+ *                               history:
+ *                                 type: array
+ *                                 items:
+ *                                   type: object
+ *                           documents:
+ *                             type: object
+ *                             properties:
+ *                               photo:
+ *                                 type: string
+ *                               birthCertificate:
+ *                                 type: string
+ *                               idProof:
+ *                                 type: string
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         currentPage:
+ *                           type: integer
+ *                           example: 1
+ *                         totalPages:
+ *                           type: integer
+ *                           example: 3
+ *                         totalRecords:
+ *                           type: integer
+ *                           example: 25
+ *                         limit:
+ *                           type: integer
+ *                           example: 10
+ *       400:
+ *         description: Bad request - Invalid ID format or missing required parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "tenantId, schoolId, and classId are required!"
+ *       403:
+ *         description: Forbidden - Unauthorized access (tenant/school/class mismatch)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Unauthorized: Section does not belong to this tenant!"
+ *       404:
+ *         description: Section, class, or school not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Section not found!"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Server Error"
+ */
+router.get("/:sectionId/students", protect, getStudentsBySection);
 
 export default router;
