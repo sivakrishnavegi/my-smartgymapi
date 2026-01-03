@@ -14,7 +14,7 @@ const guardianSchema = new Schema(
 
 const studentSchema = new Schema(
   {
-    tenantId: { type: Types.ObjectId, ref: "Tenant", required: true },
+    tenantId: { type: String, required: true },
     schoolId: { type: Types.ObjectId, ref: "School", required: true },
     classId: { type: Types.ObjectId, ref: "Class", required: true },
     sectionId: { type: Types.ObjectId, ref: "Section", required: true },

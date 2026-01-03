@@ -390,6 +390,17 @@ export const getStudentsBySection = async (req: Request, res: Response) => {
       });
     }
 
+    // Check if section belongs to class
+    const isSectionInClass = (classExists.sections || []).some(
+      (sec: any) => sec.toString() === sectionId
+    );
+
+    if (!isSectionInClass) {
+      return res.status(400).json({
+        message: "Section does not belong to the specified class!",
+      });
+    }
+
     // 4. Verify section exists and belongs to tenant/school/class
     const section = await SectionModel.findById(sectionId);
     if (!section) {
@@ -462,6 +473,227 @@ export const getStudentsBySection = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Get Students By Section Error:", error);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// Add a student to a section
+export const addStudentToSection = async (req: Request, res: Response) => {
+  try {
+    const { sectionId } = req.params;
+    const {
+      tenantId,
+      schoolId,
+      classId,
+      admissionNo,
+      rollNo,
+      firstName,
+      middleName,
+      lastName,
+      dob,
+      gender,
+      contact,
+      guardians,
+      documents,
+      status,
+      admissionDate,
+    } = req.body;
+
+    // 1. Validation
+    if (!tenantId || !schoolId || !classId || !sectionId) {
+      return res.status(400).json({
+        message: "tenantId, schoolId, classId, and sectionId are required!",
+      });
+    }
+
+    if (
+      !mongoose.Types.ObjectId.isValid(schoolId) ||
+      !mongoose.Types.ObjectId.isValid(classId) ||
+      !mongoose.Types.ObjectId.isValid(sectionId)
+    ) {
+      return res.status(400).json({ message: "Invalid ID format!" });
+    }
+
+    // 2. Verify School
+    const schoolExists = await SchoolModel.findOne({
+      _id: schoolId,
+      tenantId,
+    });
+    if (!schoolExists) {
+      return res.status(404).json({
+        message: "School not found or does not belong to the tenant!",
+      });
+    }
+
+    // 3. Verify Class
+    const classExists = await ClassModel.findOne({
+      _id: classId,
+      schoolId,
+    });
+    if (!classExists) {
+      return res.status(404).json({
+        message: "Class not found or does not belong to the school!",
+      });
+    }
+
+    // 4. Verify Section
+    const sectionExists = await SectionModel.findOne({
+      _id: sectionId,
+      schoolId: schoolId,
+      tenantId: tenantId,
+    });
+
+    if (!sectionExists) {
+      return res.status(404).json({
+        message: "Section not found or mismatch with filters!",
+      });
+    }
+
+    // Helper: Check if section is actually in the class's section list
+    const isSectionLinked = (classExists.sections || []).some(
+      (sec: any) => sec.toString() === sectionId
+    );
+    if (!isSectionLinked) {
+      return res.status(400).json({
+        message: "Section does not belong to the specified class!",
+      });
+    }
+
+    // 5. Check Duplicate Admission Number
+    const existingStudent = await Student.findOne({
+      admissionNo,
+      tenantId,
+      schoolId,
+    });
+    if (existingStudent) {
+      return res.status(409).json({
+        message: `Student with admission number ${admissionNo} already exists in this school!`,
+      });
+    }
+
+    // 6. Create Student
+    const newStudent = await Student.create({
+      tenantId,
+      schoolId,
+      classId,
+      sectionId,
+      admissionNo,
+      rollNo,
+      firstName,
+      middleName,
+      lastName,
+      dob,
+      gender,
+      contact,
+      guardians,
+      documents,
+      admissionDate: admissionDate || new Date(),
+      status: status || "Active",
+      academic: {
+        currentClass: classId,
+        currentSection: sectionId,
+        history: [
+          {
+            classId,
+            sectionId,
+            session: classExists.academicSession,
+          },
+        ],
+      },
+      createdBy: req?.user?.id,
+    });
+
+    return res.status(201).json({
+      message: "Student added successfully",
+      data: newStudent,
+    });
+  } catch (error) {
+    console.error("Add Student To Section Error:", error);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// Get a specific student details
+export const getStudent = async (req: Request, res: Response) => {
+  try {
+    const { sectionId, studentId } = req.params;
+    const { tenantId, schoolId, classId } = req.query;
+
+    // 1. Validation
+    if (!studentId || !sectionId || !tenantId || !schoolId || !classId) {
+      return res.status(400).json({
+        message: "studentId, sectionId, tenantId, schoolId, and classId are required!",
+      });
+    }
+
+    if (
+      !mongoose.Types.ObjectId.isValid(studentId) ||
+      !mongoose.Types.ObjectId.isValid(sectionId) ||
+      !mongoose.Types.ObjectId.isValid(schoolId as string) ||
+      !mongoose.Types.ObjectId.isValid(classId as string)
+    ) {
+      return res.status(400).json({ message: "Invalid ID format!" });
+    }
+
+    // 2. Verify School
+    const schoolExists = await SchoolModel.findOne({
+      _id: schoolId,
+      tenantId,
+    });
+    if (!schoolExists) {
+      return res.status(404).json({
+        message: "School not found or does not belong to the tenant!",
+      });
+    }
+
+    // 3. Verify Class
+    const classExists = await ClassModel.findOne({
+      _id: classId,
+      schoolId,
+    });
+    if (!classExists) {
+      return res.status(404).json({
+        message: "Class not found or does not belong to the school!",
+      });
+    }
+
+    // 4. Verify Section
+    const sectionExists = await SectionModel.findOne({
+      _id: sectionId,
+      schoolId: schoolId,
+      tenantId: tenantId,
+    });
+
+    if (!sectionExists) {
+      return res.status(404).json({
+        message: "Section not found or mismatch with filters!",
+      });
+    }
+
+    // 5. Fetch Student and Validate
+    const student = await Student.findOne({
+      _id: studentId,
+      tenantId,
+      schoolId,
+      classId,
+      sectionId,
+    })
+      .populate("academic.currentClass", "name code")
+      .populate("academic.currentSection", "sectionName sectionCode")
+      .lean();
+
+    if (!student) {
+      return res.status(404).json({
+        message: "Student not found or does not belong to the specified details!",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Student fetched successfully",
+      data: student,
+    });
+  } catch (error) {
+    console.error("Get Student Error:", error);
     return res.status(500).json({ message: "Server Error" });
   }
 };

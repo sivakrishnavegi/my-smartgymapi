@@ -9,6 +9,8 @@ import {
   getSectionsByClass,
   updateSectionsByClass,
   getStudentsBySection,
+  addStudentToSection,
+  getStudent,
 } from "../controllers/sectionController";
 import { protect } from "../middlewares/authMiddleware";
 
@@ -553,7 +555,7 @@ router.put("/class/:classId", protect, updateSectionsByClass);
  * /api/sections/{sectionId}/students:
  *   get:
  *     summary: Get all students in a specific section
- *     description: Retrieve a paginated list of students belonging to a specific section with optional search functionality. Requires tenant, school, and class validation.
+ *     description: Retrieve a paginated list of active students belonging to a specific section with optional search functionality. Requires tenant, school, and class validation.
  *     tags: [Sections]
  *     parameters:
  *       - in: path
@@ -731,7 +733,7 @@ router.put("/class/:classId", protect, updateSectionsByClass);
  *                           type: integer
  *                           example: 10
  *       400:
- *         description: Bad request - Invalid ID format or missing required parameters
+ *         description: Bad request - Invalid ID format, missing required parameters, or section mismatch
  *         content:
  *           application/json:
  *             schema:
@@ -739,7 +741,7 @@ router.put("/class/:classId", protect, updateSectionsByClass);
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "tenantId, schoolId, and classId are required!"
+ *                   example: "Section does not belong to the specified class!"
  *       403:
  *         description: Forbidden - Unauthorized access (tenant/school/class mismatch)
  *         content:
@@ -772,5 +774,184 @@ router.put("/class/:classId", protect, updateSectionsByClass);
  *                   example: "Server Error"
  */
 router.get("/:sectionId/students", protect, getStudentsBySection);
+
+/**
+ * @swagger
+ * /api/sections/{sectionId}/students:
+ *   post:
+ *     summary: Add a student to a section
+ *     description: Create a new student and assign them to a specific section. Requires tenant, school, class, and section validation.
+ *     tags: [Sections]
+ *     parameters:
+ *       - in: path
+ *         name: sectionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Section ID (MongoDB ObjectId)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - tenantId
+ *               - schoolId
+ *               - classId
+ *               - firstName
+ *               - dob
+ *               - gender
+ *               - admissionNo
+ *             properties:
+ *               tenantId:
+ *                 type: string
+ *                 description: Tenant ID (UUID)
+ *               schoolId:
+ *                 type: string
+ *                 description: School ID (ObjectId)
+ *               classId:
+ *                 type: string
+ *                 description: Class ID (ObjectId)
+ *               admissionNo:
+ *                 type: string
+ *               rollNo:
+ *                 type: string
+ *               firstName:
+ *                 type: string
+ *               middleName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               dob:
+ *                 type: string
+ *                 format: date
+ *               gender:
+ *                 type: string
+ *                 enum: [Male, Female, Other]
+ *               contact:
+ *                 type: object
+ *                 properties:
+ *                   phone:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                   address:
+ *                     type: object
+ *                     properties:
+ *                       line1: { type: string }
+ *                       line2: { type: string }
+ *                       city: { type: string }
+ *                       state: { type: string }
+ *                       pincode: { type: string }
+ *                       country: { type: string }
+ *               guardians:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     name: { type: string }
+ *                     relation: { type: string, enum: [Father, Mother, Guardian] }
+ *                     phone: { type: string }
+ *                     email: { type: string }
+ *                     occupation: { type: string }
+ *                     address: { type: string }
+ *               documents:
+ *                 type: object
+ *                 properties:
+ *                   photo: { type: string }
+ *                   birthCertificate: { type: string }
+ *                   idProof: { type: string }
+ *               status:
+ *                 type: string
+ *                 enum: [Active, Inactive, Transferred, Graduated]
+ *                 default: Active
+ *               admissionDate:
+ *                 type: string
+ *                 format: date
+ *                 default: Current Date
+ *     responses:
+ *       201:
+ *         description: Student added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Student added successfully"
+ *                 data:
+ *                   $ref: '#/components/schemas/Student'
+ *       400:
+ *         description: Bad request - Missing fields or invalid IDs
+ *       404:
+ *         description: School, Class, or Section not found
+ *       409:
+ *         description: Student with admission number already exists
+ *       500:
+ *         description: Internal server error
+ */
+router.post("/:sectionId/students", protect, addStudentToSection);
+
+/**
+ * @swagger
+ * /api/sections/{sectionId}/students/{studentId}:
+ *   get:
+ *     summary: Get details of a specific student
+ *     description: Retrieve detailed information about a specific student. Requires tenant, school, class, and section validation.
+ *     tags: [Sections]
+ *     parameters:
+ *       - in: path
+ *         name: sectionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Section ID (MongoDB ObjectId)
+ *       - in: path
+ *         name: studentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Student ID (MongoDB ObjectId)
+ *       - in: query
+ *         name: tenantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Tenant ID (UUID)
+ *       - in: query
+ *         name: schoolId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: School ID (ObjectId)
+ *       - in: query
+ *         name: classId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Class ID (ObjectId)
+ *     responses:
+ *       200:
+ *         description: Student fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Student fetched successfully"
+ *                 data:
+ *                   $ref: '#/components/schemas/Student'
+ *       400:
+ *         description: Bad request - Missing fields or invalid IDs
+ *       404:
+ *         description: Student, School, Class, or Section not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/:sectionId/students/:studentId", protect, getStudent);
 
 export default router;
