@@ -85,22 +85,31 @@ export const getStudentAttendance = async (req: Request, res: Response) => {
     } = req.query;
 
     // 1. Basic Validation
-    if (!studentId || !tenantId || !schoolId || !classId) {
+    const errors: string[] = [];
+    if (!studentId) errors.push('studentId is required.');
+    if (!tenantId) errors.push('tenantId is required.');
+    if (!schoolId) errors.push('schoolId is required.');
+    if (!classId) errors.push('classId is required.');
+
+    if (errors.length > 0) {
+      console.error('[GET STUDENT ATTENDANCE VALIDATION ERROR]', errors);
       return res.status(400).json({
         success: false,
-        message: 'studentId, tenantId, schoolId, and classId are required.',
+        message: errors.join(' '),
       });
     }
 
-    if (
-      !mongoose.Types.ObjectId.isValid(studentId) ||
-      !mongoose.Types.ObjectId.isValid(schoolId as string) ||
-      !mongoose.Types.ObjectId.isValid(classId as string)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid ID format.',
-      });
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      console.error(`[GET STUDENT ATTENDANCE INVALID ID] studentId: ${studentId}`);
+      return res.status(400).json({ success: false, message: 'Invalid studentId format.' });
+    }
+    if (!mongoose.Types.ObjectId.isValid(schoolId as string)) {
+      console.error(`[GET STUDENT ATTENDANCE INVALID ID] schoolId: ${schoolId}`);
+      return res.status(400).json({ success: false, message: 'Invalid schoolId format.' });
+    }
+    if (!mongoose.Types.ObjectId.isValid(classId as string)) {
+      console.error(`[GET STUDENT ATTENDANCE INVALID ID] classId: ${classId}`);
+      return res.status(400).json({ success: false, message: 'Invalid classId format.' });
     }
 
     // 2. Build Query
