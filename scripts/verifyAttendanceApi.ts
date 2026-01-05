@@ -1,6 +1,11 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import { getStudentAttendance, markBulkAttendance, getSectionAttendance } from '../controllers/attendenceController';
+import {
+    getStudentAttendance,
+    markBulkAttendance,
+    getSectionAttendance,
+    updateBulkAttendance
+} from '../controllers/attendenceController';
 import { Attendance as StudentAttendanceModel } from '../models/student/attendence.schema';
 import '../models/student/student.schema'; // Ensure Student model is registered
 import '../models/section.model'; // Ensure Section model is registered
@@ -29,6 +34,10 @@ const runVerification = async () => {
         const mockClassId = new mongoose.Types.ObjectId();
         const mockSectionId = new mongoose.Types.ObjectId();
         const mockTenantId = '03254a3f-8c89-4a32-ae74-75e68f8062f1';
+
+        // Cleanup before start
+        await StudentAttendanceModel.deleteMany({ tenantId: mockTenantId });
+        console.log('Previous mock records cleaned');
 
         const attendanceRecords: any[] = [
             {
@@ -164,7 +173,107 @@ const runVerification = async () => {
             console.log('❌ Bulk marking request failed:', resData);
         }
 
-        // 6. Test Section Attendance Retrieval
+        // 6. Test Enhanced Student Attendance Retrieval (Filters & Pagination)
+        console.log('Testing Enhanced Student Attendance Retrieval...');
+
+        // 6a. Page 1, Limit 1
+        const mockReqPage1 = {
+            params: { studentId: mockStudentId.toString() },
+            query: {
+                tenantId: mockTenantId.toString(),
+                schoolId: mockSchoolId.toString(),
+                classId: mockClassId.toString(),
+                page: '1',
+                limit: '1'
+            }
+        } as any;
+        await getStudentAttendance(mockReqPage1, mockRes);
+        if (resStatus === 200 && resData.pagination.totalRecords >= 3 && resData.data.length === 1) {
+            console.log('✅ Pagination verified (Page 1, Limit 1)');
+        } else {
+            console.log('❌ Pagination failed (Page 1):', { status: resStatus, total: resData?.pagination?.totalRecords, dataLen: resData?.data?.length });
+        }
+
+        // 6b. Status filter
+        const mockReqStatus = {
+            params: { studentId: mockStudentId.toString() },
+            query: {
+                tenantId: mockTenantId.toString(),
+                schoolId: mockSchoolId.toString(),
+                classId: mockClassId.toString(),
+                status: 'Absent'
+            }
+        } as any;
+        await getStudentAttendance(mockReqStatus, mockRes);
+        if (resStatus === 200 && resData.count === 1 && resData.data[0].status === 'Absent') {
+            console.log('✅ Status filter verified');
+        } else {
+            console.log('❌ Status filter failed:', { status: resStatus, count: resData?.count, dataStatus: resData?.data?.[0]?.status });
+        }
+
+        // 6c. Specific date filter
+        const mockReqDate = {
+            params: { studentId: mockStudentId.toString() },
+            query: {
+                tenantId: mockTenantId.toString(),
+                schoolId: mockSchoolId.toString(),
+                classId: mockClassId.toString(),
+                date: '2025-01-01'
+            }
+        } as any;
+        await getStudentAttendance(mockReqDate, mockRes);
+        if (resStatus === 200 && resData.count === 1) {
+            console.log('✅ Specific date filter verified');
+        } else {
+            console.log('❌ Specific date filter failed:', { status: resStatus, count: resData?.count });
+        }
+
+        // 7. Test Bulk Update (PUT)
+        const updateUserId = new mongoose.Types.ObjectId();
+        const bulkUpdateReq = {
+            body: {
+                tenantId: mockTenantId.toString(),
+                schoolId: mockSchoolId.toString(),
+                classId: mockClassId.toString(),
+                sectionId: mockSectionId.toString(),
+                date: '2026-01-05', // Same date as bulk mark
+                session: '2025-26',
+                attendanceData: [
+                    { studentId: mockStudentId.toString(), status: 'Absent', remarks: 'Updated to absent' }
+                ]
+            },
+            user: { id: updateUserId.toString(), role: 'admin' }
+        } as any;
+
+        console.log('Testing Bulk Update (PUT)...');
+        await updateBulkAttendance(bulkUpdateReq, mockRes);
+
+        if (resStatus === 200 && resData.success) {
+            const updatedRecord = await StudentAttendanceModel.findOne({
+                studentId: mockStudentId,
+                date: new Date('2026-01-05'),
+                tenantId: mockTenantId
+            });
+            if (updatedRecord && updatedRecord.status === 'Absent' && updatedRecord.remarks === 'Updated to absent') {
+                console.log('✅ Bulk update verified in DB');
+                if (updatedRecord.updatedBy?.user?.toString() === updateUserId.toString()) {
+                    console.log('✅ updatedBy verified');
+                    if (updatedRecord.markedBy?.role === 'admin') {
+                        console.log('✅ original markedBy preserved');
+                    } else {
+                        console.log('❌ markedBy changed unexpectedly');
+                    }
+                } else {
+                    console.log('❌ updatedBy verification failed:', updatedRecord.updatedBy);
+                }
+            } else {
+                console.log('❌ Bulk update data verification failed');
+            }
+        } else {
+            console.log('❌ Bulk update request failed:', resData);
+        }
+
+        // 8. Test Section Attendance Retrieval
         const sectionReq = {
             params: { sectionId: mockSectionId.toString() },
             query: {

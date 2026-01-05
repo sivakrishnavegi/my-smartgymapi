@@ -1,6 +1,6 @@
 // routes/attendanceRoutes.ts
 import express from 'express';
-import { checkIn, getStudentAttendance, markBulkAttendance, getSectionAttendance } from '../controllers/attendenceController';
+import { checkIn, getStudentAttendance, markBulkAttendance, getSectionAttendance, updateBulkAttendance } from '../controllers/attendenceController';
 import { protect } from '../middlewares/authMiddleware';
 
 const router = express.Router();
@@ -91,15 +91,39 @@ router.post('/checkin', protect, checkIn);
  *           format: date
  *         description: End date (YYYY-MM-DD)
  *       - in: query
+ *         name: date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Specific date (YYYY-MM-DD)
+ *       - in: query
  *         name: session
  *         schema:
  *           type: string
  *         description: session (e.g. 2025-26)
  *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [Present, Absent, Late, Excuse]
+ *         description: Filter by attendance status
+ *       - in: query
  *         name: expand
  *         schema:
  *           type: string
  *         description: Comma-separated list of fields to expand (studentId, classId, sectionId, schoolId, markedBy)
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of records per page
  *     responses:
  *       200:
  *         description: Successfully fetched attendance records
@@ -116,6 +140,17 @@ router.post('/checkin', protect, checkIn);
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/StudentAttendance'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     totalRecords:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                     currentPage:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
  *                 count:
  *                   type: integer
  *       400:
@@ -192,6 +227,72 @@ router.get('/student/:studentId', protect, getStudentAttendance);
  *         description: Internal Server Error
  */
 router.post('/mark-bulk', protect, markBulkAttendance);
+
+/**
+ * @swagger
+ * /api/attendance/mark-bulk:
+ *   put:
+ *     summary: Update attendance for all students in a specific section
+ *     description: Bulk updates attendance records for students. Logs updatedBy based on the current user. Requires JWT token.
+ *     tags:
+ *       - Attendance
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - tenantId
+ *               - schoolId
+ *               - classId
+ *               - sectionId
+ *               - date
+ *               - session
+ *               - attendanceData
+ *             properties:
+ *               tenantId:
+ *                 type: string
+ *               schoolId:
+ *                 type: string
+ *               classId:
+ *                 type: string
+ *               sectionId:
+ *                 type: string
+ *               date:
+ *                 type: string
+ *                 format: date
+ *               session:
+ *                 type: string
+ *                 example: "2025-26"
+ *               attendanceData:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - studentId
+ *                     - status
+ *                   properties:
+ *                     studentId:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                       enum: [Present, Absent, Late, Excuse]
+ *                     remarks:
+ *                       type: string
+ *     responses:
+ *       200:
+ *         description: Attendance updated successfully
+ *       400:
+ *         description: Invalid request data
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal Server Error
+ */
+router.put('/mark-bulk', protect, updateBulkAttendance);
 
 /**
  * @swagger

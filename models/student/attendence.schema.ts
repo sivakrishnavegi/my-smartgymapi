@@ -20,6 +20,11 @@ const studentAttendanceSchema = new Schema(
       role: { type: String },
       at: { type: Date, default: Date.now },
     },
+    updatedBy: {
+      user: { type: Types.ObjectId, ref: "User" },
+      role: { type: String },
+      at: { type: Date },
+    },
     remarks: { type: String },
 
     session: { type: String }, // academic year, e.g. "2025-26"

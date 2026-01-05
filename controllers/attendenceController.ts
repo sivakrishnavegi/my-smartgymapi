@@ -76,8 +76,12 @@ export const getStudentAttendance = async (req: Request, res: Response) => {
       year,
       startDate,
       endDate,
+      date,
       session,
+      status,
       expand,
+      page = '1',
+      limit = '10',
     } = req.query;
 
     // 1. Basic Validation
@@ -111,8 +115,18 @@ export const getStudentAttendance = async (req: Request, res: Response) => {
       query.session = session;
     }
 
+    if (status) {
+      query.status = status;
+    }
+
     // 3. Date Filtering logic
-    if (startDate && endDate) {
+    if (date) {
+      const attendanceDate = new Date(date as string);
+      if (isNaN(attendanceDate.getTime())) {
+        return res.status(400).json({ success: false, message: 'Invalid date format.' });
+      }
+      query.date = attendanceDate;
+    } else if (startDate && endDate) {
       query.date = {
         $gte: new Date(startDate as string),
         $lte: new Date(endDate as string),
@@ -131,7 +145,12 @@ export const getStudentAttendance = async (req: Request, res: Response) => {
       }
     }
 
-    // 4. Expansion Logic
+    // 4. Pagination
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // 5. Expansion Logic
     let attendanceQuery = StudentAttendanceModel.find(query).sort({ date: 1 });
 
     if (expand && typeof expand === 'string') {
@@ -153,13 +172,25 @@ export const getStudentAttendance = async (req: Request, res: Response) => {
       }
     }
 
-    const attendanceRecords = await attendanceQuery.lean();
+    // 6. Fetch Data
+    const [attendanceRecords, totalRecords] = await Promise.all([
+      attendanceQuery.skip(skip).limit(limitNum).lean(),
+      StudentAttendanceModel.countDocuments(query),
+    ]);
+
+    const totalPages = Math.ceil(totalRecords / limitNum);
 
     return res.status(200).json({
       success: true,
       message: 'Student attendance records fetched successfully.',
       data: attendanceRecords,
-      count: attendanceRecords.length,
+      pagination: {
+        totalRecords,
+        totalPages,
+        currentPage: pageNum,
+        limit: limitNum,
+      },
+      count: attendanceRecords.length, // Keeping count for backward compatibility if needed
     });
   } catch (error) {
     console.error('[GET STUDENT ATTENDANCE ERROR]', error);
@@ -358,6 +389,104 @@ export const getSectionAttendance = async (req: Request, res: Response) => {
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error',
+    });
+  }
+};
+
+/**
+ * Update attendance for all students in a specific section
+ * Supports bulk upsert and logs updatedBy details
+ */
+export const updateBulkAttendance = async (req: Request, res: Response) => {
+  try {
+    const {
+      tenantId,
+      schoolId,
+      classId,
+      sectionId,
+      date,
+      session,
+      attendanceData, // Array of { studentId, status, remarks }
+    } = req.body;
+
+    const currentUserId = (req as any).user?.id;
+    const currentUserRole = (req as any).user?.role;
+
+    // 1. Validation
+    if (!tenantId || !schoolId || !classId || !sectionId || !date || !attendanceData) {
+      return res.status(400).json({
+        success: false,
+        message: 'tenantId, schoolId, classId, sectionId, date, and attendanceData are required.',
+      });
+    }
+
+    if (!Array.isArray(attendanceData) || attendanceData.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'attendanceData must be a non-empty array.',
+      });
+    }
+
+    const attendanceDate = new Date(date);
+    if (isNaN(attendanceDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format.',
+      });
+    }
+
+    // 2. Prepare Bulk Operations
+    const bulkOps = attendanceData.map((record: any) => {
+      const { studentId, status, remarks } = record;
+
+      if (!mongoose.Types.ObjectId.isValid(studentId)) {
+        throw new Error(`Invalid studentId: ${studentId}`);
+      }
+
+      const logInfo = (currentUserId && mongoose.Types.ObjectId.isValid(currentUserId)) ? {
+        user: new mongoose.Types.ObjectId(currentUserId as string),
+        role: currentUserRole || 'unknown',
+        at: new Date()
+      } : undefined;
+
+      return {
+        updateOne: {
+          filter: {
+            studentId: new mongoose.Types.ObjectId(studentId),
+            date: attendanceDate,
+          },
+          update: {
+            $set: {
+              tenantId,
+              schoolId: new mongoose.Types.ObjectId(schoolId as string),
+              classId: new mongoose.Types.ObjectId(classId as string),
+              sectionId: new mongoose.Types.ObjectId(sectionId as string),
+              status,
+              remarks: remarks || '',
+              session,
+              updatedBy: logInfo,
+            },
+            $setOnInsert: {
+              markedBy: logInfo,
+            }
+          },
+          upsert: true,
+        },
+      };
+    });
+
+    // 3. Execute Bulk Write
+    await StudentAttendanceModel.bulkWrite(bulkOps);
+
+    return res.status(200).json({
+      success: true,
+      message: `Bulk attendance updated successfully for ${attendanceData.length} students.`,
+    });
+  } catch (error: any) {
+    console.error('[UPDATE BULK ATTENDANCE ERROR]', error);
+    return res.status(error.message.startsWith('Invalid studentId') ? 400 : 500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
     });
   }
 };
