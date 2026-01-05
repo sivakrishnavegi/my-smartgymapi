@@ -91,10 +91,10 @@ router.post('/checkin', protect, checkIn);
  *           format: date
  *         description: End date (YYYY-MM-DD)
  *       - in: query
- *         name: academicYear
+ *         name: session
  *         schema:
  *           type: string
- *         description: academicYear (e.g. 2025-26)
+ *         description: session (e.g. 2025-26)
  *       - in: query
  *         name: expand
  *         schema:
@@ -149,8 +149,8 @@ router.get('/student/:studentId', protect, getStudentAttendance);
  *               - classId
  *               - sectionId
  *               - date
- *               - academicYear
- *               - records
+ *               - session
+ *               - attendanceData
  *             properties:
  *               tenantId:
  *                 type: string
@@ -163,10 +163,10 @@ router.get('/student/:studentId', protect, getStudentAttendance);
  *               date:
  *                 type: string
  *                 format: date
- *               academicYear:
+ *               session:
  *                 type: string
  *                 example: "2025-26"
- *               records:
+ *               attendanceData:
  *                 type: array
  *                 items:
  *                   type: object
@@ -236,10 +236,10 @@ router.post('/mark-bulk', protect, markBulkAttendance);
  *           format: date
  *         description: Attendance date (YYYY-MM-DD)
  *       - in: query
- *         name: academicYear
+ *         name: session
  *         schema:
  *           type: string
- *         description: Academic academicYear (e.g., 2025-26)
+ *         description: Academic session (e.g., 2025-26)
  *       - in: query
  *         name: status
  *         schema:

@@ -76,7 +76,7 @@ export const getStudentAttendance = async (req: Request, res: Response) => {
       year,
       startDate,
       endDate,
-      academicYear,
+      session,
       expand,
     } = req.query;
 
@@ -102,13 +102,13 @@ export const getStudentAttendance = async (req: Request, res: Response) => {
     // 2. Build Query
     const query: any = {
       studentId: new mongoose.Types.ObjectId(studentId),
-      tenantId: tenantId, // Assuming tenantId can be string or ObjectId in storage but filtered as provided
+      tenantId: tenantId,
       schoolId: new mongoose.Types.ObjectId(schoolId as string),
       classId: new mongoose.Types.ObjectId(classId as string),
     };
 
-    if (academicYear) {
-      query.academicYear = academicYear;
+    if (session) {
+      query.session = session;
     }
 
     // 3. Date Filtering logic
@@ -182,25 +182,25 @@ export const markBulkAttendance = async (req: Request, res: Response) => {
       classId,
       sectionId,
       date,
-      academicYear,
-      records, // Array of { studentId, status, remarks }
+      session,
+      attendanceData, // Array of { studentId, status, remarks }
     } = req.body;
 
     const markedById = (req as any).user?.id;
     const markedByRole = (req as any).user?.role;
 
     // 1. Validation
-    if (!tenantId || !schoolId || !classId || !sectionId || !date || !records) {
+    if (!tenantId || !schoolId || !classId || !sectionId || !date || !attendanceData) {
       return res.status(400).json({
         success: false,
-        message: 'tenantId, schoolId, classId, sectionId, date, and records are required.',
+        message: 'tenantId, schoolId, classId, sectionId, date, and attendanceData are required.',
       });
     }
 
-    if (!Array.isArray(records) || records.length === 0) {
+    if (!Array.isArray(attendanceData) || attendanceData.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'records must be a non-empty array.',
+        message: 'attendanceData must be a non-empty array.',
       });
     }
 
@@ -213,7 +213,7 @@ export const markBulkAttendance = async (req: Request, res: Response) => {
     }
 
     // 2. Prepare Bulk Operations
-    const bulkOps = records.map((record: any) => {
+    const bulkOps = attendanceData.map((record: any) => {
       const { studentId, status, remarks } = record;
 
       if (!mongoose.Types.ObjectId.isValid(studentId)) {
@@ -228,7 +228,7 @@ export const markBulkAttendance = async (req: Request, res: Response) => {
           },
           update: {
             $set: {
-              tenantId: mongoose.Types.ObjectId.isValid(tenantId) ? new mongoose.Types.ObjectId(tenantId as string) : tenantId,
+              tenantId,
               schoolId: new mongoose.Types.ObjectId(schoolId as string),
               classId: new mongoose.Types.ObjectId(classId as string),
               sectionId: new mongoose.Types.ObjectId(sectionId as string),
@@ -239,7 +239,7 @@ export const markBulkAttendance = async (req: Request, res: Response) => {
                 role: markedByRole || 'unknown',
                 at: new Date()
               } : undefined,
-              academicYear, // e.g. "2025-26"
+              session, // e.g. "2025-26"
             },
           },
           upsert: true,
@@ -252,7 +252,7 @@ export const markBulkAttendance = async (req: Request, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      message: `Attendance marked successfully for ${records.length} students.`,
+      message: `Attendance marked successfully for ${attendanceData.length} students.`,
     });
   } catch (error: any) {
     console.error('[MARK BULK ATTENDANCE ERROR]', error);
@@ -274,7 +274,7 @@ export const getSectionAttendance = async (req: Request, res: Response) => {
       schoolId,
       classId,
       date,
-      academicYear,
+      session,
       status,
       page = '1',
       limit = '10',
@@ -310,16 +310,14 @@ export const getSectionAttendance = async (req: Request, res: Response) => {
     // 2. Build Query
     const query: any = {
       sectionId: new mongoose.Types.ObjectId(sectionId),
-      tenantId: mongoose.Types.ObjectId.isValid(tenantId as string)
-        ? new mongoose.Types.ObjectId(tenantId as string)
-        : tenantId,
+      tenantId: tenantId,
       schoolId: new mongoose.Types.ObjectId(schoolId as string),
       classId: new mongoose.Types.ObjectId(classId as string),
       date: attendanceDate,
     };
 
-    if (academicYear) {
-      query.academicYear = academicYear;
+    if (session) {
+      query.session = session;
     }
 
     if (status) {

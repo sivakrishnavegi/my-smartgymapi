@@ -28,7 +28,7 @@ const runVerification = async () => {
         const mockSchoolId = new mongoose.Types.ObjectId();
         const mockClassId = new mongoose.Types.ObjectId();
         const mockSectionId = new mongoose.Types.ObjectId();
-        const mockTenantId = new mongoose.Types.ObjectId();
+        const mockTenantId = '03254a3f-8c89-4a32-ae74-75e68f8062f1';
 
         const attendanceRecords: any[] = [
             {
@@ -39,7 +39,7 @@ const runVerification = async () => {
                 tenantId: mockTenantId,
                 date: new Date('2025-01-01'),
                 status: 'Present',
-                academicYear: '2024-25',
+                session: '2024-25',
                 markedBy: { user: new mongoose.Types.ObjectId(), role: 'teacher', at: new Date() }
             },
             {
@@ -50,7 +50,7 @@ const runVerification = async () => {
                 tenantId: mockTenantId,
                 date: new Date('2025-01-02'),
                 status: 'Absent',
-                academicYear: '2024-25',
+                session: '2024-25',
                 markedBy: { user: new mongoose.Types.ObjectId(), role: 'teacher', at: new Date() }
             },
             {
@@ -61,7 +61,7 @@ const runVerification = async () => {
                 tenantId: mockTenantId,
                 date: new Date('2025-02-01'),
                 status: 'Present',
-                academicYear: '2024-25',
+                session: '2024-25',
                 markedBy: { user: new mongoose.Types.ObjectId(), role: 'teacher', at: new Date() }
             }
         ];
@@ -98,7 +98,6 @@ const runVerification = async () => {
         console.log('Testing Month Filter (January 2025)...');
         await getStudentAttendance(mockReqMonth, mockRes);
 
-        // Note: Retrievals might fail until session -> academicYear is fixed in controller
         if (resStatus === 200 && resData.success && resData.count === 2) {
             console.log('✅ Month filter verified: Found 2 records for January');
         } else {
@@ -126,7 +125,7 @@ const runVerification = async () => {
             console.log('❌ Duration filter failed:', { resStatus, count: resData?.count, message: resData?.message });
         }
 
-        // 5. Test Bulk Marking (New Payload)
+        // 5. Test Bulk Marking (Reverted Payload)
         const bulkMarkReq = {
             body: {
                 tenantId: mockTenantId.toString(),
@@ -134,8 +133,8 @@ const runVerification = async () => {
                 classId: mockClassId.toString(),
                 sectionId: mockSectionId.toString(),
                 date: '2026-01-05',
-                academicYear: '2025-26',
-                records: [
+                session: '2025-26',
+                attendanceData: [
                     { studentId: mockStudentId.toString(), status: 'Present', remarks: '' },
                     { studentId: mockStudentId2.toString(), status: 'Absent', remarks: 'Medical leave' }
                 ]
@@ -143,7 +142,7 @@ const runVerification = async () => {
             user: { id: new mongoose.Types.ObjectId().toString(), role: 'admin' }
         } as any;
 
-        console.log('Testing Bulk Marking (New Payload)...');
+        console.log('Testing Bulk Marking (Reverted Payload)...');
         await markBulkAttendance(bulkMarkReq, mockRes);
 
         if (resStatus === 200 && resData.success) {
@@ -153,10 +152,10 @@ const runVerification = async () => {
             });
             if (savedRecords.length === 2) {
                 console.log('✅ Bulk marking verified: 2 records saved');
-                if (savedRecords[0].markedBy?.role === 'admin' && savedRecords[0].academicYear === '2025-26') {
-                    console.log('✅ Role and academicYear verified in DB');
+                if (savedRecords[0].markedBy?.role === 'admin' && savedRecords[0].session === '2025-26') {
+                    console.log('✅ Role and session verified in DB');
                 } else {
-                    console.log('❌ DB fields verification failed:', { role: savedRecords[0].markedBy?.role, year: savedRecords[0].academicYear });
+                    console.log('❌ DB fields verification failed:', { role: savedRecords[0].markedBy?.role, session: savedRecords[0].session });
                 }
             } else {
                 console.log('❌ Bulk marking verification failed: Found', savedRecords.length, 'records');

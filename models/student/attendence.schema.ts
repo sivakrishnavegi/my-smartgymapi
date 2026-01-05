@@ -2,7 +2,7 @@ import { Schema, model, Types } from "mongoose";
 
 const studentAttendanceSchema = new Schema(
   {
-    tenantId: { type: Types.ObjectId, ref: "Tenant", required: true },
+    tenantId: { type: String, required: true },
     schoolId: { type: Types.ObjectId, ref: "School", required: true },
     classId: { type: Types.ObjectId, ref: "Class", required: true },
     sectionId: { type: Types.ObjectId, ref: "Section", required: true },
@@ -22,7 +22,7 @@ const studentAttendanceSchema = new Schema(
     },
     remarks: { type: String },
 
-    academicYear: { type: String }, // academic year, e.g. "2025-26"
+    session: { type: String }, // academic year, e.g. "2025-26"
   },
   { timestamps: true }
 );
