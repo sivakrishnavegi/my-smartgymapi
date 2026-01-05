@@ -12,6 +12,7 @@ import '../models/section.model'; // Ensure Section model is registered
 import '../models/class.model'; // Ensure Class model is registered
 import '../models/schools.schema'; // Ensure School model is registered
 import '../models/users.schema'; // Ensure User model is registered
+import '../models/errorLog.schema'; // Ensure ErrorLog model is registered
 
 dotenv.config();
 
@@ -295,8 +296,36 @@ const runVerification = async () => {
             console.log('❌ Section attendance failed:', { resStatus, total: resData?.pagination?.totalRecords, message: resData?.message });
         }
 
+
+        // 9. Test Error Logging
+        console.log('Testing Error Logging...');
+        // Trigger a validation error (missing tenantId)
+        const errorReq = {
+            params: { studentId: mockStudentId.toString() },
+            query: {
+                // tenantId missing
+                schoolId: mockSchoolId.toString(),
+                classId: mockClassId.toString(),
+            }
+        } as any;
+
+        await getStudentAttendance(errorReq, mockRes);
+
+        // Check if error was logged
+        const errorLog = await mongoose.model('ErrorLog').findOne({
+            message: 'Validation Error: tenantId is required.',
+            userId: errorReq.user?.id
+        }).sort({ createdAt: -1 });
+
+        if (errorLog && errorLog.metadata && errorLog.metadata.query) {
+            console.log('✅ Error logging verified: Validation error logged to DB');
+        } else {
+            console.log('❌ Error logging failed: No log found or incorrect details', errorLog);
+        }
+
         // 7. Cleanup
         await StudentAttendanceModel.deleteMany({ tenantId: mockTenantId });
+        await mongoose.model('ErrorLog').deleteMany({}); // Clean up logs
         console.log('Cleanup complete');
 
         await mongoose.disconnect();

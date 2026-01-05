@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import AttendanceModel from '../models/attendence.user';
 import { Attendance as StudentAttendanceModel } from '../models/student/attendence.schema';
+import { logError } from '../utils/errorLogger';
 import mongoose from 'mongoose';
 
 export const checkIn = async (req: Request, res: Response) => {
@@ -28,7 +29,7 @@ export const checkIn = async (req: Request, res: Response) => {
           success: false,
           message: 'Already checked in today. Awaiting approval.',
           data: existingCheckIn,
-          qrCodeData: `check-in:${existingCheckIn._id}:${userId}`,
+          qrCodeData: `check -in:${existingCheckIn._id}:${userId} `,
         });
       } else {
         return res.status(409).json({
@@ -50,7 +51,7 @@ export const checkIn = async (req: Request, res: Response) => {
       success: true,
       message: 'Check-in recorded. Awaiting staff approval.',
       data: attendance,
-      qrCodeData: `check-in:${attendance._id}:${userId}`,
+      qrCodeData: `check -in:${attendance._id}:${userId} `,
     });
   } catch (error) {
     console.error('[CHECK-IN ERROR]', error);
@@ -93,6 +94,8 @@ export const getStudentAttendance = async (req: Request, res: Response) => {
 
     if (errors.length > 0) {
       console.error('[GET STUDENT ATTENDANCE VALIDATION ERROR]', errors);
+      const errorMsg = 'Validation Error: ' + errors.join(', ');
+      await logError(req, { message: errorMsg });
       return res.status(400).json({
         success: false,
         message: errors.join(' '),
@@ -100,15 +103,18 @@ export const getStudentAttendance = async (req: Request, res: Response) => {
     }
 
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
-      console.error(`[GET STUDENT ATTENDANCE INVALID ID] studentId: ${studentId}`);
+      const msg = `Invalid studentId format: ${studentId}`;
+      console.error(`[GET STUDENT ATTENDANCE INVALID ID] ${msg}`);
+      await logError(req, { message: msg });
       return res.status(400).json({ success: false, message: 'Invalid studentId format.' });
     }
+    // ... similar for other IDs if needed, but keeping it concise for now or adding them all
     if (!mongoose.Types.ObjectId.isValid(schoolId as string)) {
-      console.error(`[GET STUDENT ATTENDANCE INVALID ID] schoolId: ${schoolId}`);
+      console.error(`[GET STUDENT ATTENDANCE INVALID ID]schoolId: ${schoolId} `);
       return res.status(400).json({ success: false, message: 'Invalid schoolId format.' });
     }
     if (!mongoose.Types.ObjectId.isValid(classId as string)) {
-      console.error(`[GET STUDENT ATTENDANCE INVALID ID] classId: ${classId}`);
+      console.error(`[GET STUDENT ATTENDANCE INVALID ID]classId: ${classId} `);
       return res.status(400).json({ success: false, message: 'Invalid classId format.' });
     }
 
@@ -201,8 +207,9 @@ export const getStudentAttendance = async (req: Request, res: Response) => {
       },
       count: attendanceRecords.length, // Keeping count for backward compatibility if needed
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[GET STUDENT ATTENDANCE ERROR]', error);
+    await logError(req, error);
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error',
@@ -257,7 +264,7 @@ export const markBulkAttendance = async (req: Request, res: Response) => {
       const { studentId, status, remarks } = record;
 
       if (!mongoose.Types.ObjectId.isValid(studentId)) {
-        throw new Error(`Invalid studentId: ${studentId}`);
+        throw new Error(`Invalid studentId: ${studentId} `);
       }
 
       return {
@@ -296,6 +303,7 @@ export const markBulkAttendance = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('[MARK BULK ATTENDANCE ERROR]', error);
+    await logError(req, error);
     return res.status(error.message.startsWith('Invalid studentId') ? 400 : 500).json({
       success: false,
       message: error.message || 'Internal Server Error',
@@ -393,8 +401,9 @@ export const getSectionAttendance = async (req: Request, res: Response) => {
         limit: limitNum,
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[GET SECTION ATTENDANCE ERROR]', error);
+    await logError(req, error);
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error',
@@ -449,7 +458,7 @@ export const updateBulkAttendance = async (req: Request, res: Response) => {
       const { studentId, status, remarks } = record;
 
       if (!mongoose.Types.ObjectId.isValid(studentId)) {
-        throw new Error(`Invalid studentId: ${studentId}`);
+        throw new Error(`Invalid studentId: ${studentId} `);
       }
 
       const logInfo = (currentUserId && mongoose.Types.ObjectId.isValid(currentUserId)) ? {
@@ -493,6 +502,7 @@ export const updateBulkAttendance = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('[UPDATE BULK ATTENDANCE ERROR]', error);
+    await logError(req, error);
     return res.status(error.message.startsWith('Invalid studentId') ? 400 : 500).json({
       success: false,
       message: error.message || 'Internal Server Error',
