@@ -112,7 +112,6 @@ const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
                 sameSite: "strict",
                 path: "/", // must match the cookie path
             });
-            console.log(`Cleared cookie>>: ${cookieName}`);
         });
         // res.setHeader("Set-Cookie", [
         //   serialize("token", "", { maxAge: 0, path: "/" }),

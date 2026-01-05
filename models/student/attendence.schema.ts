@@ -11,14 +11,18 @@ const studentAttendanceSchema = new Schema(
     date: { type: Date, required: true }, // e.g., 2025-08-25
     status: {
       type: String,
-      enum: ["Present", "Absent", "Leave", "Late", "Half-Day"],
+      enum: ["Present", "Absent", "Late", "Excuse"],
       default: "Present",
     },
 
-    markedBy: { type: Types.ObjectId, ref: "User" }, // Teacher/Admin
+    markedBy: {
+      user: { type: Types.ObjectId, ref: "User" },
+      role: { type: String },
+      at: { type: Date, default: Date.now },
+    },
     remarks: { type: String },
 
-    session: { type: String }, // academic year, e.g. "2025-26"
+    academicYear: { type: String }, // academic year, e.g. "2025-26"
   },
   { timestamps: true }
 );

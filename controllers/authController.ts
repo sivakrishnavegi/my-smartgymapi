@@ -111,7 +111,6 @@ export const logout = async (req: Request, res: Response) => {
         sameSite: "strict",
         path: "/", // must match the cookie path
       });
-      console.log(`Cleared cookie>>: ${cookieName}`);
     });
 
     // res.setHeader("Set-Cookie", [

@@ -616,8 +616,6 @@ export const addStudentToSection = async (req: Request, res: Response) => {
 // Get a specific student details
 export const getStudent = async (req: Request, res: Response) => {
   try {
-    console.log('PARAMS:', req.params);
-    console.log('QUERY:', req.query);
 
     const sectionId = req.params.sectionId as string;
     const studentId = req.params.studentId as string;

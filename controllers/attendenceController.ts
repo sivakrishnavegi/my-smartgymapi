@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
-import Attendance from '../models/attendence.user';
+import AttendanceModel from '../models/attendence.user';
+import { Attendance as StudentAttendanceModel } from '../models/student/attendence.schema';
 import mongoose from 'mongoose';
 
 export const checkIn = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
+    const userId = (req as any).user?.id;
 
     if (!userId) {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
@@ -16,7 +17,7 @@ export const checkIn = async (req: Request, res: Response) => {
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);
 
-    const existingCheckIn = await Attendance.findOne({
+    const existingCheckIn = await AttendanceModel.findOne({
       userId: new mongoose.Types.ObjectId(userId),
       date: { $gte: todayStart, $lte: todayEnd },
     });
@@ -38,7 +39,7 @@ export const checkIn = async (req: Request, res: Response) => {
       }
     }
 
-    const attendance = await Attendance.create({
+    const attendance = await AttendanceModel.create({
       userId,
       date: new Date(),
       checkInTime: new Date(),
@@ -53,6 +54,309 @@ export const checkIn = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('[CHECK-IN ERROR]', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+/**
+ * Get specific student attendance based on duration or month
+ * Expandable academic year class id tenant id school id
+ */
+export const getStudentAttendance = async (req: Request, res: Response) => {
+  try {
+    const { studentId } = req.params;
+    const {
+      tenantId,
+      schoolId,
+      classId,
+      month,
+      year,
+      startDate,
+      endDate,
+      academicYear,
+      expand,
+    } = req.query;
+
+    // 1. Basic Validation
+    if (!studentId || !tenantId || !schoolId || !classId) {
+      return res.status(400).json({
+        success: false,
+        message: 'studentId, tenantId, schoolId, and classId are required.',
+      });
+    }
+
+    if (
+      !mongoose.Types.ObjectId.isValid(studentId) ||
+      !mongoose.Types.ObjectId.isValid(schoolId as string) ||
+      !mongoose.Types.ObjectId.isValid(classId as string)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid ID format.',
+      });
+    }
+
+    // 2. Build Query
+    const query: any = {
+      studentId: new mongoose.Types.ObjectId(studentId),
+      tenantId: tenantId, // Assuming tenantId can be string or ObjectId in storage but filtered as provided
+      schoolId: new mongoose.Types.ObjectId(schoolId as string),
+      classId: new mongoose.Types.ObjectId(classId as string),
+    };
+
+    if (academicYear) {
+      query.academicYear = academicYear;
+    }
+
+    // 3. Date Filtering logic
+    if (startDate && endDate) {
+      query.date = {
+        $gte: new Date(startDate as string),
+        $lte: new Date(endDate as string),
+      };
+    } else if (month && year) {
+      const monthInt = parseInt(month as string, 10);
+      const yearInt = parseInt(year as string, 10);
+
+      if (!isNaN(monthInt) && !isNaN(yearInt)) {
+        const startOfMonth = new Date(yearInt, monthInt - 1, 1);
+        const endOfMonth = new Date(yearInt, monthInt, 0, 23, 59, 59, 999);
+        query.date = {
+          $gte: startOfMonth,
+          $lte: endOfMonth,
+        };
+      }
+    }
+
+    // 4. Expansion Logic
+    let attendanceQuery = StudentAttendanceModel.find(query).sort({ date: 1 });
+
+    if (expand && typeof expand === 'string') {
+      const expandFields = expand.split(',');
+      if (expandFields.includes('studentId')) {
+        attendanceQuery = attendanceQuery.populate('studentId', 'firstName lastName admissionNo rollNo');
+      }
+      if (expandFields.includes('classId')) {
+        attendanceQuery = attendanceQuery.populate('classId', 'className classCode');
+      }
+      if (expandFields.includes('sectionId')) {
+        attendanceQuery = attendanceQuery.populate('sectionId', 'sectionName sectionCode');
+      }
+      if (expandFields.includes('schoolId')) {
+        attendanceQuery = attendanceQuery.populate('schoolId', 'name code address');
+      }
+      if (expandFields.includes('markedBy')) {
+        attendanceQuery = attendanceQuery.populate('markedBy.user', 'profile.firstName profile.lastName account.primaryEmail');
+      }
+    }
+
+    const attendanceRecords = await attendanceQuery.lean();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Student attendance records fetched successfully.',
+      data: attendanceRecords,
+      count: attendanceRecords.length,
+    });
+  } catch (error) {
+    console.error('[GET STUDENT ATTENDANCE ERROR]', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+/**
+ * Mark attendance for all students in a specific section
+ * Supports bulk upsert based on studentId and date
+ */
+export const markBulkAttendance = async (req: Request, res: Response) => {
+  try {
+    const {
+      tenantId,
+      schoolId,
+      classId,
+      sectionId,
+      date,
+      academicYear,
+      records, // Array of { studentId, status, remarks }
+    } = req.body;
+
+    const markedById = (req as any).user?.id;
+    const markedByRole = (req as any).user?.role;
+
+    // 1. Validation
+    if (!tenantId || !schoolId || !classId || !sectionId || !date || !records) {
+      return res.status(400).json({
+        success: false,
+        message: 'tenantId, schoolId, classId, sectionId, date, and records are required.',
+      });
+    }
+
+    if (!Array.isArray(records) || records.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'records must be a non-empty array.',
+      });
+    }
+
+    const attendanceDate = new Date(date);
+    if (isNaN(attendanceDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format.',
+      });
+    }
+
+    // 2. Prepare Bulk Operations
+    const bulkOps = records.map((record: any) => {
+      const { studentId, status, remarks } = record;
+
+      if (!mongoose.Types.ObjectId.isValid(studentId)) {
+        throw new Error(`Invalid studentId: ${studentId}`);
+      }
+
+      return {
+        updateOne: {
+          filter: {
+            studentId: new mongoose.Types.ObjectId(studentId),
+            date: attendanceDate,
+          },
+          update: {
+            $set: {
+              tenantId: mongoose.Types.ObjectId.isValid(tenantId) ? new mongoose.Types.ObjectId(tenantId as string) : tenantId,
+              schoolId: new mongoose.Types.ObjectId(schoolId as string),
+              classId: new mongoose.Types.ObjectId(classId as string),
+              sectionId: new mongoose.Types.ObjectId(sectionId as string),
+              status,
+              remarks: remarks || '',
+              markedBy: (markedById && mongoose.Types.ObjectId.isValid(markedById)) ? {
+                user: new mongoose.Types.ObjectId(markedById as string),
+                role: markedByRole || 'unknown',
+                at: new Date()
+              } : undefined,
+              academicYear, // e.g. "2025-26"
+            },
+          },
+          upsert: true,
+        },
+      };
+    });
+
+    // 3. Execute Bulk Write
+    await StudentAttendanceModel.bulkWrite(bulkOps);
+
+    return res.status(200).json({
+      success: true,
+      message: `Attendance marked successfully for ${records.length} students.`,
+    });
+  } catch (error: any) {
+    console.error('[MARK BULK ATTENDANCE ERROR]', error);
+    return res.status(error.message.startsWith('Invalid studentId') ? 400 : 500).json({
+      success: false,
+      message: error.message || 'Internal Server Error',
+    });
+  }
+};
+
+/**
+ * Get attendance data for a specific section with pagination
+ */
+export const getSectionAttendance = async (req: Request, res: Response) => {
+  try {
+    const { sectionId } = req.params;
+    const {
+      tenantId,
+      schoolId,
+      classId,
+      date,
+      academicYear,
+      status,
+      page = '1',
+      limit = '10',
+    } = req.query;
+
+    // 1. Validation
+    if (!sectionId || !tenantId || !schoolId || !classId || !date) {
+      return res.status(400).json({
+        success: false,
+        message: 'sectionId, tenantId, schoolId, classId, and date are required.',
+      });
+    }
+
+    if (
+      !mongoose.Types.ObjectId.isValid(sectionId) ||
+      !mongoose.Types.ObjectId.isValid(schoolId as string) ||
+      !mongoose.Types.ObjectId.isValid(classId as string)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid ID format.',
+      });
+    }
+
+    const attendanceDate = new Date(date as string);
+    if (isNaN(attendanceDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format.',
+      });
+    }
+
+    // 2. Build Query
+    const query: any = {
+      sectionId: new mongoose.Types.ObjectId(sectionId),
+      tenantId: mongoose.Types.ObjectId.isValid(tenantId as string)
+        ? new mongoose.Types.ObjectId(tenantId as string)
+        : tenantId,
+      schoolId: new mongoose.Types.ObjectId(schoolId as string),
+      classId: new mongoose.Types.ObjectId(classId as string),
+      date: attendanceDate,
+    };
+
+    if (academicYear) {
+      query.academicYear = academicYear;
+    }
+
+    if (status) {
+      query.status = status;
+    }
+
+    // 3. Pagination
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    // 4. Fetch Data
+    const [attendanceRecords, totalRecords] = await Promise.all([
+      StudentAttendanceModel.find(query)
+        .populate('studentId', 'firstName lastName admissionNo rollNo')
+        .sort({ 'studentId.rollNo': 1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      StudentAttendanceModel.countDocuments(query),
+    ]);
+
+    const totalPages = Math.ceil(totalRecords / limitNum);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Section attendance records fetched successfully.',
+      data: attendanceRecords,
+      pagination: {
+        totalRecords,
+        totalPages,
+        currentPage: pageNum,
+        limit: limitNum,
+      },
+    });
+  } catch (error) {
+    console.error('[GET SECTION ATTENDANCE ERROR]', error);
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error',
