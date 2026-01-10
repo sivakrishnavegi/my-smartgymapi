@@ -40,10 +40,13 @@ const allowedOrigins: string[] = [
 const app = express();
 app.set("trust proxy", 1);
 
+import { requestLogger } from "./middlewares/requestLogger";
+
 // ---------------------------------------------
 // RATE LIMITER FIRST
 // ---------------------------------------------
 app.use(limiter);
+app.use(requestLogger);
 
 // ---------------------------------------------
 // HELMET (MUST COME BEFORE CORS)

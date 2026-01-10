@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import AcademicYear, { IAcademicYear } from "../models/academicYear.schema";
+import { logError } from '../utils/errorLogger';
 
 // Create Academic Year
 export const createAcademicYear = async (req: Request, res: Response) => {
@@ -34,16 +35,18 @@ export const createAcademicYear = async (req: Request, res: Response) => {
     res.status(201).json(saved);
   } catch (error: any) {
     console.error(error);
+    await logError(req, error);
     res.status(500).json({ message: "Server Error", error: error.message });
   }
 };
 
 // Get All Academic Years
-export const getAllAcademicYears = async (_req: Request, res: Response) => {
+export const getAllAcademicYears = async (req: Request, res: Response) => {
   try {
     const years = await AcademicYear.find().sort({ startDate: -1 });
     res.json(years);
   } catch (error: any) {
+    await logError(req as Request, error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -55,6 +58,7 @@ export const getAcademicYear = async (req: Request, res: Response) => {
     if (!year) return res.status(404).json({ message: "Academic Year not found" });
     res.json(year);
   } catch (error: any) {
+    await logError(req, error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -66,6 +70,7 @@ export const updateAcademicYear = async (req: Request, res: Response) => {
     if (!updated) return res.status(404).json({ message: "Academic Year not found" });
     res.json(updated);
   } catch (error: any) {
+    await logError(req, error);
     res.status(400).json({ message: error.message });
   }
 };
@@ -77,6 +82,7 @@ export const deleteAcademicYear = async (req: Request, res: Response) => {
     if (!deleted) return res.status(404).json({ message: "Academic Year not found" });
     res.json({ message: "Academic Year deleted successfully" });
   } catch (error: any) {
+    await logError(req, error);
     res.status(500).json({ message: error.message });
   }
 };

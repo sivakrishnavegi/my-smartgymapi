@@ -5,6 +5,7 @@ import { SectionModel } from "../models/section.model";
 import UserModel from "../models/users.schema";
 import { ClassModel } from "../models/class.model";
 import { Student } from "../models/student/student.schema";
+import { logError } from '../utils/errorLogger';
 
 // Create a new section
 export const createSection = async (req: Request, res: Response) => {
@@ -54,6 +55,7 @@ export const createSection = async (req: Request, res: Response) => {
       .json({ message: "Section created successfully", data: newSection });
   } catch (error) {
     console.error(error);
+    await logError(req, error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -71,6 +73,7 @@ export const getSections = async (req: Request, res: Response) => {
     return res.status(200).json({ sections: sections });
   } catch (error) {
     console.error(error);
+    await logError(req, error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -166,6 +169,7 @@ export const getSectionById = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Get Section By ID Error:", error);
+    await logError(req, error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -208,6 +212,7 @@ export const updateSection = async (req: Request, res: Response) => {
       .json({ message: "Section updated successfully", data: section });
   } catch (error) {
     console.error(error);
+    await logError(req, error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -230,6 +235,7 @@ export const deleteSection = async (req: Request, res: Response) => {
     return res.status(200).json({ message: "Section deleted successfully" });
   } catch (error) {
     console.error(error);
+    await logError(req, error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -256,6 +262,7 @@ export const assignHomeroomTeacher = async (req: Request, res: Response) => {
 
     res.status(200).json({ message: "Teacher assigned successfully", section });
   } catch (err) {
+    await logError(req, err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -283,6 +290,7 @@ export const getSectionsByClass = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Get Sections By Class Error:", error);
+    await logError(req, error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -337,6 +345,7 @@ export const updateSectionsByClass = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Update Sections By Class Error:", error);
+    await logError(req, error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -473,6 +482,7 @@ export const getStudentsBySection = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Get Students By Section Error:", error);
+    await logError(req, error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -609,6 +619,7 @@ export const addStudentToSection = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Add Student To Section Error:", error);
+    await logError(req, error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -689,6 +700,7 @@ export const getStudent = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Get Student Error:', error);
+    await logError(req, error);
     return res.status(500).json({ message: 'Server Error' });
   }
 };

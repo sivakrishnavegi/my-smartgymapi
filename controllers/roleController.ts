@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
 import { RoleModel } from "../models/roles.schema";
+import { logError } from '../utils/errorLogger';
 
 // Create a role
 export const createRole = async (req: Request, res: Response) => {
@@ -27,8 +28,10 @@ export const createRole = async (req: Request, res: Response) => {
 
     await role.save();
     res.status(201).json({ message: "Role created successfully", role });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+   }catch (err: any) {
+    console.error("[CreateRole] Error creating role:", err);
+    await logError(req, err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -42,8 +45,10 @@ export const getRoles = async (req: Request, res: Response) => {
 
     const roles = await RoleModel.find(filter);
     res.status(200).json({ roles });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+   }catch (err: any) {
+    console.error("[GetRoles] Error getting roles:", err);
+    await logError(req, err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -58,8 +63,10 @@ export const getRoleById = async (req: Request, res: Response) => {
     if (!role) return res.status(404).json({ error: "Role not found" });
 
     res.status(200).json({ role });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+   }catch (err: any) {
+    console.error("[GetRoleById] Error getting role by ID:", err);
+    await logError(req, err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -91,8 +98,10 @@ export const updateRole = async (req: Request, res: Response) => {
 
     await role.save();
     res.status(200).json({ message: "Role updated successfully", role });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+   }catch (err: any) {
+    console.error("[UpdateRole] Error updating role:", err);
+    await logError(req, err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -108,7 +117,9 @@ export const deleteRole = async (req: Request, res: Response) => {
     if (!role) return res.status(404).json({ error: "Role not found" });
 
     res.status(200).json({ message: "Role deleted successfully" });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+   }catch (err: any) {
+    console.error("[DeleteRole] Error deleting role:", err);
+    await logError(req, err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };

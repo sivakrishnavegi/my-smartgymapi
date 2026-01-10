@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import Tenant from "../../models/tenant.schema";
 import School from "../../models/schools.schema";
 import User from "../../models/users.schema";
+import { logError } from '../../utils/errorLogger';
 
 
 const JWT_SECRET = process.env.JWT_SECRET_KEY || "your_secret_key";
@@ -11,9 +12,9 @@ const JWT_SECRET = process.env.JWT_SECRET_KEY || "your_secret_key";
 // ------------------ Create SuperAdmin ------------------
 export const createSuperAdmin = async (req: Request, res: Response) => {
   try {
-    const { tenantId, schoolId, email :userEmail, password, firstName, lastName } = req.body;
+    const { tenantId, schoolId, email: userEmail, password, firstName, lastName } = req.body;
 
-     // Normalize and validate email if provided
+    // Normalize and validate email if provided
     let normalizedEmail: string | undefined;
     if (userEmail) {
       normalizedEmail = userEmail.toLowerCase().trim();
@@ -61,6 +62,7 @@ export const createSuperAdmin = async (req: Request, res: Response) => {
     res.status(201).json({ message: "SuperAdmin created successfully", superAdminId: superAdmin._id });
   } catch (err: any) {
     console.error("Create SuperAdmin Error:", err);
+    await logError(req, err);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -92,6 +94,7 @@ export const superAdminLogin = async (req: Request, res: Response) => {
     res.status(200).json({ message: "Login successful", token, superAdminId: superAdmin._id });
   } catch (err: any) {
     console.error("SuperAdmin Login Error:", err);
+    await logError(req, err);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -109,6 +112,7 @@ export const getSuperAdmin = async (req: Request, res: Response) => {
     res.status(200).json({ superAdmin });
   } catch (err: any) {
     console.error("Get SuperAdmin Error:", err);
+    await logError(req, err);
     res.status(500).json({ error: "Internal server error" });
   }
 };

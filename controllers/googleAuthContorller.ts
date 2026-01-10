@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import User, { IGoogleAuth, IProfile } from "../models/users.schema";
 import { oauth2Client } from "../routes/googleAuthRoutes";
 import { generateToken } from "../utils/genarateToken";
+import { logError } from '../utils/errorLogger';
 
 export const googleAuthCallbackSignInButton = async (
   req: Request,
@@ -119,6 +120,7 @@ export const googleAuthCallbackSignInButton = async (
     });
   } catch (err) {
     console.error("Google Auth Callback Error:", err);
+    await logError(req, err);
     return res
       .status(500)
       .json({ error: "Authentication failed", details: err });
@@ -243,6 +245,7 @@ export const googleAuthCallbacks = async (req: Request, res: Response) => {
     return res.redirect("http://localhost:3001/dashboard/admin");
   } catch (error) {
     console.error("Google Auth Callback Error:", error);
+    await logError(req, error);
     return res.redirect("http://localhost:3001/login?error=google_auth_failed");
   }
 };

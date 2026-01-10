@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import GoogleMeetEvent from "../models/GoogleMeetSchema";
 import User from "../models/users.schema";
+import { logError } from '../utils/errorLogger';
 
 
 export const createGoogleMeetEvent = async (req: Request, res: Response) => {
@@ -110,6 +111,7 @@ export const createGoogleMeetEvent = async (req: Request, res: Response) => {
     });
   } catch (err) {
     console.error("Error creating Google Meet event:", err);
+    await logError(req, err);
     return res.status(500).json({
       success: false,
       message: "Failed to create Google Meet event",

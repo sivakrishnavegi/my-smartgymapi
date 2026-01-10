@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import Tenant from "../models/tenant.schema";
 
 
+import { logError } from '../utils/errorLogger';
+
 export const getAppConfig = async (req: Request, res: Response) => {
   try {
     const { domain } = req.body;
@@ -33,7 +35,7 @@ export const getAppConfig = async (req: Request, res: Response) => {
       tenantId: tenant.tenantId,
       sassSetupCompleted: tenant.isSassSetupCompleted,
       isApiKeysVerified: tenant.isApiKeysVerified,
-      isSchoolSetupCompleted : tenant.isSchoolSetupCompleted
+      isSchoolSetupCompleted: tenant.isSchoolSetupCompleted
     };
 
     return res.status(200).json({
@@ -46,6 +48,7 @@ export const getAppConfig = async (req: Request, res: Response) => {
     });
   } catch (err: any) {
     console.error("[getAppConfig] Error:", err);
+    await logError(req, err);
 
     return res.status(500).json({
       success: false,

@@ -4,6 +4,7 @@ import { Request, Response } from "express";
 import mongoose from "mongoose";
 import { RoleModel } from "../../models/roles.schema";
 import UserModel, { IUser } from "../../models/users.schema";
+import { logError } from '../../utils/errorLogger';
 
 // ------------------ Type for Payload ------------------
 export interface AddUserPayload {
@@ -142,6 +143,7 @@ export const addUser = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error("❌ Error creating user:", error);
+    await logError(req, error);
     const message = error?.message || "Failed to create user";
     return res.status(500).json({ message });
   }
@@ -150,7 +152,7 @@ export const addUser = async (req: Request, res: Response) => {
 
 
 export const getAllUsers = async (req: Request, res: Response) => {
-    try {
+  try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     const skip = (page - 1) * limit;
@@ -193,6 +195,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error("❌ Error fetching users:", error);
+    await logError(req, error);
     return res.status(500).json({ message: error?.message || "Failed to fetch users" });
   }
 };

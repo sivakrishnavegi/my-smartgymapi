@@ -4,6 +4,7 @@ import { Request, Response } from "express";
 import { SessionModel } from "../models/SessionSchema";
 import User from "../models/users.schema";
 import { generateToken } from "../utils/genarateToken";
+import { logError } from '../utils/errorLogger';
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -54,6 +55,7 @@ export const login = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Login error:", error);
+    await logError(req, error);
     return res.status(500).json({ message: "Server error" });
   }
 };
@@ -93,6 +95,7 @@ export const signup = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("[SIGNUP ERROR]", error);
+    await logError(req, error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -119,6 +122,7 @@ export const logout = async (req: Request, res: Response) => {
     // ]);
     return res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
+    await logError(req, error);
     return res.status(500).json({ message: "Server error" });
   }
 };

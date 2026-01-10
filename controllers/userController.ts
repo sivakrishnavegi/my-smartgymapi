@@ -7,6 +7,7 @@ import User from "../models/users.schema";
 import School from "../models/schools.schema";
 import { generateRefreshToken, generateToken } from "../utils/genarateToken";
 import { SessionModel } from "../models/SessionSchema";
+import { logError } from '../utils/errorLogger';
 
 export const createUser = async (req: Request, res: Response) => {
   try {
@@ -133,6 +134,7 @@ export const createUser = async (req: Request, res: Response) => {
     }
 
     console.error("Create user error:", err);
+    await logError(req, err);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -144,8 +146,10 @@ export const listUsers = async (req: Request, res: Response) => {
       .populate("roles")
       .populate("linkedStudentIds");
     res.status(200).json(users);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  }catch (err: any) {
+    console.error("[ListUsers] Error listing users:", err);
+    await logError(req, err);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -161,8 +165,10 @@ export const getUserById = async (req: Request, res: Response) => {
       .populate("linkedStudentIds");
     if (!user) return res.status(404).json({ error: "User not found" });
     res.status(200).json(user);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  }catch (err: any) {
+    console.error("[GetUserById] Error getting user by ID:", err);
+    await logError(req, err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -176,8 +182,10 @@ export const updateUser = async (req: Request, res: Response) => {
     const user = await User.findByIdAndUpdate(id, req.body, { new: true });
     if (!user) return res.status(404).json({ error: "User not found" });
     res.status(200).json({ message: "User updated", user });
-  } catch (err: any) {
-    res.status(400).json({ error: err.message });
+  }catch (err: any) {
+    console.error("[UpdateUser] Error updating user:", err);
+    await logError(req, err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -191,8 +199,10 @@ export const deleteUser = async (req: Request, res: Response) => {
     const user = await User.findByIdAndDelete(id);
     if (!user) return res.status(404).json({ error: "User not found" });
     res.status(200).json({ message: "User deleted" });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+   }catch (err: any) {
+    console.error("[DeleteUser] Error deleting user:", err);
+    await logError(req, err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -275,8 +285,9 @@ export const loginUser = async (req: Request, res: Response) => {
         token: token,
       },
     });
-  } catch (err) {
-    console.error("Login error:", err);
+   }catch (err: any) {
+    console.error("[Login] Error logging in:", err);
+    await logError(req, err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -356,8 +367,9 @@ export const refreshToken = async (req: Request, res: Response) => {
       token: newAccessToken,
       refreshToken: newRefreshToken,
     });
-  } catch (err: any) {
-    console.error("Refresh token error:", err);
+   }catch (err: any) {
+    console.error("[RefreshToken] Error refreshing token:", err);
+    await logError(req, err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };

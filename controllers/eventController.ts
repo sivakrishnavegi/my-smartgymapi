@@ -6,6 +6,7 @@ import calendar, {
 } from "../utils/google/googleCalendar";
 import User from "../models/users.schema";
 import GoogleMeetEvent from "../models/GoogleMeetSchema";
+import { logError } from '../utils/errorLogger';
 
 export const createEvent = async (req: Request, res: Response) => {
   try {
@@ -49,6 +50,7 @@ export const createEvent = async (req: Request, res: Response) => {
     });
   } catch (err) {
     console.error("Error creating event:", err);
+    await logError(req, err);
     return res.status(500).json({
       success: false,
       message: "Server Error",
@@ -61,7 +63,7 @@ export const getEvents = async (req: Request, res: Response) => {
   try {
     // get user id from auth middleware (e.g., req.user.id)
     const userId = req?.user?.id;
-console.log("first ggg",userId)
+    console.log("first ggg", userId)
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
@@ -74,7 +76,7 @@ console.log("first ggg",userId)
         message: "No Google access token found for this user",
       });
     }
-console.log("first ggg",user)
+    console.log("first ggg", user)
 
     const accessToken = user?.account?.google?.accessToken;
 
@@ -104,6 +106,7 @@ console.log("first ggg",user)
     });
   } catch (err) {
     console.error("Error fetching Google Calendars:", err);
+    await logError(req, err);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch calendars",

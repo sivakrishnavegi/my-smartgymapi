@@ -4,6 +4,7 @@ import { Types } from "mongoose";
 import { RoleModel } from "../../models/roles.schema";
 import School from "../../models/schools.schema";
 import UserModel from "../../models/users.schema";
+import { logError } from '../../utils/errorLogger';
 
 export const addNewStaffMemberToSchool = async (
   req: Request,
@@ -166,6 +167,7 @@ export const addNewStaffMemberToSchool = async (
     }
 
     console.error("Add staff error:", err);
+    await logError(req, err);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -274,6 +276,7 @@ export const listStaffMembersForSchool = async (req: Request, res: Response) => 
     });
   } catch (err) {
     console.error("List staff error:", err);
+    await logError(req, err);
     return res.status(500).json({
       error: "Internal server error",
     });

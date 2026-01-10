@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { buildPaginationResponse, getPagination, getQueryParam } from "../utils/pagination";
 import UserModel from '../models/users.schema';
 import { SectionModel } from "../models/section.model";
+import { logError } from '../utils/errorLogger';
 
 
 const generateUniqueCode = async (): Promise<string> => {
@@ -73,6 +74,7 @@ export const createClass = async (req: Request, res: Response) => {
     return res.status(201).json({ message: "Class created successfully", data: newClass });
   } catch (error) {
     console.error(error);
+    await logError(req, error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -116,6 +118,7 @@ export const getClasses = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Get Classes Error:', error);
+    await logError(req, error);
     return res.status(500).json({ message: 'Server Error' });
   }
 };
@@ -137,6 +140,7 @@ export const getClassById = async (req: Request, res: Response) => {
     return res.status(200).json({ data: classObj });
   } catch (error) {
     console.error(error);
+    await logError(req, error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -177,6 +181,7 @@ export const updateClass = async (req: Request, res: Response) => {
       .json({ message: "Class updated successfully", data: classObj });
   } catch (error) {
     console.error(error);
+    await logError(req, error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -197,6 +202,7 @@ export const deleteClass = async (req: Request, res: Response) => {
     return res.status(200).json({ message: "Class deleted successfully" });
   } catch (error) {
     console.error(error);
+    await logError(req, error);
     return res.status(500).json({ message: "Server Error" });
   }
 };
@@ -257,6 +263,7 @@ export const assignTeacher = async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Assign Teacher Error:', error);
+    await logError(req, error);
     return res.status(500).json({ message: "Server Error" });
   }
 };

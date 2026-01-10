@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import School from "../models/schools.schema";
 import Tenant from "../models/tenant.schema";
+import { logError } from '../utils/errorLogger';
 
 /**
  * @swagger
@@ -86,6 +87,7 @@ export const createSchool = async (req: Request, res: Response) => {
     return res.status(201).json({ message: "School created successfully", school });
   } catch (err: any) {
     console.error("[CreateSchool] Error creating school:", err);
+    await logError(req, err);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -111,8 +113,10 @@ export const listSchools = async (req: Request, res: Response) => {
   try {
     const schools = await School.find();
     res.status(200).json(schools);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  }catch (err: any) {
+    console.error("[ListSchools] Error listing schools:", err);
+    await logError(req, err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -144,8 +148,10 @@ export const getSchoolById = async (req: Request, res: Response) => {
     const school = await School.findById(req.params.id);
     if (!school) return res.status(404).json({ error: "School not found" });
     res.status(200).json(school);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  }catch (err: any) {
+    console.error("[GetSchoolById] Error getting school by ID:", err);
+    await logError(req, err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -179,8 +185,10 @@ export const updateSchool = async (req: Request, res: Response) => {
     const school = await School.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!school) return res.status(404).json({ error: "School not found" });
     res.status(200).json({ message: "School updated", school });
-  } catch (err: any) {
-    res.status(400).json({ error: err.message });
+  }catch (err: any) {
+    console.error("[UpdateSchool] Error updating school:", err);
+    await logError(req, err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -208,8 +216,10 @@ export const deleteSchool = async (req: Request, res: Response) => {
     const school = await School.findByIdAndDelete(req.params.id);
     if (!school) return res.status(404).json({ error: "School not found" });
     res.status(200).json({ message: "School deleted" });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
+  }catch (err: any) {
+    console.error("[DeleteSchool] Error deleting school:", err);
+    await logError(req, err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
 

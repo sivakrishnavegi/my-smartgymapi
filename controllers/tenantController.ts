@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { parseApiKey } from "../helpers/keys";
 import School from "../models/schools.schema";
 import Tenant from "../models/tenant.schema";
+import { logError } from '../utils/errorLogger';
 
 export const createTenant = async (req: Request, res: Response) => {
   try {
@@ -29,6 +30,7 @@ export const createTenant = async (req: Request, res: Response) => {
       tenant,
     });
   } catch (err: any) {
+    await logError(req, err);
     res.status(400).json({ error: err.message });
   }
 };
@@ -43,6 +45,7 @@ export const listTenants = async (_req: Request, res: Response) => {
       tenants,
     });
   } catch (err: any) {
+    await logError(_req, err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -56,6 +59,7 @@ export const getTenantById = async (req: Request, res: Response) => {
     if (!tenant) return res.status(404).json({ error: "Tenant not found" });
     res.json(tenant);
   } catch (err: any) {
+    await logError(req, err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -80,6 +84,7 @@ export const getTenantByDomainId = async (req: Request, res: Response) => {
     });
   } catch (err: any) {
     console.error("Error fetching tenant by domain:", err);
+    await logError(req, err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -95,6 +100,7 @@ export const updateTenant = async (req: Request, res: Response) => {
     if (!updated) return res.status(404).json({ error: "Tenant not found" });
     res.json(updated);
   } catch (err: any) {
+    await logError(req, err);
     res.status(400).json({ error: err.message });
   }
 };
@@ -108,6 +114,7 @@ export const deleteTenant = async (req: Request, res: Response) => {
     if (!deleted) return res.status(404).json({ error: "Tenant not found" });
     res.json({ message: "Tenant deleted successfully" });
   } catch (err: any) {
+    await logError(req, err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -151,6 +158,7 @@ export const issueApiKey = async (req: Request, res: Response) => {
     });
   } catch (err: any) {
     console.error("Error issuing API key:", err);
+    await logError(req, err);
     res.status(500).json({ error: "Failed to issue API key" });
   }
 };
@@ -209,6 +217,7 @@ export const verifyApiKey = async (req: Request, res: Response) => {
     });
   } catch (err: any) {
     console.error("Error verifying API key:", err);
+    await logError(req, err);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -227,6 +236,7 @@ export const revokeApiKey = async (req: Request, res: Response) => {
 
     res.json({ message: "API Key revoked" });
   } catch (err: any) {
+    await logError(req, err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -251,6 +261,7 @@ export const updateSubscription = async (req: Request, res: Response) => {
 
     res.json(tenant);
   } catch (err: any) {
+    await logError(req, err);
     res.status(400).json({ error: err.message });
   }
 };

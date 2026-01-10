@@ -55,6 +55,7 @@ export const checkIn = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('[CHECK-IN ERROR]', error);
+    await logError(req, error);
     return res.status(500).json({
       success: false,
       message: 'Internal Server Error',
