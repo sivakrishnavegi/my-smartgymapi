@@ -12,12 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateSectionsByClass = exports.getSectionsByClass = exports.assignHomeroomTeacher = exports.deleteSection = exports.updateSection = exports.getSectionById = exports.getSections = exports.createSection = void 0;
+exports.getStudent = exports.addStudentToSection = exports.getStudentsBySection = exports.updateSectionsByClass = exports.getSectionsByClass = exports.assignHomeroomTeacher = exports.deleteSection = exports.updateSection = exports.getSectionById = exports.getSections = exports.createSection = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const schools_schema_1 = __importDefault(require("../models/schools.schema"));
 const section_model_1 = require("../models/section.model");
 const users_schema_1 = __importDefault(require("../models/users.schema"));
 const class_model_1 = require("../models/class.model");
+const student_schema_1 = require("../models/student/student.schema");
 // Create a new section
 const createSection = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
@@ -89,16 +90,78 @@ exports.getSections = getSections;
 const getSectionById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
+        const { tenantId, schoolId } = req.query;
+        // Validate section ID
         if (!mongoose_1.default.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid section ID!" });
         }
-        const section = yield section_model_1.SectionModel.findById(id);
-        if (!section)
+        // Validate required query parameters
+        if (!tenantId || !schoolId) {
+            return res.status(400).json({
+                message: "tenantId and schoolId are required!"
+            });
+        }
+        // Validate schoolId format
+        if (!mongoose_1.default.Types.ObjectId.isValid(schoolId)) {
+            return res.status(400).json({ message: "Invalid schoolId format!" });
+        }
+        // Check if school exists
+        const schoolExists = yield schools_schema_1.default.findById(schoolId);
+        if (!schoolExists) {
+            return res.status(404).json({ message: "School not found!" });
+        }
+        // Verify school belongs to tenant
+        if (schoolExists.tenantId !== tenantId) {
+            return res.status(403).json({
+                message: "Unauthorized: School does not belong to this tenant!"
+            });
+        }
+        // Find section and populate related data
+        const section = yield section_model_1.SectionModel.findById(id)
+            .populate({
+            path: "homeroomTeacherId",
+            select: "userType profile.firstName profile.lastName profile.photoUrl profile.contact account.primaryEmail employment",
+        })
+            .populate({
+            path: "schoolId",
+            select: "name code address",
+        })
+            .populate({
+            path: "createdBy",
+            select: "profile.firstName profile.lastName account.primaryEmail",
+        })
+            .lean();
+        if (!section) {
             return res.status(404).json({ message: "Section not found!" });
-        return res.status(200).json({ data: section });
+        }
+        // Verify section belongs to the specified tenant and school
+        if (section.tenantId !== tenantId) {
+            return res.status(403).json({
+                message: "Unauthorized: Section does not belong to this tenant!"
+            });
+        }
+        if (section.schoolId._id.toString() !== schoolId) {
+            return res.status(403).json({
+                message: "Unauthorized: Section does not belong to this school!"
+            });
+        }
+        // Get all students in this section
+        const students = yield student_schema_1.Student.find({
+            sectionId: id,
+            status: "Active"
+        })
+            .select("admissionNo rollNo firstName middleName lastName dob gender contact.email contact.phone status")
+            .sort({ rollNo: 1 })
+            .lean();
+        // Construct complete section response
+        const sectionResponse = Object.assign(Object.assign({}, section), { students: students, studentCount: students.length });
+        return res.status(200).json({
+            message: "Section fetched successfully",
+            data: sectionResponse
+        });
     }
     catch (error) {
-        console.error(error);
+        console.error("Get Section By ID Error:", error);
         return res.status(500).json({ message: "Server Error" });
     }
 });
@@ -255,3 +318,293 @@ const updateSectionsByClass = (req, res) => __awaiter(void 0, void 0, void 0, fu
     }
 });
 exports.updateSectionsByClass = updateSectionsByClass;
+// Get students by section with pagination and search
+const getStudentsBySection = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { sectionId } = req.params;
+        const { tenantId, schoolId, classId, page = "1", limit = "10", search } = req.query;
+        // 1. Validation
+        if (!mongoose_1.default.Types.ObjectId.isValid(sectionId)) {
+            return res.status(400).json({ message: "Invalid section ID!" });
+        }
+        if (!tenantId || !schoolId || !classId) {
+            return res.status(400).json({
+                message: "tenantId, schoolId, and classId are required!",
+            });
+        }
+        if (!mongoose_1.default.Types.ObjectId.isValid(schoolId)) {
+            return res.status(400).json({ message: "Invalid schoolId format!" });
+        }
+        if (!mongoose_1.default.Types.ObjectId.isValid(classId)) {
+            return res.status(400).json({ message: "Invalid classId format!" });
+        }
+        // 2. Verify school exists and belongs to tenant
+        const schoolExists = yield schools_schema_1.default.findById(schoolId);
+        if (!schoolExists) {
+            return res.status(404).json({ message: "School not found!" });
+        }
+        if (schoolExists.tenantId !== tenantId) {
+            return res.status(403).json({
+                message: "Unauthorized: School does not belong to this tenant!",
+            });
+        }
+        // 3. Verify class exists and belongs to school
+        const classExists = yield class_model_1.ClassModel.findById(classId);
+        if (!classExists) {
+            return res.status(404).json({ message: "Class not found!" });
+        }
+        if (classExists.schoolId.toString() !== schoolId) {
+            return res.status(403).json({
+                message: "Unauthorized: Class does not belong to this school!",
+            });
+        }
+        // Check if section belongs to class
+        const isSectionInClass = (classExists.sections || []).some((sec) => sec.toString() === sectionId);
+        if (!isSectionInClass) {
+            return res.status(400).json({
+                message: "Section does not belong to the specified class!",
+            });
+        }
+        // 4. Verify section exists and belongs to tenant/school/class
+        const section = yield section_model_1.SectionModel.findById(sectionId);
+        if (!section) {
+            return res.status(404).json({ message: "Section not found!" });
+        }
+        if (section.tenantId !== tenantId) {
+            return res.status(403).json({
+                message: "Unauthorized: Section does not belong to this tenant!",
+            });
+        }
+        if (section.schoolId.toString() !== schoolId) {
+            return res.status(403).json({
+                message: "Unauthorized: Section does not belong to this school!",
+            });
+        }
+        // 5. Build query for students
+        const query = {
+            sectionId: sectionId,
+            classId: classId,
+            schoolId: schoolId,
+            tenantId: tenantId,
+            status: "Active",
+        };
+        // Add search filter if provided
+        if (search && typeof search === "string") {
+            query.$or = [
+                { firstName: { $regex: search, $options: "i" } },
+                { lastName: { $regex: search, $options: "i" } },
+                { admissionNo: { $regex: search, $options: "i" } },
+                { rollNo: { $regex: search, $options: "i" } },
+            ];
+        }
+        // 6. Pagination
+        const pageNum = parseInt(page, 10);
+        const limitNum = parseInt(limit, 10);
+        const skip = (pageNum - 1) * limitNum;
+        // 7. Fetch students with pagination
+        const [students, totalRecords] = yield Promise.all([
+            student_schema_1.Student.find(query)
+                .select("admissionNo rollNo firstName middleName lastName dob gender contact guardians status academic documents")
+                .sort({ rollNo: 1 })
+                .skip(skip)
+                .limit(limitNum)
+                .lean(),
+            student_schema_1.Student.countDocuments(query),
+        ]);
+        // 8. Calculate pagination metadata
+        const totalPages = Math.ceil(totalRecords / limitNum);
+        return res.status(200).json({
+            message: "Students fetched successfully",
+            data: {
+                students,
+                pagination: {
+                    currentPage: pageNum,
+                    totalPages,
+                    totalRecords,
+                    limit: limitNum,
+                },
+            },
+        });
+    }
+    catch (error) {
+        console.error("Get Students By Section Error:", error);
+        return res.status(500).json({ message: "Server Error" });
+    }
+});
+exports.getStudentsBySection = getStudentsBySection;
+// Add a student to a section
+const addStudentToSection = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const { sectionId } = req.params;
+        const { tenantId, schoolId, classId, admissionNo, rollNo, firstName, middleName, lastName, dob, gender, contact, guardians, documents, status, admissionDate, } = req.body;
+        // 1. Validation
+        if (!tenantId || !schoolId || !classId || !sectionId) {
+            return res.status(400).json({
+                message: "tenantId, schoolId, classId, and sectionId are required!",
+            });
+        }
+        if (!mongoose_1.default.Types.ObjectId.isValid(schoolId) ||
+            !mongoose_1.default.Types.ObjectId.isValid(classId) ||
+            !mongoose_1.default.Types.ObjectId.isValid(sectionId)) {
+            return res.status(400).json({ message: "Invalid ID format!" });
+        }
+        // 2. Verify School
+        const schoolExists = yield schools_schema_1.default.findOne({
+            _id: schoolId,
+            tenantId,
+        });
+        if (!schoolExists) {
+            return res.status(404).json({
+                message: "School not found or does not belong to the tenant!",
+            });
+        }
+        // 3. Verify Class
+        const classExists = yield class_model_1.ClassModel.findOne({
+            _id: classId,
+            schoolId,
+        });
+        if (!classExists) {
+            return res.status(404).json({
+                message: "Class not found or does not belong to the school!",
+            });
+        }
+        // 4. Verify Section
+        const sectionExists = yield section_model_1.SectionModel.findOne({
+            _id: sectionId,
+            schoolId: schoolId,
+            tenantId: tenantId,
+        });
+        if (!sectionExists) {
+            return res.status(404).json({
+                message: "Section not found or mismatch with filters!",
+            });
+        }
+        // Helper: Check if section is actually in the class's section list
+        const isSectionLinked = (classExists.sections || []).some((sec) => sec.toString() === sectionId);
+        if (!isSectionLinked) {
+            return res.status(400).json({
+                message: "Section does not belong to the specified class!",
+            });
+        }
+        // 5. Check Duplicate Admission Number
+        const existingStudent = yield student_schema_1.Student.findOne({
+            admissionNo,
+            tenantId,
+            schoolId,
+        });
+        if (existingStudent) {
+            return res.status(409).json({
+                message: `Student with admission number ${admissionNo} already exists in this school!`,
+            });
+        }
+        // 6. Create Student
+        const newStudent = yield student_schema_1.Student.create({
+            tenantId,
+            schoolId,
+            classId,
+            sectionId,
+            admissionNo,
+            rollNo,
+            firstName,
+            middleName,
+            lastName,
+            dob,
+            gender,
+            contact,
+            guardians,
+            documents,
+            admissionDate: admissionDate || new Date(),
+            status: status || "Active",
+            academic: {
+                currentClass: classId,
+                currentSection: sectionId,
+                history: [
+                    {
+                        classId,
+                        sectionId,
+                        session: classExists.academicSession,
+                    },
+                ],
+            },
+            createdBy: (_a = req === null || req === void 0 ? void 0 : req.user) === null || _a === void 0 ? void 0 : _a.id,
+        });
+        return res.status(201).json({
+            message: "Student added successfully",
+            data: newStudent,
+        });
+    }
+    catch (error) {
+        console.error("Add Student To Section Error:", error);
+        return res.status(500).json({ message: "Server Error" });
+    }
+});
+exports.addStudentToSection = addStudentToSection;
+// Get a specific student details
+const getStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const sectionId = req.params.sectionId;
+        const studentId = req.params.studentId;
+        const tenantId = req.query.tenantId;
+        const schoolId = req.query.schoolId;
+        const classId = req.query.classId;
+        if (!sectionId || !studentId || !tenantId || !schoolId || !classId) {
+            return res.status(400).json({
+                message: 'sectionId, studentId, tenantId, schoolId, and classId are required',
+            });
+        }
+        if (!mongoose_1.default.Types.ObjectId.isValid(sectionId) ||
+            !mongoose_1.default.Types.ObjectId.isValid(studentId) ||
+            !mongoose_1.default.Types.ObjectId.isValid(schoolId) ||
+            !mongoose_1.default.Types.ObjectId.isValid(classId)) {
+            return res.status(400).json({ message: 'Invalid ID format' });
+        }
+        // School
+        const schoolExists = yield schools_schema_1.default.findOne({
+            _id: schoolId,
+            tenantId,
+        });
+        if (!schoolExists) {
+            return res.status(404).json({ message: 'School not found' });
+        }
+        // Class
+        const classExists = yield class_model_1.ClassModel.findOne({
+            _id: classId,
+            schoolId,
+        });
+        if (!classExists) {
+            return res.status(404).json({ message: 'Class not found' });
+        }
+        // Section
+        const sectionExists = yield section_model_1.SectionModel.findOne({
+            _id: sectionId,
+            schoolId,
+            tenantId,
+        });
+        if (!sectionExists) {
+            return res.status(404).json({ message: 'Section not found' });
+        }
+        const student = yield student_schema_1.Student.findOne({
+            _id: studentId,
+            tenantId,
+            schoolId,
+            classId,
+            sectionId,
+        })
+            .populate('academic.currentClass', 'name code')
+            .populate('academic.currentSection', 'sectionName sectionCode')
+            .lean();
+        if (!student) {
+            return res.status(404).json({ message: 'Student not found' });
+        }
+        return res.status(200).json({
+            message: 'Student fetched successfully',
+            data: student,
+        });
+    }
+    catch (error) {
+        console.error('Get Student Error:', error);
+        return res.status(500).json({ message: 'Server Error' });
+    }
+});
+exports.getStudent = getStudent;

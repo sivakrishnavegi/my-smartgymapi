@@ -11,7 +11,7 @@ const guardianSchema = new mongoose_1.Schema({
     address: { type: String },
 }, { _id: false });
 const studentSchema = new mongoose_1.Schema({
-    tenantId: { type: mongoose_1.Types.ObjectId, ref: "Tenant", required: true },
+    tenantId: { type: String, required: true },
     schoolId: { type: mongoose_1.Types.ObjectId, ref: "School", required: true },
     classId: { type: mongoose_1.Types.ObjectId, ref: "Class", required: true },
     sectionId: { type: mongoose_1.Types.ObjectId, ref: "Section", required: true },

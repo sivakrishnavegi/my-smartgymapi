@@ -69,6 +69,27 @@ export const checkIn = async (req: Request, res: Response) => {
 export const getStudentAttendance = async (req: Request, res: Response) => {
   try {
     const { studentId } = req.params;
+
+
+    // Handle nested params object if present (common in some frontend frameworks or proxy setups)
+    let queryParams = (req.query as any).params || req.query;
+
+    // Fallback: Manually parse keys like "params[tenantId]" if query parser didn't nest them
+    if (!queryParams.tenantId && !queryParams.schoolId) {
+      const manualParams: any = {};
+      Object.keys(req.query).forEach((key) => {
+        const match = key.match(/^params\[(\w+)\]$/);
+        if (match) {
+          manualParams[match[1]] = req.query[key];
+        } else {
+          manualParams[key] = req.query[key];
+        }
+      });
+      if (Object.keys(manualParams).length > 0) {
+        queryParams = { ...queryParams, ...manualParams };
+      }
+    }
+
     const {
       tenantId,
       schoolId,
@@ -81,9 +102,11 @@ export const getStudentAttendance = async (req: Request, res: Response) => {
       session,
       status,
       expand,
-      page = '1',
-      limit = '10',
-    } = req.query;
+    } = queryParams;
+
+    // Handle pagination from top-level or nested
+    const page = queryParams.page || req.query.page || '1';
+    const limitParams = queryParams.limit || req.query.limit || '10';
 
     // 1. Basic Validation
     const errors: string[] = [];
@@ -162,7 +185,7 @@ export const getStudentAttendance = async (req: Request, res: Response) => {
 
     // 4. Pagination
     const pageNum = parseInt(page as string, 10);
-    const limitNum = parseInt(limit as string, 10);
+    const limitNum = parseInt(limitParams as string, 10);
     const skip = (pageNum - 1) * limitNum;
 
     // 5. Expansion Logic
