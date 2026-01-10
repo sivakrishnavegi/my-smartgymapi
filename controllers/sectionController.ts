@@ -6,6 +6,7 @@ import UserModel from "../models/users.schema";
 import { ClassModel } from "../models/class.model";
 import { Student } from "../models/student/student.schema";
 import { logError } from '../utils/errorLogger';
+import bcrypt from "bcrypt";
 
 // Create a new section
 export const createSection = async (req: Request, res: Response) => {
@@ -47,7 +48,7 @@ export const createSection = async (req: Request, res: Response) => {
       sectionName,
       sectionCode,
       isActive,
-      createdBy: req?.user?.id,
+      createdBy: (req as any)?.user?.id,
     });
 
     return res
@@ -610,8 +611,55 @@ export const addStudentToSection = async (req: Request, res: Response) => {
           },
         ],
       },
-      createdBy: req?.user?.id,
+      createdBy: (req as any)?.user?.id,
     });
+
+
+    // 7. Auto-Create User Account
+    try {
+      // Default password hash
+      const defaultPassword = "Student@123";
+      const saltRounds = 10;
+      const passwordHash = await bcrypt.hash(defaultPassword, saltRounds);
+
+      // Create User
+      const newUser = await UserModel.create({
+        tenantId,
+        schoolId,
+        userType: "student",
+        profile: {
+          firstName,
+          lastName,
+          dob,
+          gender,
+          contact, // reuse contact details
+        },
+        account: {
+          username: admissionNo.toLowerCase(), // Use lowercase admission number as username
+          primaryEmail: contact?.email || undefined,
+          passwordHash,
+          status: "inactive",
+        },
+        roles: [], // Optionally fetch and add 'student' role if exists
+        linkedStudentIds: [newStudent._id],
+        enrollment: {
+          studentId: newStudent._id,
+          classId,
+          sectionId,
+          regNo: admissionNo // Use admissionNo or let system generate regNo
+        },
+        createdBy: (req as any)?.user?.id,
+      });
+
+      console.log(`[AddStudent] User account created for student ${newStudent._id}`);
+
+    } catch (userError) {
+      console.error("[AddStudent] Failed to create user account:", userError);
+      // We don't fail the request if user creation fails, but we log it.
+      // Alternatively, we could delete the student and fail. 
+      // For now, logging is safer to avoid data loss of the student record.
+      await logError(req, userError);
+    }
 
     return res.status(201).json({
       message: "Student added successfully",

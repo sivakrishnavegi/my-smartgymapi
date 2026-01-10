@@ -146,7 +146,7 @@ export const listUsers = async (req: Request, res: Response) => {
       .populate("roles")
       .populate("linkedStudentIds");
     res.status(200).json(users);
-  }catch (err: any) {
+  } catch (err: any) {
     console.error("[ListUsers] Error listing users:", err);
     await logError(req, err);
     res.status(500).json({ error: "Internal server error" });
@@ -165,7 +165,7 @@ export const getUserById = async (req: Request, res: Response) => {
       .populate("linkedStudentIds");
     if (!user) return res.status(404).json({ error: "User not found" });
     res.status(200).json(user);
-  }catch (err: any) {
+  } catch (err: any) {
     console.error("[GetUserById] Error getting user by ID:", err);
     await logError(req, err);
     return res.status(500).json({ error: "Internal server error" });
@@ -182,7 +182,7 @@ export const updateUser = async (req: Request, res: Response) => {
     const user = await User.findByIdAndUpdate(id, req.body, { new: true });
     if (!user) return res.status(404).json({ error: "User not found" });
     res.status(200).json({ message: "User updated", user });
-  }catch (err: any) {
+  } catch (err: any) {
     console.error("[UpdateUser] Error updating user:", err);
     await logError(req, err);
     return res.status(500).json({ error: "Internal server error" });
@@ -199,7 +199,7 @@ export const deleteUser = async (req: Request, res: Response) => {
     const user = await User.findByIdAndDelete(id);
     if (!user) return res.status(404).json({ error: "User not found" });
     res.status(200).json({ message: "User deleted" });
-   }catch (err: any) {
+  } catch (err: any) {
     console.error("[DeleteUser] Error deleting user:", err);
     await logError(req, err);
     return res.status(500).json({ error: "Internal server error" });
@@ -214,12 +214,17 @@ export const loginUser = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Email and password are required" });
     }
 
-    // Find user by email
+    // Find user by email OR username
+    // The client sends 'email' field, but it can be treated as identifier
+    const identifier = email.toLowerCase().trim();
     const user = await User.findOne({
-      "account.primaryEmail": email.toLowerCase().trim(),
+      $or: [
+        { "account.primaryEmail": identifier },
+        { "account.username": identifier } // Allow login by username (e.g. admissionNo)
+      ]
     });
     if (!user) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      return res.status(401).json({ error: "Invalid email/username or password" });
     }
 
     // Compare password
@@ -285,7 +290,7 @@ export const loginUser = async (req: Request, res: Response) => {
         token: token,
       },
     });
-   }catch (err: any) {
+  } catch (err: any) {
     console.error("[Login] Error logging in:", err);
     await logError(req, err);
     return res.status(500).json({ error: "Internal server error" });
@@ -367,7 +372,7 @@ export const refreshToken = async (req: Request, res: Response) => {
       token: newAccessToken,
       refreshToken: newRefreshToken,
     });
-   }catch (err: any) {
+  } catch (err: any) {
     console.error("[RefreshToken] Error refreshing token:", err);
     await logError(req, err);
     return res.status(500).json({ error: "Internal server error" });

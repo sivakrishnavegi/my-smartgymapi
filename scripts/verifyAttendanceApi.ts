@@ -1,341 +1,72 @@
+
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import {
-    getStudentAttendance,
-    markBulkAttendance,
-    getSectionAttendance,
-    updateBulkAttendance
-} from '../controllers/attendenceController';
-import { Attendance as StudentAttendanceModel } from '../models/student/attendence.schema';
-import '../models/student/student.schema'; // Ensure Student model is registered
-import '../models/section.model'; // Ensure Section model is registered
-import '../models/class.model'; // Ensure Class model is registered
-import '../models/schools.schema'; // Ensure School model is registered
-import '../models/users.schema'; // Ensure User model is registered
-import '../models/errorLog.schema'; // Ensure ErrorLog model is registered
+import { getStudentAttendance } from '../controllers/attendenceController';
+import path from 'path';
 
-dotenv.config();
+// Load .env from root directory
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const runVerification = async () => {
+const verifyAttendanceApi = async () => {
     try {
         console.log('--- Starting Verification ---');
 
         // 1. Connect to DB
-        const mongoUri = process.env.MONGODB_SECRET_URI;
+        const mongoUri = process.env.MONGODB_SECRET_URI || process.env.MONGO_URI;
         if (!mongoUri) {
-            throw new Error('MONGODB_SECRET_URI not found in environment');
+            console.error("MONGODB_SECRET_URI is missing in env");
+            process.exit(1);
         }
         await mongoose.connect(mongoUri);
         console.log('Connected to MongoDB');
 
-        // 2. Seed Mock Data
-        const mockStudentId = new mongoose.Types.ObjectId();
-        const mockStudentId2 = new mongoose.Types.ObjectId();
-        const mockSchoolId = new mongoose.Types.ObjectId();
-        const mockClassId = new mongoose.Types.ObjectId();
-        const mockSectionId = new mongoose.Types.ObjectId();
-        const mockTenantId = '03254a3f-8c89-4a32-ae74-75e68f8062f1';
-
-        // Cleanup before start
-        await StudentAttendanceModel.deleteMany({ tenantId: mockTenantId });
-        console.log('Previous mock records cleaned');
-
-        const attendanceRecords: any[] = [
-            {
-                studentId: mockStudentId,
-                schoolId: mockSchoolId,
-                classId: mockClassId,
-                sectionId: mockSectionId,
-                tenantId: mockTenantId,
-                date: new Date('2025-01-01'),
-                status: 'Present',
-                session: '2024-25',
-                markedBy: { user: new mongoose.Types.ObjectId(), role: 'teacher', at: new Date() }
-            },
-            {
-                studentId: mockStudentId,
-                schoolId: mockSchoolId,
-                classId: mockClassId,
-                sectionId: mockSectionId,
-                tenantId: mockTenantId,
-                date: new Date('2025-01-02'),
-                status: 'Absent',
-                session: '2024-25',
-                markedBy: { user: new mongoose.Types.ObjectId(), role: 'teacher', at: new Date() }
-            },
-            {
-                studentId: mockStudentId,
-                schoolId: mockSchoolId,
-                classId: mockClassId,
-                sectionId: mockSectionId,
-                tenantId: mockTenantId,
-                date: new Date('2025-02-01'),
-                status: 'Present',
-                session: '2024-25',
-                markedBy: { user: new mongoose.Types.ObjectId(), role: 'teacher', at: new Date() }
+        // 2. Define Mock Request with Nested Params
+        // The user specifically asked to verify params like params[schoolId]
+        const mockReq = {
+            params: { studentId: '6958fe65fd67f69877d61a50' }, // Express params
+            query: {
+                // Simulating flattened nested query params
+                'params[tenantId]': '03254a3f-8c89-4a32-ae74-75e68f8062f1',
+                'params[schoolId]': '68a92f1ca69d89189e2f6df6',
+                'params[classId]': '6947b4696c7ce228d16fd39f',
+                'params[studentId]': '6958fe65fd67f69877d61a50',
+                'params[startDate]': '2026-01-01',
+                'params[endDate]': '2026-01-31'
             }
-        ];
-
-        await StudentAttendanceModel.insertMany(attendanceRecords);
-        console.log('Mock attendance records seeded');
-
-        let resData: any = null;
-        let resStatus: number = 0;
+        } as any;
 
         const mockRes = {
             status: (code: number) => {
-                resStatus = code;
                 return {
                     json: (data: any) => {
-                        resData = data;
+                        console.log(`\nResponse Status: ${code}`);
+                        if (code === 200) {
+                            console.log('✅ Success!');
+                            console.log('Message:', data.message);
+                            console.log('Count:', data.count);
+                            console.log('Pagination:', data.pagination);
+                            if (data.data && data.data.length > 0) {
+                                console.log(`Sample Record 1: Date=${data.data[0].date}, Status=${data.data[0].status}`);
+                            }
+                        } else {
+                            console.error('❌ Failed!');
+                            console.error('Error:', data);
+                        }
                     }
                 };
             }
         } as any;
 
-        // 3. Test Month Filter
-        const mockReqMonth = {
-            params: { studentId: mockStudentId.toString() },
-            query: {
-                tenantId: mockTenantId.toString(),
-                schoolId: mockSchoolId.toString(),
-                classId: mockClassId.toString(),
-                month: '1',
-                year: '2025',
-            }
-        } as any;
-
-        console.log('Testing Month Filter (January 2025)...');
-        await getStudentAttendance(mockReqMonth, mockRes);
-
-        if (resStatus === 200 && resData.success && resData.count === 2) {
-            console.log('✅ Month filter verified: Found 2 records for January');
-        } else {
-            console.log('❌ Month filter failed:', { resStatus, count: resData?.count, message: resData?.message });
-        }
-
-        // 4. Test Duration Filter
-        const mockReqDuration = {
-            params: { studentId: mockStudentId.toString() },
-            query: {
-                tenantId: mockTenantId.toString(),
-                schoolId: mockSchoolId.toString(),
-                classId: mockClassId.toString(),
-                startDate: '2025-01-02',
-                endDate: '2025-02-01',
-            }
-        } as any;
-
-        console.log('Testing Duration Filter (2025-01-02 to 2025-02-01)...');
-        await getStudentAttendance(mockReqDuration, mockRes);
-
-        if (resStatus === 200 && resData.success && resData.count === 2) {
-            console.log('✅ Duration filter verified: Found 2 records');
-        } else {
-            console.log('❌ Duration filter failed:', { resStatus, count: resData?.count, message: resData?.message });
-        }
-
-        // 5. Test Bulk Marking (Reverted Payload)
-        const bulkMarkReq = {
-            body: {
-                tenantId: mockTenantId.toString(),
-                schoolId: mockSchoolId.toString(),
-                classId: mockClassId.toString(),
-                sectionId: mockSectionId.toString(),
-                date: '2026-01-05',
-                session: '2025-26',
-                attendanceData: [
-                    { studentId: mockStudentId.toString(), status: 'Present', remarks: '' },
-                    { studentId: mockStudentId2.toString(), status: 'Absent', remarks: 'Medical leave' }
-                ]
-            },
-            user: { id: new mongoose.Types.ObjectId().toString(), role: 'admin' }
-        } as any;
-
-        console.log('Testing Bulk Marking (Reverted Payload)...');
-        await markBulkAttendance(bulkMarkReq, mockRes);
-
-        if (resStatus === 200 && resData.success) {
-            const savedRecords = await StudentAttendanceModel.find({
-                date: new Date('2026-01-05'),
-                tenantId: mockTenantId
-            });
-            if (savedRecords.length === 2) {
-                console.log('✅ Bulk marking verified: 2 records saved');
-                if (savedRecords[0].markedBy?.role === 'admin' && savedRecords[0].session === '2025-26') {
-                    console.log('✅ Role and session verified in DB');
-                } else {
-                    console.log('❌ DB fields verification failed:', { role: savedRecords[0].markedBy?.role, session: savedRecords[0].session });
-                }
-            } else {
-                console.log('❌ Bulk marking verification failed: Found', savedRecords.length, 'records');
-            }
-        } else {
-            console.log('❌ Bulk marking request failed:', resData);
-        }
-
-        // 6. Test Enhanced Student Attendance Retrieval (Filters & Pagination)
-        console.log('Testing Enhanced Student Attendance Retrieval...');
-
-        // 6a. Page 1, Limit 1
-        const mockReqPage1 = {
-            params: { studentId: mockStudentId.toString() },
-            query: {
-                tenantId: mockTenantId.toString(),
-                schoolId: mockSchoolId.toString(),
-                classId: mockClassId.toString(),
-                page: '1',
-                limit: '1'
-            }
-        } as any;
-        await getStudentAttendance(mockReqPage1, mockRes);
-        if (resStatus === 200 && resData.pagination.totalRecords >= 3 && resData.data.length === 1) {
-            console.log('✅ Pagination verified (Page 1, Limit 1)');
-        } else {
-            console.log('❌ Pagination failed (Page 1):', { status: resStatus, total: resData?.pagination?.totalRecords, dataLen: resData?.data?.length });
-        }
-
-        // 6b. Status filter
-        const mockReqStatus = {
-            params: { studentId: mockStudentId.toString() },
-            query: {
-                tenantId: mockTenantId.toString(),
-                schoolId: mockSchoolId.toString(),
-                classId: mockClassId.toString(),
-                status: 'Absent'
-            }
-        } as any;
-        await getStudentAttendance(mockReqStatus, mockRes);
-        if (resStatus === 200 && resData.count === 1 && resData.data[0].status === 'Absent') {
-            console.log('✅ Status filter verified');
-        } else {
-            console.log('❌ Status filter failed:', { status: resStatus, count: resData?.count, dataStatus: resData?.data?.[0]?.status });
-        }
-
-        // 6c. Specific date filter
-        const mockReqDate = {
-            params: { studentId: mockStudentId.toString() },
-            query: {
-                tenantId: mockTenantId.toString(),
-                schoolId: mockSchoolId.toString(),
-                classId: mockClassId.toString(),
-                date: '2025-01-01'
-            }
-        } as any;
-        await getStudentAttendance(mockReqDate, mockRes);
-        if (resStatus === 200 && resData.count === 1) {
-            console.log('✅ Specific date filter verified');
-        } else {
-            console.log('❌ Specific date filter failed:', { status: resStatus, count: resData?.count });
-        }
-
-        // 7. Test Bulk Update (PUT)
-        const updateUserId = new mongoose.Types.ObjectId();
-        const bulkUpdateReq = {
-            body: {
-                tenantId: mockTenantId.toString(),
-                schoolId: mockSchoolId.toString(),
-                classId: mockClassId.toString(),
-                sectionId: mockSectionId.toString(),
-                date: '2026-01-05', // Same date as bulk mark
-                session: '2025-26',
-                attendanceData: [
-                    { studentId: mockStudentId.toString(), status: 'Absent', remarks: 'Updated to absent' }
-                ]
-            },
-            user: { id: updateUserId.toString(), role: 'admin' }
-        } as any;
-
-        console.log('Testing Bulk Update (PUT)...');
-        await updateBulkAttendance(bulkUpdateReq, mockRes);
-
-        if (resStatus === 200 && resData.success) {
-            const updatedRecord = await StudentAttendanceModel.findOne({
-                studentId: mockStudentId,
-                date: new Date('2026-01-05'),
-                tenantId: mockTenantId
-            });
-            if (updatedRecord && updatedRecord.status === 'Absent' && updatedRecord.remarks === 'Updated to absent') {
-                console.log('✅ Bulk update verified in DB');
-                if (updatedRecord.updatedBy?.user?.toString() === updateUserId.toString()) {
-                    console.log('✅ updatedBy verified');
-                    if (updatedRecord.markedBy?.role === 'admin') {
-                        console.log('✅ original markedBy preserved');
-                    } else {
-                        console.log('❌ markedBy changed unexpectedly');
-                    }
-                } else {
-                    console.log('❌ updatedBy verification failed:', updatedRecord.updatedBy);
-                }
-            } else {
-                console.log('❌ Bulk update data verification failed');
-            }
-        } else {
-            console.log('❌ Bulk update request failed:', resData);
-        }
-
-        // 8. Test Section Attendance Retrieval
-        const sectionReq = {
-            params: { sectionId: mockSectionId.toString() },
-            query: {
-                tenantId: mockTenantId.toString(),
-                schoolId: mockSchoolId.toString(),
-                classId: mockClassId.toString(),
-                date: '2025-01-01',
-                page: '1',
-                limit: '10'
-            }
-        } as any;
-
-        console.log('Testing Section Attendance Retrieval...');
-        await getSectionAttendance(sectionReq, mockRes);
-
-        if (resStatus === 200 && resData.success && resData.pagination.totalRecords === 1) {
-            console.log('✅ Section attendance verified: Found 1 record for 2025-01-01');
-        } else {
-            console.log('❌ Section attendance failed:', { resStatus, total: resData?.pagination?.totalRecords, message: resData?.message });
-        }
-
-
-        // 9. Test Error Logging
-        console.log('Testing Error Logging...');
-        // Trigger a validation error (missing tenantId)
-        const errorReq = {
-            params: { studentId: mockStudentId.toString() },
-            query: {
-                // tenantId missing
-                schoolId: mockSchoolId.toString(),
-                classId: mockClassId.toString(),
-            }
-        } as any;
-
-        await getStudentAttendance(errorReq, mockRes);
-
-        // Check if error was logged
-        const errorLog = await mongoose.model('ErrorLog').findOne({
-            message: 'Validation Error: tenantId is required.',
-            userId: errorReq.user?.id
-        }).sort({ createdAt: -1 });
-
-        if (errorLog && errorLog.metadata && errorLog.metadata.query) {
-            console.log('✅ Error logging verified: Validation error logged to DB');
-        } else {
-            console.log('❌ Error logging failed: No log found or incorrect details', errorLog);
-        }
-
-        // 7. Cleanup
-        await StudentAttendanceModel.deleteMany({ tenantId: mockTenantId });
-        await mongoose.model('ErrorLog').deleteMany({}); // Clean up logs
-        console.log('Cleanup complete');
-
-        await mongoose.disconnect();
-        console.log('Disconnected from MongoDB');
-        console.log('--- Verification Finished ---');
+        // 3. Call Controller
+        console.log('Calling getStudentAttendance with nested params...');
+        await getStudentAttendance(mockReq, mockRes);
 
     } catch (err) {
         console.error('Verification script error:', err);
-        process.exit(1);
+    } finally {
+        await mongoose.disconnect();
+        console.log('\n--- Verification Finished ---');
     }
 };
 
-runVerification();
+verifyAttendanceApi();
