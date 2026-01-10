@@ -9,11 +9,15 @@ const SectionSchema = new Schema<ISection>({
     required: true,
     index: true,
   },
-  isActive : { type : Boolean , default : false },
+  isActive: { type: Boolean, default: false },
   sectionName: { type: String, required: true },
   sectionCode: { type: String },
-  description : { type : String },
+  description: { type: String },
   homeroomTeacherId: { type: Schema.Types.ObjectId, ref: "User" },
+  subjects: [{
+    subjectId: { type: Schema.Types.ObjectId, ref: "Subject", required: true },
+    teacherId: { type: Schema.Types.ObjectId, ref: "User" }
+  }],
   createdAt: { type: Date, default: Date.now },
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true }
 });

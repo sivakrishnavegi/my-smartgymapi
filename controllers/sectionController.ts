@@ -7,6 +7,7 @@ import { ClassModel } from "../models/class.model";
 import { Student } from "../models/student/student.schema";
 import { logError } from '../utils/errorLogger';
 import bcrypt from "bcrypt";
+import { SubjectModel } from "../models/subject.model";
 
 // Create a new section
 export const createSection = async (req: Request, res: Response) => {
@@ -742,6 +743,7 @@ export const getStudent = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Student not found' });
     }
 
+
     return res.status(200).json({
       message: 'Student fetched successfully',
       data: student,
@@ -752,4 +754,108 @@ export const getStudent = async (req: Request, res: Response) => {
     return res.status(500).json({ message: 'Server Error' });
   }
 };
+
+// Assign subjects and teachers to a section
+export const assignSubjects = async (req: Request, res: Response) => {
+  try {
+    const { sectionId } = req.params;
+    const { tenantId, schoolId, subjects } = req.body; // subjects: [{ subjectId, teacherId }]
+
+    if (!tenantId || !schoolId || !sectionId) {
+      return res.status(400).json({ message: "tenantId, schoolId, and sectionId are required!" });
+    }
+
+    if (!Array.isArray(subjects)) {
+      return res.status(400).json({ message: "subjects must be an array!" });
+    }
+
+    const section = await SectionModel.findOne({ _id: sectionId, tenantId, schoolId });
+    if (!section) {
+      return res.status(404).json({ message: "Section not found or access denied!" });
+    }
+
+
+    // Initialize validSubjects with existing subjects (or empty array)
+    const validSubjects = section.subjects || [];
+
+    for (const item of subjects) {
+      if (!item.subjectId) continue;
+
+      // Verify subject belongs to tenant/school AND this specific section
+      const subjectDoc = await SubjectModel.findOne({ _id: item.subjectId, tenantId, schoolId });
+      if (!subjectDoc) {
+        return res.status(400).json({ message: `Invalid subject ID: ${item.subjectId}` });
+      }
+
+      // Ensure subject is created for THIS section
+      if (subjectDoc.sectionId.toString() !== sectionId) {
+        return res.status(400).json({ message: `Subject ${item.subjectId} belongs to a different section!` });
+      }
+
+      // Verify teacher if provided
+      if (item.teacherId) {
+        const teacherDoc = await UserModel.findOne({ _id: item.teacherId, tenantId, schoolId, userType: 'teacher' });
+        if (!teacherDoc) {
+          return res.status(400).json({ message: `Invalid teacher ID: ${item.teacherId}` });
+        }
+      }
+
+      // Check if subject is already assigned to this section
+      const existingIndex = validSubjects.findIndex((s: any) => s.subjectId.toString() === item.subjectId);
+
+      if (existingIndex > -1) {
+        // Update existing assignment
+        validSubjects[existingIndex].teacherId = item.teacherId || undefined;
+      } else {
+        // Add new assignment
+        validSubjects.push({
+          subjectId: item.subjectId,
+          teacherId: item.teacherId || undefined
+        });
+      }
+    }
+
+    section.subjects = validSubjects;
+    await section.save();
+
+    return res.status(200).json({ message: "Subjects assigned successfully", data: section.subjects });
+
+  } catch (error) {
+    console.error("Assign Subjects Error:", error);
+    await logError(req, error);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// Get subjects for a section
+export const getSectionSubjects = async (req: Request, res: Response) => {
+  try {
+    const { sectionId } = req.params;
+    const { tenantId, schoolId } = req.query;
+
+    if (!tenantId || !schoolId || !sectionId) {
+      return res.status(400).json({ message: "tenantId, schoolId, and sectionId are required!" });
+    }
+
+    const section = await SectionModel.findOne({ _id: sectionId, tenantId, schoolId })
+      .populate('subjects.subjectId', 'name code creditHours')
+      .populate('subjects.teacherId', 'profile.firstName profile.lastName account.primaryEmail')
+      .lean();
+
+    if (!section) {
+      return res.status(404).json({ message: "Section not found!" });
+    }
+
+    return res.status(200).json({
+      message: "Section subjects fetched",
+      data: section.subjects || []
+    });
+
+  } catch (error) {
+    console.error("Get Section Subjects Error:", error);
+    await logError(req, error);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
 

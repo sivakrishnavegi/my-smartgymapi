@@ -11,6 +11,8 @@ import {
   getStudentsBySection,
   addStudentToSection,
   getStudent,
+  assignSubjects,
+  getSectionSubjects
 } from "../controllers/sectionController";
 import { protect } from "../middlewares/authMiddleware";
 
@@ -953,5 +955,64 @@ router.post("/:sectionId/students", protect, addStudentToSection);
  *         description: Internal server error
  */
 router.get("/:sectionId/students/:studentId", protect, getStudent);
+
+/**
+ * @swagger
+ * /api/sections/{sectionId}/subjects:
+ *   post:
+ *     summary: Assign subjects to a section with teachers
+ *     tags: [Sections]
+ *     parameters:
+ *       - in: path
+ *         name: sectionId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [tenantId, schoolId, subjects]
+ *             properties:
+ *               tenantId: { type: string }
+ *               schoolId: { type: string }
+ *               subjects:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     subjectId: { type: string }
+ *                     teacherId: { type: string }
+ *     responses:
+ *       200: { description: Subjects assigned successfully }
+ *       400: { description: Invalid input }
+ */
+router.post("/:sectionId/subjects", protect, assignSubjects);
+
+/**
+ * @swagger
+ * /api/sections/{sectionId}/subjects:
+ *   get:
+ *     summary: Get subjects assigned to a section
+ *     tags: [Sections]
+ *     parameters:
+ *       - in: path
+ *         name: sectionId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: tenantId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: schoolId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: Subjects fetched successfully }
+ *       404: { description: Section not found }
+ */
+router.get("/:sectionId/subjects", protect, getSectionSubjects);
 
 export default router;

@@ -22,11 +22,13 @@ const {
   eventRoutes,
   classesRoutes,
   sectionRoutes,
+  subjectRoutes,
   superAdminRoutes,
   appConfigRoutes,
   academicYearRoutes,
   manageStaffRoutes,
   socketRoutes,
+  teacherRoutes,
 } = AppRoutes;
 
 const allowedOrigins: string[] = [
@@ -121,6 +123,7 @@ const routes: { path: string; router: Router; middlewares?: any[] }[] = [
   { path: "/api/roles", router: rolesRoutes },
   { path: "/api/classes", router: classesRoutes },
   { path: "/api/sections", router: sectionRoutes },
+  { path: "/api/subjects", router: subjectRoutes },
   { path: "/api/users", router: userRoutes },
   { path: "/api/events", router: eventRoutes },
   { path: "/api/google", router: googleAuthRoutes },
@@ -130,6 +133,7 @@ const routes: { path: string; router: Router; middlewares?: any[] }[] = [
   { path: "/api/app-config", router: appConfigRoutes },
   { path: "/api/academic-years", router: academicYearRoutes },
   { path: "/api/socket", router: socketRoutes },
+  { path: "/api/teachers", router: teacherRoutes },
 ];
 
 routes.forEach(({ path, router, middlewares }) => {

@@ -12,10 +12,12 @@ import googleMeetRoutes from "./googleMeetRoutes";
 import rolesRoutes from "./roleRoutes";
 import schoolRoutes from "./school.routes";
 import sectionRoutes from "./section.routes";
+import subjectRoutes from "./subjectRoutes";
 import socketRoutes from "./socket/socketRoutes";
 import superAdminRoutes from "./superadminRoutes";
 import tenantRoutes from "./tenantRoutes";
 import userRoutes from "./user.routes";
+import teacherRoutes from "./teacherRoutes";
 
 const routes = {
   appConfigRoutes,
@@ -27,6 +29,7 @@ const routes = {
   academicYearRoutes,
   schoolRoutes,
   sectionRoutes,
+  subjectRoutes,
   tenantRoutes,
   userRoutes,
   googleAuthRoutes,
@@ -34,6 +37,7 @@ const routes = {
   superAdminRoutes,
   manageStaffRoutes,
   socketRoutes,
+  teacherRoutes,
 };
 
 export default routes;
