@@ -40,6 +40,16 @@ export const addNewStaffMemberToSchool = async (
       return res.status(400).json({ error: "Account information is required" });
     }
 
+
+    // Enforce defaults for Teachers
+    if (role && role.toLowerCase() === 'teacher') {
+      if (!account.password) {
+        account.password = 'teacher123';
+      }
+      // Enforce inactive status for new teachers as per requirement
+      account.isActive = false;
+    }
+
     const { username, password, isActive, permissions, email } = account;
 
     if (!email)

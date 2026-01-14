@@ -337,8 +337,28 @@ export const updateSectionsByClass = async (req: Request, res: Response) => {
       }
     }
 
-    // 5. Update
-    classObj.sections = sections;
+    // 5. Check for conflicts: Ensure sections aren't already assigned to OTHER classes
+    const conflictingClasses = await ClassModel.find({
+      _id: { $ne: classId },
+      sections: { $in: sections }
+    }).select('sections');
+
+    const claimedSectionIds = new Set<string>();
+    conflictingClasses.forEach(cls => {
+      if (cls.sections) {
+        cls.sections.forEach(secId => {
+          if (sections.includes(secId.toString())) {
+            claimedSectionIds.add(secId.toString());
+          }
+        });
+      }
+    });
+
+    // Valid sections are those NOT claimed by other classes
+    const validSections = sections.filter((secId: string) => !claimedSectionIds.has(secId));
+
+    // 6. Update
+    classObj.sections = validSections;
     await classObj.save();
 
     return res.status(200).json({

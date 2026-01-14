@@ -4,6 +4,7 @@ import { SubjectModel } from "../models/subject.model";
 import { ClassModel } from "../models/class.model";
 import { SectionModel } from "../models/section.model";
 import { logError } from "../utils/errorLogger";
+import { isValidObjectId } from "mongoose";
 
 /**
  * Create a new subject
@@ -15,6 +16,10 @@ export const createSubject = async (req: Request, res: Response) => {
 
         if (!tenantId || !schoolId || !classId || !sectionId || !name || !code) {
             return res.status(400).json({ message: "Missing required fields: tenantId, schoolId, classId, sectionId, name, code" });
+        }
+
+        if (!isValidObjectId(classId) || !isValidObjectId(sectionId)) {
+            return res.status(400).json({ message: "Invalid classId or sectionId format" });
         }
 
         // Check if Class exists and belongs to Tenant/School

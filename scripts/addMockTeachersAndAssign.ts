@@ -1,5 +1,6 @@
 
 import dotenv from 'dotenv';
+import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 import UserModel from '../models/users.schema';
 import { SectionModel } from '../models/section.model';
@@ -40,7 +41,7 @@ const addMockTeachersAndAssign = async () => {
         let sectionDoc = await SectionModel.findOne({ tenantId, schoolId, classId: classDoc._id, sectionName: 'Section A' });
         if (!sectionDoc) {
             // Fetch a user for createdBy
-            const creator = await UserModel.findOne({ tenantId }); 
+            const creator = await UserModel.findOne({ tenantId });
             sectionDoc = await SectionModel.create({
                 tenantId, schoolId, classId: classDoc._id, sectionName: 'Section A', sectionCode: 'G10-A', isActive: true,
                 createdBy: creator?._id || new mongoose.Types.ObjectId()
@@ -68,12 +69,20 @@ const addMockTeachersAndAssign = async () => {
         for (const t of teacherData) {
             let user = await UserModel.findOne({ 'account.primaryEmail': t.email });
             if (!user) {
+                // Default password hash for 'teacher123'
+                const passwordHash = await bcrypt.hash('teacher123', 12);
+
                 user = await UserModel.create({
                     tenantId,
                     schoolId,
                     userType: 'teacher',
                     profile: { firstName: t.firstName, lastName: t.lastName },
-                    account: { primaryEmail: t.email, status: 'active', username: t.email.split('@')[0] }
+                    account: {
+                        primaryEmail: t.email,
+                        status: 'inactive', // Default inactive as per requirement
+                        username: t.email.split('@')[0],
+                        passwordHash: passwordHash
+                    }
                 });
                 console.log(`Created User: ${t.firstName} ${t.lastName}`);
             }
