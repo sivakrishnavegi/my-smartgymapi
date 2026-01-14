@@ -67,9 +67,34 @@ export const createSubject = async (req: Request, res: Response) => {
  * GET /api/subjects
  * Query Params: tenantId, schoolId, classId, sectionId (Required)
  */
+
 export const getSubjects = async (req: Request, res: Response) => {
     try {
-        const { tenantId, schoolId, classId, sectionId } = req.query;
+        // Handle both flat and nested params (params[key])
+        let queryParams = (req.query.params || req.query) as any;
+
+        // Robust Fallback: Check manual URL params if tenantId missing
+        // This handles cases where Express query parser (simple) doesn't parse 'params[key]' as object
+        if (!queryParams?.tenantId && req.originalUrl.includes('?')) {
+            try {
+                const url = new URL(req.originalUrl, `http://${req.headers.host || 'localhost'}`);
+                const sp = url.searchParams;
+                // Check if we have the specific nested keys we need
+                if (sp.has('params[tenantId]')) {
+                    queryParams = {
+                        tenantId: sp.get('params[tenantId]'),
+                        schoolId: sp.get('params[schoolId]'),
+                        classId: sp.get('params[classId]'),
+                        sectionId: sp.get('params[sectionId]'),
+                        ...queryParams // Keep any other parsed keys
+                    };
+                }
+            } catch (e) {
+                console.error("Manual param parsing error:", e);
+            }
+        }
+
+        const { tenantId, schoolId, classId, sectionId } = queryParams;
 
         if (!tenantId || !schoolId || !classId || !sectionId) {
             return res.status(400).json({ message: "tenantId, schoolId, classId, and sectionId are required" });
