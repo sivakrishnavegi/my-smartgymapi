@@ -18,7 +18,9 @@ export type UserType =
   | "teacher"
   | "student"
   | "librarian"
-  | "guardian";
+  | "guardian"
+  | "user"
+  | "trainer";
 export type AccountStatus = "active" | "inactive" | "suspended";
 
 export interface IContact {
@@ -76,7 +78,7 @@ export interface IUser extends Document {
   employment?: IEmployment;
   enrollment?: IEnrollment;
   createdAt: Date;
-  createdBy? :Types.ObjectId
+  createdBy?: Types.ObjectId
 }
 export interface IAuthProvider {
   provider: "local" | "google";
@@ -110,6 +112,8 @@ const UserSchema = new Schema<IUser>({
       "guardian",
       "guest",
       "superadmin",
+      "user",
+      "trainer",
     ],
     required: true,
   },
@@ -163,7 +167,7 @@ const UserSchema = new Schema<IUser>({
     regNo: String,
   },
   createdAt: { type: Date, default: Date.now },
-  createdBy : { type: ObjectId, ref: "User" }
+  createdBy: { type: ObjectId, ref: "User" }
 });
 
 // ------------------ Pre-save Hook ------------------

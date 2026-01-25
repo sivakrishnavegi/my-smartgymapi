@@ -1,4 +1,4 @@
-export type UserType = "admin" | "teacher" | "student" | "librarian" | "guardian" | "user" | "guest" | "superadmin";
+export type UserType = "admin" | "superadmin" | "guest" | "teacher" | "student" | "librarian" | "guardian" | "user" | "trainer";
 
 export interface IUser {
   _id: string
@@ -13,7 +13,9 @@ declare global {
       user?: {
         id: string;
         email?: string;
-        role?: 'admin' | 'user' | 'trainer';
+        role?: UserType;
+        tenantId?: string;
+        schoolId?: string;
       };
     }
   }
