@@ -12,7 +12,10 @@ import {
   addStudentToSection,
   getStudent,
   assignSubjects,
-  getSectionSubjects
+  getSectionSubjects,
+  getSectionTeachers,
+  getSectionStats,
+  checkSectionAlignment
 } from "../controllers/sectionController";
 import { protect } from "../middlewares/authMiddleware";
 
@@ -1014,5 +1017,122 @@ router.post("/:sectionId/subjects", protect, assignSubjects);
  *       404: { description: Section not found }
  */
 router.get("/:sectionId/subjects", protect, getSectionSubjects);
+
+/**
+ * @swagger
+ * /api/sections/{sectionId}/teachers:
+ *   get:
+ *     summary: Get teachers assigned to a section
+ *     description: Retrieve a paginated list of teachers (homeroom + subject teachers) for a specific section.
+ *     tags: [Sections]
+ *     parameters:
+ *       - in: path
+ *         name: sectionId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: tenantId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: schoolId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *     responses:
+ *       200: { description: Teachers fetched successfully }
+ *       404: { description: Section not found }
+ */
+router.get("/:sectionId/teachers", protect, getSectionTeachers);
+
+/**
+ * @swagger
+ * /api/sections/{sectionId}/stats:
+ *   get:
+ *     summary: Get statistics for a section
+ *     description: Retrieve counts of students, subjects, and teachers for a specific section.
+ *     tags: [Sections]
+ *     parameters:
+ *       - in: path
+ *         name: sectionId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: tenantId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: schoolId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: Stats fetched successfully }
+ *       404: { description: Section not found }
+ */
+router.get("/:sectionId/stats", protect, getSectionStats);
+
+/**
+ * @swagger
+ * /api/sections/{sectionId}/check-alignment:
+ *   get:
+ *     summary: Check if a section is aligned with any class
+ *     description: Checks if the specified section is assigned to any class within the tenant and school.
+ *     tags: [Sections]
+ *     parameters:
+ *       - in: path
+ *         name: sectionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Section ID (MongoDB ObjectId)
+ *       - in: query
+ *         name: tenantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Tenant ID
+ *       - in: query
+ *         name: schoolId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: School ID
+ *     responses:
+ *       200:
+ *         description: Check successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     isAligned:
+ *                       type: boolean
+ *                     class:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         code:
+ *                           type: string
+ *       400:
+ *         description: Invalid input
+ *       404:
+ *         description: Section not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/:sectionId/check-alignment", protect, checkSectionAlignment);
 
 export default router;

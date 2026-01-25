@@ -8,6 +8,7 @@ import { Student } from "../models/student/student.schema";
 import { logError } from '../utils/errorLogger';
 import bcrypt from "bcrypt";
 import { SubjectModel } from "../models/subject.model";
+import { getPagination, buildPaginationResponse, getQueryParam } from "../utils/pagination/index";
 
 // Create a new section
 export const createSection = async (req: Request, res: Response) => {
@@ -372,11 +373,18 @@ export const updateSectionsByClass = async (req: Request, res: Response) => {
   }
 };
 
+
+
+// ... existing imports
+
 // Get students by section with pagination and search
 export const getStudentsBySection = async (req: Request, res: Response) => {
   try {
     const { sectionId } = req.params;
-    const { tenantId, schoolId, classId, page = "1", limit = "10", search } = req.query;
+    const { tenantId, schoolId, classId } = req.query;
+    const search = getQueryParam(req, "search");
+
+    const { page, limit, skip } = getPagination(req);
 
     // 1. Validation
     if (!mongoose.Types.ObjectId.isValid(sectionId)) {
@@ -469,11 +477,6 @@ export const getStudentsBySection = async (req: Request, res: Response) => {
       ];
     }
 
-    // 6. Pagination
-    const pageNum = parseInt(page as string, 10);
-    const limitNum = parseInt(limit as string, 10);
-    const skip = (pageNum - 1) * limitNum;
-
     // 7. Fetch students with pagination
     const [students, totalRecords] = await Promise.all([
       Student.find(query)
@@ -482,28 +485,63 @@ export const getStudentsBySection = async (req: Request, res: Response) => {
         )
         .sort({ rollNo: 1 })
         .skip(skip)
-        .limit(limitNum)
+        .limit(limit)
         .lean(),
       Student.countDocuments(query),
     ]);
 
-    // 8. Calculate pagination metadata
-    const totalPages = Math.ceil(totalRecords / limitNum);
+    const paginationData = buildPaginationResponse(page, limit, totalRecords);
 
     return res.status(200).json({
       message: "Students fetched successfully",
       data: {
         students,
-        pagination: {
-          currentPage: pageNum,
-          totalPages,
-          totalRecords,
-          limit: limitNum,
-        },
+        pagination: paginationData,
       },
     });
   } catch (error) {
     console.error("Get Students By Section Error:", error);
+    await logError(req, error);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
+export const checkSectionAlignment = async (req: Request, res: Response) => {
+  try {
+    const { sectionId } = req.params;
+    const { tenantId, schoolId } = req.query;
+
+    if (!mongoose.Types.ObjectId.isValid(sectionId)) {
+      return res.status(400).json({ message: "Invalid section ID!" });
+    }
+
+    if (!tenantId || !schoolId) {
+      return res.status(400).json({ message: "tenantId and schoolId are required!" });
+    }
+
+    // Check if section exists
+    const section = await SectionModel.findOne({ _id: sectionId, tenantId, schoolId });
+    if (!section) {
+      return res.status(404).json({ message: "Section not found!" });
+    }
+
+    // Check if aligned with any class
+    const alignedClass = await ClassModel.findOne({
+      sections: sectionId,
+      tenantId,
+      schoolId
+    }).select('name code');
+
+    return res.status(200).json({
+      message: "Section alignment check successful",
+      data: {
+        isAligned: !!alignedClass,
+        class: alignedClass || null
+      }
+    });
+
+  } catch (error) {
+    console.error("Check Section Alignment Error:", error);
     await logError(req, error);
     return res.status(500).json({ message: "Server Error" });
   }
@@ -873,6 +911,153 @@ export const getSectionSubjects = async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error("Get Section Subjects Error:", error);
+    await logError(req, error);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// Get teachers assigned to a section (Homeroom + Subject teachers)
+export const getSectionTeachers = async (req: Request, res: Response) => {
+  try {
+    const { sectionId } = req.params;
+    const { tenantId, schoolId } = req.query;
+    const { page, limit, skip } = getPagination(req);
+
+    if (!tenantId || !schoolId || !sectionId) {
+      return res.status(400).json({ message: "tenantId, schoolId, and sectionId are required!" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(sectionId)) {
+      return res.status(400).json({ message: "Invalid section ID!" });
+    }
+
+    const section = await SectionModel.findOne({ _id: sectionId, tenantId, schoolId });
+
+    if (!section) {
+      return res.status(404).json({ message: "Section not found!" });
+    }
+
+    // Collect all unique teacher IDs
+    const teacherIds = new Set<string>();
+
+    // Add homeroom teacher
+    if (section.homeroomTeacherId) {
+      teacherIds.add(section.homeroomTeacherId.toString());
+    }
+
+    // Add subject teachers
+    if (section.subjects && section.subjects.length > 0) {
+      section.subjects.forEach(sub => {
+        if (sub.teacherId) {
+          teacherIds.add(sub.teacherId.toString());
+        }
+      });
+    }
+
+    const uniqueTeacherIds = Array.from(teacherIds);
+    const totalTeachers = uniqueTeacherIds.length;
+
+    // Pagination
+    // Pagination logic replaced by getPagination utils
+
+    // Fetch teacher details
+    const teachers = await UserModel.find({
+      _id: { $in: uniqueTeacherIds },
+      userType: { $in: ['teacher', 'admin', 'superadmin'] } // Teachers might be admins too? stricter to just 'teacher' but let's allow flexibility if they are assigned
+    })
+      .select('profile.firstName profile.lastName profile.photoUrl profile.contact account.primaryEmail employment userType')
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    // Map to identify role in section (Homeroom or Subject Teacher) - Optional but helpful
+    const teachersWithRole = teachers.map(teacher => {
+      const t = teacher as any;
+      const isHomeroom = section.homeroomTeacherId && section.homeroomTeacherId.toString() === t._id.toString();
+      // Find subjects this teacher teaches in this section
+      const subjectsTaught = section.subjects?.filter(s => s.teacherId && s.teacherId.toString() === t._id.toString()).map(s => s.subjectId) || [];
+
+      return {
+        ...t,
+        isHomeroom,
+        subjectsTaught
+      };
+    });
+
+    const paginationData = buildPaginationResponse(page, limit, totalTeachers);
+
+    return res.status(200).json({
+      message: "Section teachers fetched successfully",
+      data: {
+        teachers: teachersWithRole,
+        pagination: paginationData
+      }
+    });
+
+  } catch (error) {
+    console.error("Get Section Teachers Error:", error);
+    await logError(req, error);
+    return res.status(500).json({ message: "Server Error" });
+  }
+};
+
+// Get section stats (Student count, Subject count, Teacher count)
+export const getSectionStats = async (req: Request, res: Response) => {
+  try {
+    const { sectionId } = req.params;
+    const { tenantId, schoolId } = req.query;
+
+    if (!tenantId || !schoolId || !sectionId) {
+      return res.status(400).json({ message: "tenantId, schoolId, and sectionId are required!" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(sectionId)) {
+      return res.status(400).json({ message: "Invalid section ID!" });
+    }
+
+    // 1. Verify Section
+    const section = await SectionModel.findOne({ _id: sectionId, tenantId, schoolId });
+    if (!section) {
+      return res.status(404).json({ message: "Section not found!" });
+    }
+
+    // 2. Count Students
+    const studentCount = await Student.countDocuments({
+      sectionId: sectionId,
+      status: 'Active',
+      tenantId,
+      schoolId
+    });
+
+    // 3. Count Subjects
+    // We count subjects associated with this section in SubjectModel
+    const subjectCount = await SubjectModel.countDocuments({
+      sectionId: sectionId,
+      tenantId,
+      schoolId
+    });
+
+    // 4. Count Teachers (Homeroom + Unique Subject Teachers)
+    const teacherIds = new Set<string>();
+    if (section.homeroomTeacherId) teacherIds.add(section.homeroomTeacherId.toString());
+    if (section.subjects) {
+      section.subjects.forEach(s => {
+        if (s.teacherId) teacherIds.add(s.teacherId.toString());
+      });
+    }
+    const teacherCount = teacherIds.size;
+
+    return res.status(200).json({
+      message: "Section stats fetched successfully",
+      data: {
+        totalStudents: studentCount,
+        totalSubjects: subjectCount,
+        totalTeachers: teacherCount
+      }
+    });
+
+  } catch (error) {
+    console.error("Get Section Stats Error:", error);
     await logError(req, error);
     return res.status(500).json({ message: "Server Error" });
   }
