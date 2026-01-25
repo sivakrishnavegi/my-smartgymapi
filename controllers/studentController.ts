@@ -1,7 +1,7 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import mongoose from "mongoose";
 import { Student } from "../models/student/student.schema";
-import UserModel from "../models/users.schema";
+import UserModel, { IUser } from "../models/users.schema";
 import { ClassModel } from "../models/class.model";
 import { SectionModel } from "../models/section.model";
 import { ExamModel } from "../models/exam.model";
@@ -9,29 +9,59 @@ import { ResultModel } from "../models/result.model";
 import { SubjectModel } from "../models/subject.model";
 import SchoolModel from "../models/schools.schema";
 import { logError } from "../utils/errorLogger";
+import { AuthenticatedRequest } from "../middlewares/authMiddleware";
 
 /**
  * Get complete details of a student including academic context, exams, and results.
  * @route GET /api/students/:studentId/complete-profile
  */
-export const getCompleteStudentDetails = async (req: Request, res: Response) => {
+export const getCompleteStudentDetails = async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const { studentId } = req.params;
-        const { tenantId, schoolId } = req.query;
+        let { studentId } = req.params;
+        const tenantId = (req.query.tenantId as string) || req.user?.tenantId;
+        const schoolId = (req.query.schoolId as string) || req.user?.schoolId;
 
-        // 1. Validation
-        if (!studentId || !tenantId || !schoolId) {
+        if (!tenantId || !schoolId) {
             return res.status(400).json({
-                message: "studentId, tenantId, and schoolId are required!",
+                message: "tenantId and schoolId are required!",
             });
+        }
+
+        // 1. Identification and Authorization Logic
+        if (studentId === "me") {
+            const userId = req.user?.id;
+            const currentUser = await UserModel.findById(userId).lean() as IUser | null;
+            if (!currentUser) {
+                return res.status(401).json({ message: "Authenticated user not found!" });
+            }
+
+            // A student user has enrollment.studentId; a guardian user has linkedStudentIds
+            const linkedStudentId = currentUser.enrollment?.studentId || (currentUser.linkedStudentIds && currentUser.linkedStudentIds[0]);
+
+            if (!linkedStudentId) {
+                return res.status(404).json({ message: "No linked student record found for this account!" });
+            }
+            studentId = linkedStudentId.toString();
+        } else {
+            // Role-based permission check for specific studentId
+            const userRole = req.user?.role;
+            if (userRole === "student" || userRole === "guardian") {
+                const userId = req.user?.id;
+                const currentUser = await UserModel.findById(userId).lean() as IUser | null;
+                const allowedIds = [
+                    currentUser?.enrollment?.studentId?.toString(),
+                    ...(currentUser?.linkedStudentIds?.map((id: any) => id.toString()) || [])
+                ];
+
+                if (!allowedIds.includes(studentId)) {
+                    return res.status(403).json({ message: "You do not have permission to view this student's profile!" });
+                }
+            }
+            // Admin and Teacher roles are allowed to view any profile within their scope
         }
 
         if (!mongoose.Types.ObjectId.isValid(studentId)) {
             return res.status(400).json({ message: "Invalid studentId format!" });
-        }
-
-        if (!mongoose.Types.ObjectId.isValid(schoolId as string)) {
-            return res.status(400).json({ message: "Invalid schoolId format!" });
         }
 
         // 2. Fetch Student Profile
