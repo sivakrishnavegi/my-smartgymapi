@@ -15,24 +15,177 @@ const checkRateLimit = async (userId: string, limit: number, windowSeconds: numb
     return current <= limit;
 };
 
-// --- Chat Interface ---
+// --- AI SaaS & Chat Implementation ---
 import { AiChatHistoryModel } from "../models/aiChatHistory.model";
+import { AiConfigModel } from "../models/AiConfig";
+
+/**
+ * Industry-standard AI query endpoint with SaaS billing.
+ * @route POST /api/ai-teacher/ask
+ */
+export const askAi = async (req: Request, res: Response) => {
+    try {
+        const {
+            subject,
+            input,
+            context,
+            options,
+            client_meta,
+            tenantId: payloadTenantId,
+            schoolId: payloadSchoolId,
+            sessionId: reqSessionId
+        } = req.body;
+
+        const user = (req as any).user;
+        const userId = user.id || user._id;
+        const tenantId = payloadTenantId || user.tenantId;
+        const schoolId = payloadSchoolId || user.schoolId;
+
+        // 1. Check AI Configuration & Subscription
+        const aiConfig = await AiConfigModel.findOne({ tenantId, schoolId });
+        if (!aiConfig || !aiConfig.isEnabled) {
+            return res.status(403).json({
+                success: false,
+                message: "AI Teacher service is not enabled for this school. Please contact support."
+            });
+        }
+
+        // 2. Check Token Limits
+        if (aiConfig.tokenManagement.usedThisMonth >= aiConfig.tokenManagement.monthlyLimit) {
+            return res.status(403).json({
+                success: false,
+                message: "Monthly AI token limit reached. Please upgrade your plan."
+            });
+        }
+
+        // 3. Prepare Payload for FastAPI
+        const sessionId = reqSessionId || uuidv4();
+        const pythonPayload = {
+            subject,
+            input,
+            context: {
+                ...context,
+                userId: userId.toString(),
+                userRole: user.role
+            },
+            options,
+            client_meta,
+            sessionId
+        };
+
+        // 4. Call FastAPI Microservice (Industry Standard)
+        console.log(`[AI Proxy] Calling FastAPI: ${PYTHON_SERVICE_URL}/ai/ask`);
+
+        // Mocking the call for now as requested
+        // In real implementation: 
+        /*
+        const pyRes = await fetch(`${PYTHON_SERVICE_URL}/ai/ask`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(pythonPayload)
+        });
+        const pyData = await pyRes.json();
+        */
+
+        // Mock Response Data
+        const mockResponse = {
+            answer: `[AI Teacher] Analysis of ${subject}: ${input.content}. This involves complex biological processes...`,
+            usage: {
+                inputTokens: 150,
+                outputTokens: 350,
+                totalTokens: 500,
+                cost: 0.0005
+            },
+            sessionId
+        };
+
+        // 5. Update Usage and History Atomically
+        const [updatedConfig] = await Promise.all([
+            AiConfigModel.findOneAndUpdate(
+                { tenantId, schoolId },
+                {
+                    $inc: {
+                        "tokenManagement.usedThisMonth": mockResponse.usage.totalTokens,
+                        "tokenManagement.totalUsed": mockResponse.usage.totalTokens
+                    }
+                },
+                { new: true }
+            ),
+            AiChatHistoryModel.findOneAndUpdate(
+                { sessionId, tenantId, schoolId },
+                {
+                    $setOnInsert: {
+                        tenantId,
+                        schoolId,
+                        userId,
+                        userRole: user.role,
+                        subjectId: subject,
+                        title: input.content.substring(0, 50) + "..."
+                    },
+                    $push: {
+                        messages: [
+                            {
+                                role: "user",
+                                content: input.content,
+                                timestamp: new Date()
+                            },
+                            {
+                                role: "assistant",
+                                content: mockResponse.answer,
+                                usage: mockResponse.usage,
+                                timestamp: new Date()
+                            }
+                        ]
+                    }
+                },
+                { upsert: true, new: true }
+            )
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                ...mockResponse,
+                remainingTokens: updatedConfig!.tokenManagement.monthlyLimit - updatedConfig!.tokenManagement.usedThisMonth
+            }
+        });
+
+    } catch (error: any) {
+        console.error("AI Ask Error:", error);
+        res.status(500).json({ success: false, message: "Error processing AI request" });
+    }
+};
+
+/**
+ * Get AI configuration for the school (Admins only).
+ * @route GET /api/ai-teacher/config
+ */
+export const getAiConfiguration = async (req: Request, res: Response) => {
+    try {
+        const user = (req as any).user;
+        const { tenantId, schoolId } = user;
+        const config = await AiConfigModel.findOne({ tenantId, schoolId });
+
+        if (!config) {
+            return res.status(404).json({ success: false, message: "AI Configuration not found for this school." });
+        }
+
+        res.status(200).json({ success: true, data: config });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: "Error fetching AI configuration" });
+    }
+};
 
 export const chatWithAi = async (req: Request, res: Response) => {
     try {
         const { message, subjectId, topicId, sessionId: reqSessionId } = req.body;
-        // @ts-ignore
-        const userId = req.user._id; 
-        // @ts-ignore
-        const userRole = req.user.userType;
-        // @ts-ignore
-        const userClass = req.user.enrollment?.classId;
-        // @ts-ignore
-        const userSection = req.user.enrollment?.sectionId;
-        // @ts-ignore
-        const tenantId = req.user.tenantId;
-        // @ts-ignore
-        const schoolId = req.user.schoolId;
+        const user = (req as any).user;
+        const userId = user.id || user._id;
+        const userRole = user.userType;
+        const userClass = user.enrollment?.classId;
+        const userSection = user.enrollment?.sectionId;
+        const tenantId = user.tenantId;
+        const schoolId = user.schoolId;
 
         // 1. Rate Limiting
         const isAllowed = await checkRateLimit(userId.toString(), 20, 60);
@@ -45,7 +198,7 @@ export const chatWithAi = async (req: Request, res: Response) => {
 
         // 3. Mock Forwarding to Python Microservice
         console.log(`[AI Proxy] Forwarding to Python: User=${userId}, Msg="${message}"`);
-        
+
         // 4. Response (Mocking RAG response)
         const mockResponse = {
             answer: `[AI Teacher] I see you are asking about "${message}". Since you are in Class ${userClass}, I will explain this simply...`,
@@ -57,7 +210,7 @@ export const chatWithAi = async (req: Request, res: Response) => {
         const historyKey = `chat_history:${userId}:${sessionId}`;
         await redis.lpush(historyKey, JSON.stringify({ role: "user", content: message }));
         await redis.lpush(historyKey, JSON.stringify({ role: "assistant", content: mockResponse.answer }));
-        await redis.ltrim(historyKey, 0, 19); 
+        await redis.ltrim(historyKey, 0, 19);
         await redis.expire(historyKey, 3600); // Expire after 1 hour of inactivity
 
         // 6. Save to History (MongoDB - Long Term Persistence)

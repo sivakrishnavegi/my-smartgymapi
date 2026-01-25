@@ -3,6 +3,12 @@ import { Schema, model, Document, Types } from "mongoose";
 export interface IMessage {
     role: "user" | "assistant" | "system";
     content: string;
+    usage?: {
+        inputTokens: number;
+        outputTokens: number;
+        totalTokens: number;
+        cost?: number;
+    };
     timestamp: Date;
 }
 
@@ -28,6 +34,12 @@ export interface IAiChatHistory extends Document {
 const MessageSchema = new Schema<IMessage>({
     role: { type: String, enum: ["user", "assistant", "system"], required: true },
     content: { type: String, required: true },
+    usage: {
+        inputTokens: { type: Number, default: 0 },
+        outputTokens: { type: Number, default: 0 },
+        totalTokens: { type: Number, default: 0 },
+        cost: { type: Number, default: 0 },
+    },
     timestamp: { type: Date, default: Date.now },
 });
 

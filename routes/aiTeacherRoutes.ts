@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { chatWithAi, uploadKnowledge, getIngestionStatus } from "../controllers/aiTeacherController";
+import { chatWithAi, askAi, getAiConfiguration, uploadKnowledge, getIngestionStatus } from "../controllers/aiTeacherController";
 import { protect } from "../middlewares/authMiddleware";
 
 const router = Router();
@@ -63,6 +63,86 @@ router.use(protect);
  *         description: Rate limit exceeded
  */
 router.post("/chat", chatWithAi);
+
+/**
+ * @swagger
+ * /api/ai-teacher/ask:
+ *   post:
+ *     summary: Industry-standard AI query with SaaS billing
+ *     tags: [AI Teacher]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - subject
+ *               - input
+ *             properties:
+ *               subject:
+ *                 type: string
+ *                 example: "biology"
+ *               input:
+ *                 type: object
+ *                 properties:
+ *                   type:
+ *                     type: string
+ *                     example: "text"
+ *                   content:
+ *                     type: string
+ *                     example: "Explain photosynthesis"
+ *               context:
+ *                 type: object
+ *                 properties:
+ *                   chapter:
+ *                     type: string
+ *                   language:
+ *                     type: string
+ *                     example: "en"
+ *               options:
+ *                 type: object
+ *                 properties:
+ *                   difficulty:
+ *                     type: string
+ *                     example: "simple"
+ *                   use_examples:
+ *                     type: boolean
+ *               client_meta:
+ *                 type: object
+ *               tenantId:
+ *                 type: string
+ *               schoolId:
+ *                 type: string
+ *               sessionId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: AI Response and remaining tokens
+ *       403:
+ *         description: AI disabled or tokens exhausted
+ *       500:
+ *         description: Server error
+ */
+router.post("/ask", askAi);
+
+/**
+ * @swagger
+ * /api/ai-teacher/config:
+ *   get:
+ *     summary: Get AI configuration for the school
+ *     tags: [AI Teacher]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: AI Configuration details
+ *       404:
+ *         description: Config not found
+ */
+router.get("/config", getAiConfiguration);
 
 /**
  * @swagger
