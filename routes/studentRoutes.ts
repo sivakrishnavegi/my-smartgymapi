@@ -16,7 +16,7 @@ const router = Router();
  * /api/students/{studentId}/complete-profile:
  *   get:
  *     summary: Get complete student profile and academic details
- *     description: Retrieves a comprehensive dataset for a student, including personal profile, class/section details, subjects, exams, and results.
+ *     description: Retrieves a comprehensive dataset for a student. Use "me" as studentId to fetch the profile of the authenticated user (student or guardian). Admin and Teacher roles can fetch any student profile within their scope.
  *     tags: [Students]
  *     security:
  *       - bearerAuth: []
@@ -26,19 +26,19 @@ const router = Router();
  *         required: true
  *         schema:
  *           type: string
- *         description: MongoDB ID of the student record
+ *         description: MongoDB ID of the student record, or "me" for authenticated user's profile
  *       - in: query
  *         name: tenantId
- *         required: true
+ *         required: false
  *         schema:
  *           type: string
- *         description: Tenant ID
+ *         description: Tenant ID (optional if provided in Bearer token)
  *       - in: query
  *         name: schoolId
- *         required: true
+ *         required: false
  *         schema:
  *           type: string
- *         description: School ID
+ *         description: School ID (optional if provided in Bearer token)
  *     responses:
  *       200:
  *         description: Successfully fetched complete student details

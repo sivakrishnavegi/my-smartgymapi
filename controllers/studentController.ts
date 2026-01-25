@@ -57,7 +57,6 @@ export const getCompleteStudentDetails = async (req: AuthenticatedRequest, res: 
                     return res.status(403).json({ message: "You do not have permission to view this student's profile!" });
                 }
             }
-            // Admin and Teacher roles are allowed to view any profile within their scope
         }
 
         if (!mongoose.Types.ObjectId.isValid(studentId)) {
