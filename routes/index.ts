@@ -19,6 +19,7 @@ import tenantRoutes from "./tenantRoutes";
 import userRoutes from "./user.routes";
 import teacherRoutes from "./teacherRoutes";
 import libraryRoutes from "./library.routes";
+import aiTeacherRoutes from "./aiTeacherRoutes";
 
 const routes = {
   appConfigRoutes,
@@ -40,6 +41,7 @@ const routes = {
   socketRoutes,
   teacherRoutes,
   libraryRoutes,
+  aiTeacherRoutes,
 };
 
 export default routes;

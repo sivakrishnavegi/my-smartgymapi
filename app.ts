@@ -30,6 +30,7 @@ const {
   socketRoutes,
   teacherRoutes,
   libraryRoutes,
+  aiTeacherRoutes,
 } = AppRoutes;
 
 const allowedOrigins: string[] = [
@@ -136,6 +137,7 @@ const routes: { path: string; router: Router; middlewares?: any[] }[] = [
   { path: "/api/socket", router: socketRoutes },
   { path: "/api/teachers", router: teacherRoutes },
   { path: "/api/library", router: libraryRoutes },
+  { path: "/api/ai-teacher", router: aiTeacherRoutes },
 ];
 
 routes.forEach(({ path, router, middlewares }) => {
