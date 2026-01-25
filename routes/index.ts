@@ -20,6 +20,7 @@ import userRoutes from "./user.routes";
 import teacherRoutes from "./teacherRoutes";
 import libraryRoutes from "./library.routes";
 import aiTeacherRoutes from "./aiTeacherRoutes";
+import studentRoutes from "./studentRoutes";
 
 const routes = {
   appConfigRoutes,
@@ -42,6 +43,7 @@ const routes = {
   teacherRoutes,
   libraryRoutes,
   aiTeacherRoutes,
+  studentRoutes,
 };
 
 export default routes;
