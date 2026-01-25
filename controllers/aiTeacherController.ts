@@ -18,6 +18,7 @@ const checkRateLimit = async (userId: string, limit: number, windowSeconds: numb
 // --- AI SaaS & Chat Implementation ---
 import { AiChatHistoryModel } from "../models/aiChatHistory.model";
 import { AiConfigModel } from "../models/AiConfig";
+import { AiHistoryService } from "../services/aiHistoryService";
 
 /**
  * Industry-standard AI query endpoint with SaaS billing.
@@ -99,7 +100,7 @@ export const askAi = async (req: Request, res: Response) => {
             sessionId
         };
 
-        // 5. Update Usage and History Atomically
+        // 5. Update Usage (Atomic) and History (via Service)
         const [updatedConfig] = await Promise.all([
             AiConfigModel.findOneAndUpdate(
                 { tenantId, schoolId },
@@ -111,35 +112,17 @@ export const askAi = async (req: Request, res: Response) => {
                 },
                 { new: true }
             ),
-            AiChatHistoryModel.findOneAndUpdate(
-                { sessionId, tenantId, schoolId },
-                {
-                    $setOnInsert: {
-                        tenantId,
-                        schoolId,
-                        userId,
-                        userRole: user.role,
-                        subjectId: subject,
-                        title: input.content.substring(0, 50) + "..."
-                    },
-                    $push: {
-                        messages: [
-                            {
-                                role: "user",
-                                content: input.content,
-                                timestamp: new Date()
-                            },
-                            {
-                                role: "assistant",
-                                content: mockResponse.answer,
-                                usage: mockResponse.usage,
-                                timestamp: new Date()
-                            }
-                        ]
-                    }
-                },
-                { upsert: true, new: true }
-            )
+            AiHistoryService.saveChatTurn({
+                sessionId,
+                tenantId,
+                schoolId,
+                userId: userId.toString(),
+                userRole: user.role,
+                subjectId: subject,
+                userMessage: input.content,
+                assistantMessage: mockResponse.answer,
+                usage: mockResponse.usage
+            })
         ]);
 
         return res.status(200).json({
@@ -257,38 +240,18 @@ export const chatWithAi = async (req: Request, res: Response) => {
             sessionId
         };
 
-        // 5. Save to History (Redis - Short Term)
-        const historyKey = `chat_history:${userId}:${sessionId}`;
-        await redis.lpush(historyKey, JSON.stringify({ role: "user", content: message }));
-        await redis.lpush(historyKey, JSON.stringify({ role: "assistant", content: mockResponse.answer }));
-        await redis.ltrim(historyKey, 0, 19);
-        await redis.expire(historyKey, 3600); // Expire after 1 hour of inactivity
-
-        // 6. Save to History (MongoDB - Long Term Persistence)
-        // Upsert the session document
-        await AiChatHistoryModel.findOneAndUpdate(
-            { sessionId, tenantId, schoolId },
-            {
-                $setOnInsert: {
-                    tenantId,
-                    schoolId,
-                    userId,
-                    userRole,
-                    classId: userClass,
-                    sectionId: userSection,
-                    subjectId, // optional context from starting the chat
-                    topicId,
-                    title: message.substring(0, 50) + "..." // Simple title generation
-                },
-                $push: {
-                    messages: [
-                        { role: "user", content: message, timestamp: new Date() },
-                        { role: "assistant", content: mockResponse.answer, timestamp: new Date() }
-                    ]
-                }
-            },
-            { upsert: true, new: true }
-        );
+        // 5. Save to History (Service handles both Redis & MongoDB)
+        await AiHistoryService.saveChatTurn({
+            sessionId,
+            tenantId,
+            schoolId,
+            userId: userId.toString(),
+            userRole,
+            subjectId,
+            topicId,
+            userMessage: message,
+            assistantMessage: mockResponse.answer
+        });
 
         res.status(200).json(mockResponse);
 

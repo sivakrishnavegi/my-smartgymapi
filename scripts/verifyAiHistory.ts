@@ -1,65 +1,55 @@
-import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import { AiHistoryService } from '../services/aiHistoryService';
+import redis from '../config/redis';
+import * as dotenv from 'dotenv';
 dotenv.config();
 
-import mongoose from 'mongoose';
-import { connectDB } from '../config/ds';
-import { chatWithAi } from '../controllers/aiTeacherController';
-import { AiChatHistoryModel } from '../models/aiChatHistory.model';
-import { Request, Response } from 'express';
-
-const run = async () => {
+async function verifyAIHistory() {
     try {
-        await connectDB();
-        console.log("DB Connected");
+        await mongoose.connect(process.env.MONGODB_SECRET_URI as string);
+        const sessionId = `test-session-${Date.now()}`;
+        const userId = '69764a2a25ffdb4e0b3da4ec';
+        const tenantId = 'test-tenant';
+        const schoolId = new mongoose.Types.ObjectId().toString();
 
-        // Mock User
-        const userId = new mongoose.Types.ObjectId();
-        const tenantId = "verify-tenant-history";
-        const schoolId = new mongoose.Types.ObjectId();
+        console.log('--- Step 1: Saving a chat turn ---');
+        await AiHistoryService.saveChatTurn({
+            sessionId,
+            tenantId,
+            schoolId,
+            userId,
+            userRole: 'student',
+            userMessage: 'Hello AI Teacher, explain gravity.',
+            assistantMessage: 'Gravity is a force that pulls objects toward each other...'
+        });
+        console.log('✅ Chat turn saved.');
 
-        const req = {
-            body: { message: "What is history?", subjectId: "hist-101" },
-            user: {
-                _id: userId,
-                userType: "student",
-                enrollment: { classId: new mongoose.Types.ObjectId(), sectionId: new mongoose.Types.ObjectId() },
-                tenantId,
-                schoolId
-            }
-        } as unknown as Request;
+        console.log('\n--- Step 2: Checking Redis Cache ---');
+        const redisKey = `chat_history:${sessionId}`;
+        const cached = await redis.lrange(redisKey, 0, -1);
+        console.log(`Redis contains ${cached.length} messages.`);
+        cached.forEach((m, i) => console.log(`  [${i}] ${m.substring(0, 50)}...`));
 
-        const res = {
-            status: (code: number) => ({ json: (d: any) => console.log("Status:", code, "Data:", JSON.stringify(d)) }),
-            json: (d: any) => console.log("Data:", JSON.stringify(d))
-        } as unknown as Response;
+        console.log('\n--- Step 3: Verifying Service Retrieval (should come from Redis) ---');
+        const history = await AiHistoryService.getRecentHistory(sessionId);
+        console.log(`Retrieved ${history.length} messages from service.`);
 
-        console.log("Sending Chat Request...");
-        // This will try to use Real Redis if imported. 
-        // If Redis fails, the controller catches error. 
-        // We hope it degrades gracefully or we have redis running (which previous scripts showed we do).
-        await chatWithAi(req, res);
+        console.log('\n--- Step 4: Clearing Redis and Verifying MongoDB Fallback ---');
+        await redis.del(redisKey);
+        console.log('Redis cache cleared.');
 
-        console.log("Checking MongoDB...");
-        const history = await AiChatHistoryModel.findOne({ tenantId, userId });
+        const historyFromDB = await AiHistoryService.getRecentHistory(sessionId);
+        console.log(`Retrieved ${historyFromDB.length} messages from service (should be from MongoDB).`);
+        console.log('Content check:', historyFromDB[0].content === 'Hello AI Teacher, explain gravity.' ? '✅ Correct' : '❌ Incorrect');
 
-        if (history) {
-            console.log("✅ SUCCESS: Chat History found in MongoDB!");
-            console.log("Session ID:", history.sessionId);
-            console.log("Messages Count:", history.messages.length);
-            console.log("Title:", history.title);
-        } else {
-            console.error("❌ FAILURE: Chat History NOT found in MongoDB.");
-        }
+        console.log('\n--- Verification Complete ---');
 
-        // Cleanup
-        if (history) await AiChatHistoryModel.deleteOne({ _id: history._id });
-
-    } catch (e) {
-        console.error("Verification Failed:", e);
+    } catch (error) {
+        console.error('Verification failed:', error);
     } finally {
-        await mongoose.connection.close();
-        process.exit(0);
+        await mongoose.disconnect();
+        await redis.quit();
     }
-};
+}
 
-run();
+verifyAIHistory();
