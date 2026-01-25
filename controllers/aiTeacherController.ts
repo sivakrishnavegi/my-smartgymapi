@@ -163,7 +163,16 @@ export const askAi = async (req: Request, res: Response) => {
 export const getAiConfiguration = async (req: Request, res: Response) => {
     try {
         const user = (req as any).user;
-        const { tenantId, schoolId } = user;
+        const { tenantId: queryTenantId, schoolId: querySchoolId } = req.query;
+
+        const tenantId = queryTenantId || user.tenantId;
+        const schoolId = querySchoolId || user.schoolId;
+
+        // Security: Ensure user is only accessing their own tenant
+        if (tenantId !== user.tenantId) {
+            return res.status(403).json({ success: false, message: "Unauthorized tenant access." });
+        }
+
         const config = await AiConfigModel.findOne({ tenantId, schoolId });
 
         if (!config) {
@@ -173,6 +182,48 @@ export const getAiConfiguration = async (req: Request, res: Response) => {
         res.status(200).json({ success: true, data: config });
     } catch (error: any) {
         res.status(500).json({ success: false, message: "Error fetching AI configuration" });
+    }
+};
+
+/**
+ * Update or Create AI configuration for the school (Admins only).
+ * @route POST /api/ai-teacher/config
+ */
+export const updateAiConfiguration = async (req: Request, res: Response) => {
+    try {
+        const user = (req as any).user;
+        const { isEnabled, subscription, tokenManagement, config, tenantId: bodyTenantId, schoolId: bodySchoolId } = req.body;
+
+        const tenantId = bodyTenantId || user.tenantId;
+        const schoolId = bodySchoolId || user.schoolId;
+
+        // Security: Ensure user is only accessing their own tenant
+        if (tenantId !== user.tenantId) {
+            return res.status(403).json({ success: false, message: "Unauthorized tenant access." });
+        }
+
+        const updatedConfig = await AiConfigModel.findOneAndUpdate(
+            { tenantId, schoolId },
+            {
+                $set: {
+                    isEnabled,
+                    subscription,
+                    tokenManagement,
+                    config,
+                    updatedAt: new Date()
+                }
+            },
+            { upsert: true, new: true, runValidators: true }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "AI Configuration updated successfully",
+            data: updatedConfig
+        });
+    } catch (error: any) {
+        console.error("Update AI Config Error:", error);
+        res.status(500).json({ success: false, message: "Error updating AI configuration" });
     }
 };
 

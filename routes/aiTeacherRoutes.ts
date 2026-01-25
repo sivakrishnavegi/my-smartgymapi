@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { chatWithAi, askAi, getAiConfiguration, uploadKnowledge, getIngestionStatus } from "../controllers/aiTeacherController";
+import { chatWithAi, askAi, getAiConfiguration, updateAiConfiguration, uploadKnowledge, getIngestionStatus } from "../controllers/aiTeacherController";
 import { protect } from "../middlewares/authMiddleware";
 
 const router = Router();
@@ -136,6 +136,17 @@ router.post("/ask", askAi);
  *     tags: [AI Teacher]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: tenantId
+ *         required: false
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: schoolId
+ *         required: false
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
  *         description: AI Configuration details
@@ -143,6 +154,58 @@ router.post("/ask", askAi);
  *         description: Config not found
  */
 router.get("/config", getAiConfiguration);
+
+/**
+ * @swagger
+ * /api/ai-teacher/config:
+ *   post:
+ *     summary: Update AI configuration for the school (Admins only)
+ *     tags: [AI Teacher]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               tenantId:
+ *                 type: string
+ *               schoolId:
+ *                 type: string
+ *               isEnabled:
+ *                 type: boolean
+ *               subscription:
+ *                 type: object
+ *                 properties:
+ *                   tier:
+ *                     type: string
+ *                     enum: [free, basic, premium]
+ *                   expiresAt:
+ *                     type: string
+ *                     format: date-time
+ *               tokenManagement:
+ *                 type: object
+ *                 properties:
+ *                   monthlyLimit:
+ *                     type: number
+ *               config:
+ *                 type: object
+ *                 properties:
+ *                   modelVendor:
+ *                     type: string
+ *                   defaultModel:
+ *                     type: string
+ *                   temperature:
+ *                     type: number
+ *     responses:
+ *       200:
+ *         description: AI Configuration updated successfully
+ *       500:
+ *         description: Server error
+ */
+router.post("/config", updateAiConfiguration);
 
 /**
  * @swagger
