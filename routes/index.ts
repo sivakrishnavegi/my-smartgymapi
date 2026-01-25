@@ -18,6 +18,7 @@ import superAdminRoutes from "./superadminRoutes";
 import tenantRoutes from "./tenantRoutes";
 import userRoutes from "./user.routes";
 import teacherRoutes from "./teacherRoutes";
+import libraryRoutes from "./library.routes";
 
 const routes = {
   appConfigRoutes,
@@ -38,6 +39,7 @@ const routes = {
   manageStaffRoutes,
   socketRoutes,
   teacherRoutes,
+  libraryRoutes,
 };
 
 export default routes;
