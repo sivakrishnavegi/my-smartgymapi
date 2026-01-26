@@ -1,55 +1,50 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
-export class ApiClient {
-    private client: AxiosInstance;
+/**
+ * Factory to create a pre-configured Axios instance.
+ */
+export const createApiClient = (baseURL: string, defaultHeaders: Record<string, string> = {}): AxiosInstance => {
+    const client = axios.create({
+        baseURL,
+        headers: defaultHeaders,
+        timeout: 10000,
+    });
 
-    constructor(baseURL: string, defaultHeaders: Record<string, string> = {}) {
-        this.client = axios.create({
-            baseURL,
-            headers: defaultHeaders,
-            timeout: 10000, // 10s default timeout
-        });
+    client.interceptors.response.use(
+        (response: AxiosResponse) => response,
+        (error) => {
+            const errorMessage = error.response
+                ? `API Error: ${error.response.status} ${error.response.statusText} - ${JSON.stringify(error.response.data)}`
+                : `Network Error: ${error.message}`;
 
-        // Response Interceptor for detailed error logging
-        this.client.interceptors.response.use(
-            (response: AxiosResponse) => response,
-            (error) => {
-                const errorMessage = error.response
-                    ? `API Error: ${error.response.status} ${error.response.statusText} - ${JSON.stringify(error.response.data)}`
-                    : `Network Error: ${error.message}`;
+            console.error(errorMessage);
+            return Promise.reject(error);
+        }
+    );
 
-                console.error(errorMessage);
-                return Promise.reject(error);
-            }
-        );
-    }
+    return client;
+};
 
-    public getClient(): AxiosInstance {
-        return this.client;
-    }
+/**
+ * Helper to wrap axios calls and return data directly.
+ */
+export const apiRequest = async <T>(client: AxiosInstance, config: AxiosRequestConfig): Promise<T> => {
+    const response = await client.request<T>(config);
+    return response.data;
+};
 
-    public async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-        const response = await this.client.get<T>(url, config);
-        return response.data;
-    }
+// Common methods for a cleaner API surface
+export const apiGet = <T>(client: AxiosInstance, url: string, config?: AxiosRequestConfig) =>
+    apiRequest<T>(client, { ...config, method: 'GET', url });
 
-    public async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-        const response = await this.client.post<T>(url, data, config);
-        return response.data;
-    }
+export const apiPost = <T>(client: AxiosInstance, url: string, data?: any, config?: AxiosRequestConfig) =>
+    apiRequest<T>(client, { ...config, method: 'POST', url, data });
 
-    public async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-        const response = await this.client.put<T>(url, data, config);
-        return response.data;
-    }
+export const apiPut = <T>(client: AxiosInstance, url: string, data?: any, config?: AxiosRequestConfig) =>
+    apiRequest<T>(client, { ...config, method: 'PUT', url, data });
 
-    public async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-        const response = await this.client.patch<T>(url, data, config);
-        return response.data;
-    }
+export const apiPatch = <T>(client: AxiosInstance, url: string, data?: any, config?: AxiosRequestConfig) =>
+    apiRequest<T>(client, { ...config, method: 'PATCH', url, data });
 
-    public async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-        const response = await this.client.delete<T>(url, config);
-        return response.data;
-    }
-}
+export const apiDelete = <T>(client: AxiosInstance, url: string, config?: AxiosRequestConfig) =>
+    apiRequest<T>(client, { ...config, method: 'DELETE', url });

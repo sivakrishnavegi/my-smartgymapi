@@ -16,9 +16,9 @@ const checkRateLimit = async (userId: string, limit: number, windowSeconds: numb
 };
 
 // --- AI SaaS & Chat Implementation ---
-import { AiChatHistoryModel } from "../models/aiChatHistory.model";
 import { AiConfigModel } from "../models/AiConfig";
 import { AiHistoryService } from "../services/aiHistoryService";
+import { askAiQuestion, checkAiHealth } from "../services/aiService";
 
 /**
  * Industry-standard AI query endpoint with SaaS billing.
@@ -59,46 +59,32 @@ export const askAi = async (req: Request, res: Response) => {
             });
         }
 
-        // 3. Prepare Payload for FastAPI
+        // 3. Prepare Payload for FastAPI (Updated to match real service schema)
         const sessionId = reqSessionId || uuidv4();
         const pythonPayload = {
-            subject,
-            input,
-            context: {
-                ...context,
-                userId: userId.toString(),
-                userRole: user.role
-            },
-            options,
-            client_meta,
-            sessionId
+            query: input.content,
+            tenant_id: tenantId,
+            school_id: schoolId,
+            context_filters: {
+                subject,
+                userRole: user.role,
+                ...context
+            }
         };
 
-        // 4. Call FastAPI Microservice (Industry Standard)
-        console.log(`[AI Proxy] Calling FastAPI: ${PYTHON_SERVICE_URL}/ai/ask`);
-
-        // Mocking the call for now as requested
-        // In real implementation: 
-        /*
-        const pyRes = await fetch(`${PYTHON_SERVICE_URL}/ai/ask`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(pythonPayload)
-        });
-        const pyData = await pyRes.json();
-        */
-
-        // Mock Response Data
-        const mockResponse = {
-            answer: `[AI Teacher] Analysis of ${subject}: ${input.content}. This involves complex biological processes...`,
-            usage: {
-                inputTokens: 150,
-                outputTokens: 350,
-                totalTokens: 500,
-                cost: 0.0005
-            },
-            sessionId
-        };
+        // 4. Call AI Service (Internal Health Check & Redis Caching)
+        let aiResponse;
+        try {
+            aiResponse = await askAiQuestion(pythonPayload);
+        } catch (err: any) {
+            if (err.message === 'AI_SERVICE_UNAVAILABLE') {
+                return res.status(503).json({
+                    success: false,
+                    message: "AI microservice is currently down for maintenance. Please try again in few minutes."
+                });
+            }
+            throw err;
+        }
 
         // 5. Update Usage (Atomic) and History (via Service)
         const [updatedConfig] = await Promise.all([
@@ -106,8 +92,8 @@ export const askAi = async (req: Request, res: Response) => {
                 { tenantId, schoolId },
                 {
                     $inc: {
-                        "tokenManagement.usedThisMonth": mockResponse.usage.totalTokens,
-                        "tokenManagement.totalUsed": mockResponse.usage.totalTokens
+                        "tokenManagement.usedThisMonth": aiResponse.usage?.totalTokens || 0,
+                        "tokenManagement.totalUsed": aiResponse.usage?.totalTokens || 0
                     }
                 },
                 { new: true }
@@ -120,16 +106,16 @@ export const askAi = async (req: Request, res: Response) => {
                 userRole: user.role,
                 subjectId: subject,
                 userMessage: input.content,
-                assistantMessage: mockResponse.answer,
-                usage: mockResponse.usage
+                assistantMessage: aiResponse.answer,
+                usage: aiResponse.usage
             })
         ]);
 
         return res.status(200).json({
             success: true,
             data: {
-                ...mockResponse,
-                remainingTokens: updatedConfig!.tokenManagement.monthlyLimit - updatedConfig!.tokenManagement.usedThisMonth
+                ...aiResponse,
+                remainingTokens: updatedConfig ? updatedConfig.tokenManagement.monthlyLimit - updatedConfig.tokenManagement.usedThisMonth : 0
             }
         });
 
