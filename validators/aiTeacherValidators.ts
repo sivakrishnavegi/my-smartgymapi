@@ -1,4 +1,12 @@
 import { z } from "zod";
+import { Types } from "mongoose";
+
+/**
+ * Helper for validating MongoDB ObjectIds
+ */
+const objectIdSchema = z.string().refine((val) => Types.ObjectId.isValid(val), {
+    message: "Invalid MongoDB ObjectId"
+});
 
 /**
  * Schema for /api/ai-teacher/ask
@@ -19,7 +27,7 @@ export const askAiSchema = z.object({
     }).default({ difficulty: "simple", use_examples: true }),
     client_meta: z.record(z.string(), z.any()).default({}),
     tenantId: z.string().optional(),
-    schoolId: z.string().optional(),
+    schoolId: objectIdSchema.optional(),
     sessionId: z.string().optional()
 });
 
@@ -51,5 +59,13 @@ export const updateAiConfigSchema = z.object({
         temperature: z.number().min(0).max(1).optional()
     }).optional(),
     tenantId: z.string().optional(),
-    schoolId: z.string().optional()
+    schoolId: objectIdSchema.optional()
+});
+
+/**
+ * Schema for /api/ai-teacher/config (GET query)
+ */
+export const getAiConfigQuerySchema = z.object({
+    tenantId: z.string().optional(),
+    schoolId: objectIdSchema.optional()
 });

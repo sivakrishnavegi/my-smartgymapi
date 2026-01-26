@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { chatWithAi, askAi, getAiConfiguration, updateAiConfiguration, uploadKnowledge, getIngestionStatus } from "../controllers/aiTeacherController";
 import { protect } from "../middlewares/authMiddleware";
-import { validate } from "../middlewares/validateMiddleware";
-import { askAiSchema, chatAiSchema, updateAiConfigSchema } from "../validators/aiTeacherValidators";
+import { validate, validateQuery } from "../middlewares/validateMiddleware";
+import { askAiSchema, chatAiSchema, updateAiConfigSchema, getAiConfigQuerySchema } from "../validators/aiTeacherValidators";
 
 const router = Router();
 
@@ -155,7 +155,7 @@ router.post("/ask", validate(askAiSchema), askAi);
  *       404:
  *         description: Config not found
  */
-router.get("/config", getAiConfiguration);
+router.get("/config", validateQuery(getAiConfigQuerySchema), getAiConfiguration);
 
 /**
  * @swagger
