@@ -20,8 +20,9 @@ export class AiHistoryService {
         userMessage: string;
         assistantMessage: string;
         usage?: any;
+        meta?: Record<string, any>;
     }) {
-        const { sessionId, tenantId, schoolId, userId, userRole, subjectId, topicId, userMessage, assistantMessage, usage } = params;
+        const { sessionId, tenantId, schoolId, userId, userRole, subjectId, topicId, userMessage, assistantMessage, usage, meta } = params;
 
         const messages: IMessage[] = [
             { role: "user", content: userMessage, timestamp: new Date() },
@@ -51,6 +52,7 @@ export class AiHistoryService {
                     userRole,
                     subjectId,
                     topicId,
+                    meta,
                     title: userMessage.substring(0, 50) + "..."
                 },
                 $push: {

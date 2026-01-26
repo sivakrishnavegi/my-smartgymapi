@@ -26,6 +26,8 @@ export interface IAiChatHistory extends Document {
     title?: string; // Auto-generated or user set
     messages: IMessage[];
 
+    meta?: Record<string, any>;
+
     isDeleted: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -57,6 +59,7 @@ const AiChatHistorySchema = new Schema<IAiChatHistory>({
     sessionId: { type: String, required: true, unique: true, index: true },
     title: { type: String },
     messages: [MessageSchema],
+    meta: { type: Map, of: Schema.Types.Mixed },
 
     isDeleted: { type: Boolean, default: false },
 }, { timestamps: true });

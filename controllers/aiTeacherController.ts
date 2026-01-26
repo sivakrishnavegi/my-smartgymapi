@@ -40,27 +40,46 @@ export const askAi = async (req: Request, res: Response) => {
 
         const user = (req as any).user;
         const userId = user.id || user._id;
+
+        // Security Resolve: Use payload if provided, but ensure it matches user's tenant for security
+        // Admin might be allowed to cross-tenant in some systems, but here we enforce consistency or role check
         const tenantId = payloadTenantId || user.tenantId;
         const schoolId = payloadSchoolId || user.schoolId;
 
-        // 1. Check AI Configuration & Subscription
-        const aiConfig = await AiConfigModel.findOne({ tenantId, schoolId });
-        if (!aiConfig || !aiConfig.isEnabled) {
+        if (user.role !== 'admin' && tenantId.toString() !== user.tenantId.toString()) {
             return res.status(403).json({
                 success: false,
-                message: "AI Teacher service is not enabled for this school. Please contact support."
+                message: "Unauthorized: You cannot request AI services for a different tenant."
+            });
+        }
+
+        // 1. Check AI Configuration & Subscription
+        const aiConfig = await AiConfigModel.findOne({ tenantId, schoolId });
+        if (!aiConfig) {
+            return res.status(404).json({
+                success: false,
+                message: "AI Configuration not found for this school. Please setup AI config first."
+            });
+        }
+
+        if (!aiConfig.isEnabled) {
+            return res.status(403).json({
+                success: false,
+                message: "AI Teacher service is currently disabled for this school."
             });
         }
 
         // 2. Check Token Limits
-        if (aiConfig.tokenManagement.usedThisMonth >= aiConfig.tokenManagement.monthlyLimit) {
+        const used = aiConfig.tokenManagement?.usedThisMonth || 0;
+        const limit = aiConfig.tokenManagement?.monthlyLimit || 0;
+        if (used >= limit) {
             return res.status(403).json({
                 success: false,
-                message: "Monthly AI token limit reached. Please upgrade your plan."
+                message: "Monthly AI token limit reached. Please upgrade your plan or contact support."
             });
         }
 
-        // 3. Prepare Payload for FastAPI (Updated to match real service schema)
+        // 3. Prepare Payload for FastAPI
         const sessionId = reqSessionId || uuidv4();
         const pythonPayload = {
             query: input.content,
@@ -70,7 +89,8 @@ export const askAi = async (req: Request, res: Response) => {
                 subject,
                 userRole: user.role,
                 ...context
-            }
+            },
+            options
         };
 
         // 4. Call AI Service (Internal Health Check & Redis Caching & Logging)
@@ -82,26 +102,35 @@ export const askAi = async (req: Request, res: Response) => {
                 userId: userId.toString(),
                 route: req.originalUrl
             });
+
+            if (!aiResponse || !aiResponse.answer) {
+                throw new Error("EMPTY_AI_RESPONSE");
+            }
         } catch (err: any) {
             await logError(req, err, `AI Service Call Failed for user ${userId}`);
 
             if (err.message === 'AI_SERVICE_UNAVAILABLE') {
                 return res.status(503).json({
                     success: false,
-                    message: "AI microservice is currently down for maintenance. Please try again in few minutes."
+                    message: "AI microservice is currently unreachable. Please try again shortly."
                 });
             }
-            throw err;
+
+            return res.status(500).json({
+                success: false,
+                message: "AI provider failed to respond. Technical details logged."
+            });
         }
 
         // 5. Update Usage (Atomic) and History (via Service)
+        const tokensUsed = aiResponse.usage?.totalTokens || 0;
         const [updatedConfig] = await Promise.all([
             AiConfigModel.findOneAndUpdate(
                 { tenantId, schoolId },
                 {
                     $inc: {
-                        "tokenManagement.usedThisMonth": aiResponse.usage?.totalTokens || 0,
-                        "tokenManagement.totalUsed": aiResponse.usage?.totalTokens || 0
+                        "tokenManagement.usedThisMonth": tokensUsed,
+                        "tokenManagement.totalUsed": tokensUsed
                     }
                 },
                 { new: true }
@@ -115,21 +144,27 @@ export const askAi = async (req: Request, res: Response) => {
                 subjectId: subject,
                 userMessage: input.content,
                 assistantMessage: aiResponse.answer,
-                usage: aiResponse.usage
+                usage: aiResponse.usage,
+                meta: client_meta
             })
         ]);
 
         return res.status(200).json({
             success: true,
             data: {
-                ...aiResponse,
+                answer: aiResponse.answer,
+                sessionId,
+                usage: aiResponse.usage,
                 remainingTokens: updatedConfig ? updatedConfig.tokenManagement.monthlyLimit - updatedConfig.tokenManagement.usedThisMonth : 0
             }
         });
 
     } catch (error: any) {
-        console.error("AI Ask Error:", error);
-        res.status(500).json({ success: false, message: "Error processing AI request" });
+        console.error("AI Ask Critical Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "A critical error occurred while processing your AI request."
+        });
     }
 };
 
@@ -209,49 +244,69 @@ export const chatWithAi = async (req: Request, res: Response) => {
         const { message, subjectId, topicId, sessionId: reqSessionId } = req.body;
         const user = (req as any).user;
         const userId = user.id || user._id;
-        const userRole = user.userType;
-        const userClass = user.enrollment?.classId;
-        const userSection = user.enrollment?.sectionId;
+
+        // userType is mapped from auth middleware
+        const userRole = user.role || user.userType;
         const tenantId = user.tenantId;
         const schoolId = user.schoolId;
 
-        // 1. Rate Limiting
-        const isAllowed = await checkRateLimit(userId.toString(), 20, 60);
-        if (!isAllowed) {
-            return res.status(429).json({ message: "Too many requests. Please try again later." });
+        // 1. Rate Limiting (Enhanced Fail-safe)
+        try {
+            const isAllowed = await checkRateLimit(userId.toString(), 20, 60);
+            if (!isAllowed) {
+                return res.status(429).json({
+                    success: false,
+                    message: "Too many chat requests. Please slow down and try again in a minute."
+                });
+            }
+        } catch (redisErr) {
+            console.error("[AiController] Rate limit check failed (Redis down?):", redisErr);
+            // Fail-safe: Allow if Redis is down, but log it.
         }
 
         // 2. Generate or Use Session ID
         const sessionId = reqSessionId || uuidv4();
 
-        // 3. Mock Forwarding to Python Microservice
-        console.log(`[AI Proxy] Forwarding to Python: User=${userId}, Msg="${message}"`);
+        // 3. Mock Forwarding to Python Microservice (In real scenario, call askAiQuestion or similar)
+        // For now keeping the mock logic but making it cleaner
+        console.log(`[AI Proxy] Chat Session=${sessionId}, User=${userId}, Msg="${message}"`);
 
         // 4. Response (Mocking RAG response)
         const mockResponse = {
-            answer: `[AI Teacher] I see you are asking about "${message}". Since you are in Class ${userClass}, I will explain this simply...`,
-            sources: ["Chapter 3: Force and Laws of Motion"],
+            answer: `[AI Teacher] I've received your message: "${message}". Currently, I'm analyzing this based on your profile as a ${userRole}.`,
+            sources: ["General Academic Knowledge Base"],
             sessionId
         };
 
         // 5. Save to History (Service handles both Redis & MongoDB)
-        await AiHistoryService.saveChatTurn({
-            sessionId,
-            tenantId,
-            schoolId,
-            userId: userId.toString(),
-            userRole,
-            subjectId,
-            topicId,
-            userMessage: message,
-            assistantMessage: mockResponse.answer
-        });
+        try {
+            await AiHistoryService.saveChatTurn({
+                sessionId,
+                tenantId,
+                schoolId,
+                userId: userId.toString(),
+                userRole,
+                subjectId,
+                topicId,
+                userMessage: message,
+                assistantMessage: mockResponse.answer
+            });
+        } catch (historyErr) {
+            console.error("[AiController] Failed to save chat history:", historyErr);
+            // Fail-safe: Continue even if history save fails (non-blocking for user)
+        }
 
-        res.status(200).json(mockResponse);
+        res.status(200).json({
+            success: true,
+            data: mockResponse
+        });
 
     } catch (error: any) {
         console.error("AI Chat Error:", error);
-        res.status(500).json({ message: "Error processing AI request" });
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while processing your chat request."
+        });
     }
 };
 

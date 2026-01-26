@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { chatWithAi, askAi, getAiConfiguration, updateAiConfiguration, uploadKnowledge, getIngestionStatus } from "../controllers/aiTeacherController";
 import { protect } from "../middlewares/authMiddleware";
+import { validate } from "../middlewares/validateMiddleware";
+import { askAiSchema, chatAiSchema, updateAiConfigSchema } from "../validators/aiTeacherValidators";
 
 const router = Router();
 
@@ -62,7 +64,7 @@ router.use(protect);
  *       429:
  *         description: Rate limit exceeded
  */
-router.post("/chat", chatWithAi);
+router.post("/chat", validate(chatAiSchema), chatWithAi);
 
 /**
  * @swagger
@@ -126,7 +128,7 @@ router.post("/chat", chatWithAi);
  *       500:
  *         description: Server error
  */
-router.post("/ask", askAi);
+router.post("/ask", validate(askAiSchema), askAi);
 
 /**
  * @swagger
@@ -205,7 +207,7 @@ router.get("/config", getAiConfiguration);
  *       500:
  *         description: Server error
  */
-router.post("/config", updateAiConfiguration);
+router.post("/config", validate(updateAiConfigSchema), updateAiConfiguration);
 
 /**
  * @swagger
