@@ -19,6 +19,7 @@ const checkRateLimit = async (userId: string, limit: number, windowSeconds: numb
 import { AiConfigModel } from "../models/AiConfig";
 import { AiHistoryService } from "../services/aiHistoryService";
 import { askAiQuestion, checkAiHealth } from "../services/aiService";
+import { logError } from "../utils/errorLogger";
 
 /**
  * Industry-standard AI query endpoint with SaaS billing.
@@ -72,11 +73,18 @@ export const askAi = async (req: Request, res: Response) => {
             }
         };
 
-        // 4. Call AI Service (Internal Health Check & Redis Caching)
+        // 4. Call AI Service (Internal Health Check & Redis Caching & Logging)
         let aiResponse;
         try {
-            aiResponse = await askAiQuestion(pythonPayload);
+            aiResponse = await askAiQuestion({
+                payload: pythonPayload,
+                tenantId: tenantId.toString(),
+                userId: userId.toString(),
+                route: req.originalUrl
+            });
         } catch (err: any) {
+            await logError(req, err, `AI Service Call Failed for user ${userId}`);
+
             if (err.message === 'AI_SERVICE_UNAVAILABLE') {
                 return res.status(503).json({
                     success: false,

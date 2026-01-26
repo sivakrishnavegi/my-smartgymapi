@@ -36,10 +36,15 @@ async function verifyFlow() {
         const cacheKey = `ai_cache:${hash}`;
         await redis.del(cacheKey);
 
-        // 4. Integrated Call (Includes Health Check + Caching)
+        // 4. Integrated Call (Includes Health Check + Caching + Logging)
         console.log("\n[TEST 1] Integrated askAiQuestion (Should include auto health check)...");
         const start = Date.now();
-        const res = await askAiQuestion(testPayload);
+        const res = await askAiQuestion({
+            payload: testPayload,
+            tenantId: testPayload.tenant_id,
+            userId: "65b21c4e9f1a2b3c4d5e6f7a",
+            route: "/api/test-flow"
+        });
         console.log(`Response time: ${Date.now() - start}ms`);
         console.log(`Answer: ${res.answer.substring(0, 50)}...`);
 
