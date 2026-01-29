@@ -130,7 +130,8 @@ const callToRagMicroservice = async (params: {
             headers: {
                 ...form.getHeaders(),
                 "accept": "application/json",
-                "x-token": aiConfig.xToken || "secret-token-change-me",
+                "X-TOKEN": aiConfig.xToken || "secret-token-change-me",
+                "x-key": aiConfig.serviceKey || "default-secret-key",
             },
         });
         return response.data;
@@ -149,7 +150,8 @@ const getRagStatus = async (ragDocumentId: string, tenantId: string, schoolId: s
         const response = await axios.get(url, {
             headers: {
                 "accept": "application/json",
-                "x-token": aiConfig.xToken || "secret-token-change-me",
+                "X-TOKEN": aiConfig.xToken || "secret-token-change-me",
+                "x-key": aiConfig.serviceKey || "default-secret-key",
             },
         });
         return response.data; // { status: "completed" | "failed" | "processing", vector_ids: [...] }

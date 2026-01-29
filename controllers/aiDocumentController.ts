@@ -54,7 +54,9 @@ export const ingestDocument = async (req: Request, res: Response) => {
         });
 
         // 3. Call RAG Microservice
-        const webhookUrl = `${req.protocol}://${req.get("host")}/api/webhooks/ai-ingestion`;
+        const baseUrl = process.env.API_BASE_URL || `${req.protocol}://${req.get("host")}`;
+        const webhookUrl = `${baseUrl}/api/webhooks/ai-ingestion`;
+        console.log("[AiDocumentController] Generated Webhook URL:", webhookUrl);
 
         let ragResponse;
         try {
