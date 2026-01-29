@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerDocument, getDocuments, deleteDocument, ingestDocument } from "../controllers/aiDocumentController";
+import { registerDocument, getDocuments, deleteDocument, ingestDocument, syncDocuments } from "../controllers/aiDocumentController";
 import { aiIngestionWebhook } from "../controllers/aiWebhookController";
 import { protect } from "../middlewares/authMiddleware";
 import multer from "multer";
@@ -164,6 +164,50 @@ router.get("/", getDocuments);
  *         description: Document not found
  */
 router.delete("/:id", deleteDocument);
+
+/**
+ * @swagger
+ * /api/ai-docs/sync:
+ *   post:
+ *     summary: Sync status for all 'processing' documents
+ *     tags: [AI Document Management]
+ *     security:
+ *       - bearerAuth: []
+ *       - xTokenAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - tenantId
+ *             properties:
+ *               tenantId:
+ *                 type: string
+ *               schoolId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Sync completed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 details:
+ *                   type: object
+ *                   properties:
+ *                     updated:
+ *                       type: number
+ *                     stillProcessing:
+ *                       type: number
+ *                     failed:
+ *                       type: number
+ */
+router.post("/sync", syncDocuments);
 
 /**
  * @swagger

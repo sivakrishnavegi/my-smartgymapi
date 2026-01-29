@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { AiDocumentService } from "../services/aiDocumentService";
 import { AwsService } from "../services/awsService";
+import { AiDocumentModel } from "../models/AiDocument.model";
 import { logError } from "../utils/errorLogger";
 
 /**
@@ -212,5 +213,71 @@ export const deleteDocument = async (req: Request, res: Response) => {
             message: "Internal Server Error",
             error: error instanceof Error ? error.message : "Unknown error",
         });
+    }
+};
+
+/**
+ * Sync status for all documents in 'processing' state for a tenant
+ * POST /api/ai-docs/sync
+ */
+export const syncDocuments = async (req: Request, res: Response) => {
+    try {
+        const { tenantId, schoolId } = req.body;
+
+        if (!tenantId) {
+            return res.status(400).json({ message: "tenantId is required" });
+        }
+
+        // 1. Find all docs in processing
+        const processingDocs = await AiDocumentModel.find({
+            tenantId,
+            ...(schoolId && { schoolId }),
+            status: "processing",
+            isDeleted: false,
+            ragDocumentId: { $exists: true, $ne: null }
+        });
+
+        const results = {
+            updated: 0,
+            stillProcessing: 0,
+            failed: 0
+        };
+
+        // 2. Poll RAG Service for each
+        for (const doc of processingDocs) {
+            try {
+                const ragStatusData = await AiDocumentService.getRagStatus(
+                    doc.ragDocumentId!,
+                    doc.tenantId,
+                    doc.schoolId.toString()
+                );
+
+                if (ragStatusData.status === "completed") {
+                    await AiDocumentService.updateStatus(
+                        (doc._id as any).toString(),
+                        "indexed",
+                        ragStatusData.vector_ids || []
+                    );
+                    results.updated++;
+                } else if (ragStatusData.status === "failed") {
+                    await AiDocumentService.updateStatus((doc._id as any).toString(), "failed");
+                    results.failed++;
+                } else {
+                    results.stillProcessing++;
+                }
+            } catch (err) {
+                console.error(`Failed to sync doc ${doc._id}:`, err);
+                results.failed++;
+            }
+        }
+
+        return res.status(200).json({
+            message: "Sync completed",
+            details: results
+        });
+    } catch (error) {
+        console.error("Sync Documents Error:", error);
+        await logError(req, error);
+        return res.status(500).json({ message: "Internal Server Error" });
     }
 };
