@@ -1,5 +1,6 @@
 import cors, { CorsOptions } from "cors";
 import express, { Router } from "express";
+import v8 from "v8";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./docs/swager";
 
@@ -46,6 +47,12 @@ const allowedOrigins: string[] = [
 ];
 
 const app = express();
+const port = process.env.PORT || 3000;
+
+// Log Memory Limit on Startup
+const heapLimitMB = Math.round(v8.getHeapStatistics().heap_size_limit / 1024 / 1024);
+console.log(`🚀 Node.js Heap Limit: ${heapLimitMB}MB`);
+
 app.set("trust proxy", 1);
 
 import { requestLogger } from "./middlewares/requestLogger";
