@@ -90,7 +90,10 @@ export class AiDocumentService {
         if (query.classId) filter.classId = new Types.ObjectId(query.classId);
         if (query.sectionId) filter.sectionId = new Types.ObjectId(query.sectionId);
 
-        return await AiDocumentModel.find(filter).sort({ createdAt: -1 });
+        return await AiDocumentModel.find(filter)
+            .populate("classId", "name")
+            .populate("sectionId", "sectionName")
+            .sort({ createdAt: -1 });
     }
 
     /**
