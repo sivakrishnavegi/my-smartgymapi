@@ -28,6 +28,7 @@ router.use(protect);
  *     tags: [AI Document Management]
  *     security:
  *       - bearerAuth: []
+ *       - xTokenAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -75,6 +76,7 @@ router.post("/ingest", upload.single("file"), ingestDocument);
  *     tags: [AI Document Management]
  *     security:
  *       - bearerAuth: []
+ *       - xTokenAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -115,6 +117,7 @@ router.post("/register", registerDocument);
  *     tags: [AI Document Management]
  *     security:
  *       - bearerAuth: []
+ *       - xTokenAuth: []
  *     parameters:
  *       - in: query
  *         name: tenantId
@@ -147,6 +150,7 @@ router.get("/", getDocuments);
  *     tags: [AI Document Management]
  *     security:
  *       - bearerAuth: []
+ *       - xTokenAuth: []
  *     parameters:
  *       - in: path
  *         name: id

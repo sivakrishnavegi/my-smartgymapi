@@ -22,6 +22,12 @@ const options: swaggerJSDoc.Options = {
           scheme: "bearer",
           bearerFormat: "JWT",
         },
+        xTokenAuth: {
+          type: "apiKey",
+          in: "header",
+          name: "X-TOKEN",
+          description: "Microservice access token",
+        },
       },
       schemas: {
         Attendance: {

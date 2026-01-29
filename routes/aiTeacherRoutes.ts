@@ -24,6 +24,7 @@ router.use(protect);
  *     tags: [AI Teacher]
  *     security:
  *       - bearerAuth: []
+ *       - xTokenAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -74,6 +75,7 @@ router.post("/chat", validate(chatAiSchema), chatWithAi);
  *     tags: [AI Teacher]
  *     security:
  *       - bearerAuth: []
+ *       - xTokenAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -138,6 +140,7 @@ router.post("/ask", validate(askAiSchema), askAi);
  *     tags: [AI Teacher]
  *     security:
  *       - bearerAuth: []
+ *       - xTokenAuth: []
  *     parameters:
  *       - in: query
  *         name: tenantId
@@ -165,6 +168,7 @@ router.get("/config", validateQuery(getAiConfigQuerySchema), getAiConfiguration)
  *     tags: [AI Teacher]
  *     security:
  *       - bearerAuth: []
+ *       - xTokenAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -217,6 +221,7 @@ router.post("/config", validate(updateAiConfigSchema), updateAiConfiguration);
  *     tags: [AI Teacher]
  *     security:
  *       - bearerAuth: []
+ *       - xTokenAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -258,6 +263,7 @@ router.post("/knowledge/upload", uploadKnowledge);
  *     tags: [AI Teacher]
  *     security:
  *       - bearerAuth: []
+ *       - xTokenAuth: []
  *     parameters:
  *       - in: path
  *         name: jobId

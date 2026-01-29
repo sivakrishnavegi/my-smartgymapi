@@ -22,6 +22,7 @@ router.use(protect);
  *     tags: [S3 File Management]
  *     security:
  *       - bearerAuth: []
+ *       - xTokenAuth: []
  *     parameters:
  *       - in: query
  *         name: fileName
@@ -56,6 +57,7 @@ router.get("/presigned-url", getPresignedUrl);
  *     tags: [S3 File Management]
  *     security:
  *       - bearerAuth: []
+ *       - xTokenAuth: []
  *     parameters:
  *       - in: query
  *         name: prefix
@@ -75,6 +77,7 @@ router.get("/list", listFiles);
  *     tags: [S3 File Management]
  *     security:
  *       - bearerAuth: []
+ *       - xTokenAuth: []
  *     requestBody:
  *       required: true
  *       content:
