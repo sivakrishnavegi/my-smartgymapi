@@ -11,6 +11,7 @@ export interface IAiDocument extends Document {
     s3Key: string;
     fileType: string;
     fileSize: number;
+    content?: string; // Extracted text content from RAG service
 
     status: "processing" | "indexed" | "failed";
     vectorIds: string[]; // Reference to IDs in Vector DB
@@ -44,6 +45,7 @@ const AiDocumentSchema = new Schema<IAiDocument>(
         s3Key: { type: String, required: true, unique: true },
         fileType: { type: String },
         fileSize: { type: Number },
+        content: { type: String },
 
         status: {
             type: String,
