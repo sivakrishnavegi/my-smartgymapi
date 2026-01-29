@@ -4,6 +4,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./docs/swager";
 
 import AppRoutes from "./routes";
+import { aiIngestionWebhook } from "./controllers/aiWebhookController";
 
 import cookieParser from "cookie-parser";
 import slowDown from "express-slow-down";
@@ -32,6 +33,8 @@ const {
   libraryRoutes,
   aiTeacherRoutes,
   studentRoutes,
+  s3Routes,
+  aiDocumentRoutes,
 } = AppRoutes;
 
 const allowedOrigins: string[] = [
@@ -140,6 +143,9 @@ const routes: { path: string; router: Router; middlewares?: any[] }[] = [
   { path: "/api/library", router: libraryRoutes },
   { path: "/api/ai-teacher", router: aiTeacherRoutes },
   { path: "/api/students", router: studentRoutes },
+  { path: "/api/ai-docs", router: aiDocumentRoutes },
+  { path: "/api/s3", router: s3Routes },
+  { path: "/api/webhooks/ai-ingestion", router: Router().post("/", aiIngestionWebhook) as any },
 ];
 
 routes.forEach(({ path, router, middlewares }) => {

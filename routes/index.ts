@@ -21,6 +21,8 @@ import teacherRoutes from "./teacherRoutes";
 import libraryRoutes from "./library.routes";
 import aiTeacherRoutes from "./aiTeacherRoutes";
 import studentRoutes from "./studentRoutes";
+import aiDocumentRoutes from "./aiDocumentRoutes";
+import s3Routes from "./s3Routes";
 
 const routes = {
   appConfigRoutes,
@@ -44,6 +46,8 @@ const routes = {
   libraryRoutes,
   aiTeacherRoutes,
   studentRoutes,
+  aiDocumentRoutes,
+  s3Routes,
 };
 
 export default routes;
