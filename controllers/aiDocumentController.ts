@@ -5,6 +5,7 @@ import { AwsService } from "../services/awsService";
 import { AiDocumentModel } from "../models/AiDocument.model";
 import { logError } from "../utils/errorLogger";
 import { getPagination, buildPaginationResponse } from "../utils/pagination";
+import { cacheService } from "../services/cacheService";
 
 /**
  * Ingest a document: Upload to S3, Save to Mongo, and trigger RAG Microservice
@@ -262,6 +263,10 @@ export const deleteDocument = async (req: Request, res: Response) => {
         if (!document) {
             return res.status(404).json({ message: "Document not found" });
         }
+
+        // Invalidate Cache for this school's dashboard
+        const pattern = cacheService.generateKey("ct", document.tenantId, document.schoolId.toString(), "*");
+        await cacheService.clearPattern(pattern);
 
         return res.status(200).json({
             message: "Document deleted successfully",

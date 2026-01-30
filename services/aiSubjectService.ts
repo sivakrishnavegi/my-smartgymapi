@@ -2,6 +2,7 @@ import { SubjectModel } from "../models/subject.model";
 import { AiSubjectConfigModel } from "../models/AiSubjectConfig.model";
 import { AiDocumentModel } from "../models/AiDocument.model";
 import { Types } from "mongoose";
+import { cacheService } from "./cacheService";
 
 /**
  * Get the consolidated Control Tower list for a school
@@ -14,13 +15,18 @@ export const getControlTowerList = async (params: {
 }) => {
     const { tenantId, schoolId, skip = 0, limit = 10 } = params;
 
+    // 0. Cache Check
+    const cacheKey = cacheService.generateKey("ct", tenantId, schoolId, `p${skip}:l${limit}`);
+    const cachedData = await cacheService.get<{ data: any[], total: number }>(cacheKey);
+    if (cachedData) return cachedData;
+
     // 1. Fetch academic subjects for this school (paginated)
     const filter = { tenantId, schoolId: new Types.ObjectId(schoolId) };
     const [subjects, total] = await Promise.all([
         SubjectModel.find(filter).lean().skip(skip).limit(limit),
         SubjectModel.countDocuments(filter)
     ]);
-    const subjectIds = subjects.map(s => s._id);
+    const subjectIds = subjects.map(s => new Types.ObjectId((s as any)._id));
 
     // 2. Aggregate document stats (chunks and last sync)
     // We count vectorIds for chunks and find the latest update
@@ -37,7 +43,15 @@ export const getControlTowerList = async (params: {
         {
             $group: {
                 _id: "$subjectId",
-                vectorChunks: { $sum: { $size: "$vectorIds" } },
+                vectorChunks: {
+                    $sum: {
+                        $cond: {
+                            if: { $isArray: "$vectorIds" },
+                            then: { $size: "$vectorIds" },
+                            else: 0
+                        }
+                    }
+                },
                 lastSync: { $max: "$updatedAt" }
             }
         }
@@ -61,7 +75,10 @@ export const getControlTowerList = async (params: {
         };
     });
 
-    return { data, total };
+    const result = { data, total };
+    await cacheService.set(cacheKey, result, 3600); // 1-hour cache
+
+    return result;
 };
 
 /**

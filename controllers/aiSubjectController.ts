@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import * as AiSubjectService from "../services/aiSubjectService";
 import { getPagination, buildPaginationResponse } from "../utils/pagination";
+import { cacheService } from "../services/cacheService";
 
 /**
  * Get the AI Control Tower dashboard data
@@ -54,6 +55,10 @@ export const toggleAiStatus = async (req: Request, res: Response) => {
             isActive,
             enabledClasses,
         });
+
+        // Invalidate Cache for this school's dashboard
+        const pattern = cacheService.generateKey("ct", tenantId, schoolId, "*");
+        await cacheService.clearPattern(pattern);
 
         return res.status(200).json({
             message: `AI Status updated to ${isActive ? "Active" : "Inactive"}`,

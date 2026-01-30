@@ -67,7 +67,13 @@ export const askAiQuestion = async (params: {
 
     try {
         // 3. Cache Check
-        const cached = await redis.get(cacheKey);
+        const isCacheEnabled = process.env.AI_CACHE_ENABLED === 'true';
+        let cached = null;
+
+        if (isCacheEnabled) {
+            cached = await redis.get(cacheKey);
+        }
+
         if (cached) {
             console.log(`[AiService] Cache Hit for ${cacheKey}`);
             const response = JSON.parse(cached);
@@ -94,7 +100,9 @@ export const askAiQuestion = async (params: {
         const response = await apiPost<any>(client, '/api/v1/rag/query', payload, {}, requestId);
 
         // 5. Caching Result (24h TTL)
-        await redis.setex(cacheKey, 86400, JSON.stringify(response));
+        if (isCacheEnabled) {
+            await redis.setex(cacheKey, 86400, JSON.stringify(response));
+        }
 
         // 6. Success Log
         await AiLog.create({
