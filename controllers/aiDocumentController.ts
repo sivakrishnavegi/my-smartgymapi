@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Types } from "mongoose";
 import { AiDocumentService } from "../services/aiDocumentService";
 import { AwsService } from "../services/awsService";
 import { AiDocumentModel } from "../models/AiDocument.model";
@@ -40,43 +41,36 @@ export const ingestDocument = async (req: Request, res: Response) => {
         const existingDoc = await AiDocumentService.findExistingDuplicate(tenantId, contentHash);
 
         if (existingDoc) {
-            console.log(`[AiDocumentController] Duplicate content detected. ContentHash: ${contentHash}`);
-            console.log(`[AiDocumentController] Reusing RAG Document ID: ${existingDoc.ragDocumentId}`);
+            console.log(`[AiDocumentController] Duplicate content detected. Updating existing record: ${existingDoc._id}`);
 
-            // Register a new record for this tenant/school but link to existing RAG data
-            const document = await AiDocumentService.registerDocument({
-                tenantId,
-                schoolId,
-                classId,
-                sectionId,
-                fileName: title || file.originalname,
-                originalName: file.originalname,
-                s3Key: existingDoc.s3Key, // Reuse existing S3 key if appropriate, or could upload new one. Plan says reuse.
-                fileType: file.mimetype,
-                fileSize: file.size,
-                uploadedBy: userId,
-                contentHash,
-                metadata: { category: "knowledge-base", subject, reusedFrom: existingDoc._id },
-            });
-
-            // Set to indexed immediately since we reused a completed record
-            await AiDocumentService.updateStatus(
-                (document._id as any).toString(),
-                "indexed",
-                existingDoc.vectorIds
+            // Update the existing record with latest hierarchy and metadata
+            const updated = await AiDocumentModel.findByIdAndUpdate(
+                existingDoc._id,
+                {
+                    $set: {
+                        classId: classId ? new Types.ObjectId(classId) : (existingDoc as any).classId,
+                        sectionId: sectionId ? new Types.ObjectId(sectionId) : (existingDoc as any).sectionId,
+                        schoolId: new Types.ObjectId(schoolId),
+                        fileName: title || file.originalname,
+                        metadata: {
+                            ...existingDoc.metadata,
+                            subject: subject || existingDoc.metadata.category,
+                            updatedBy: userId,
+                            lastUpdated: new Date()
+                        }
+                    }
+                },
+                { new: true }
             );
 
-            // Link RAG ID
-            (document as any).ragDocumentId = existingDoc.ragDocumentId;
-            await document.save();
-
             return res.status(200).json({
-                message: "Duplicate document detected. Metadata reused and ingestion skipped.",
+                message: "Duplicate document detected. Metadata updated to latest.",
                 data: {
-                    documentId: document._id,
+                    documentId: updated?._id,
                     ragStatus: "indexed",
                     ragDocumentId: existingDoc.ragDocumentId,
-                    isDuplicate: true
+                    isDuplicate: true,
+                    updated: true
                 },
             });
         }

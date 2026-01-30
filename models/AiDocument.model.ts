@@ -43,7 +43,7 @@ const AiDocumentSchema = new Schema<IAiDocument>(
 
         fileName: { type: String, required: true },
         originalName: { type: String, required: true },
-        s3Key: { type: String, required: true, unique: true },
+        s3Key: { type: String, required: true },
         fileType: { type: String },
         fileSize: { type: Number },
         content: { type: String },
