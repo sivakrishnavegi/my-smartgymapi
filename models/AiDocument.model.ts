@@ -5,6 +5,7 @@ export interface IAiDocument extends Document {
     schoolId: Types.ObjectId;
     classId?: Types.ObjectId;
     sectionId?: Types.ObjectId;
+    subjectId?: Types.ObjectId;
 
     fileName: string;
     originalName: string;
@@ -40,6 +41,7 @@ const AiDocumentSchema = new Schema<IAiDocument>(
         },
         classId: { type: Schema.Types.ObjectId, ref: "Class", index: true },
         sectionId: { type: Schema.Types.ObjectId, ref: "Section", index: true },
+        subjectId: { type: Schema.Types.ObjectId, ref: "Subject", index: true },
 
         fileName: { type: String, required: true },
         originalName: { type: String, required: true },

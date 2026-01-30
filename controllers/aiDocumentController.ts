@@ -22,6 +22,7 @@ export const ingestDocument = async (req: Request, res: Response) => {
             schoolId,
             classId,
             sectionId,
+            subjectId,
             title,
             subject,
         } = req.body;
@@ -50,6 +51,7 @@ export const ingestDocument = async (req: Request, res: Response) => {
                     $set: {
                         classId: classId ? new Types.ObjectId(classId) : (existingDoc as any).classId,
                         sectionId: sectionId ? new Types.ObjectId(sectionId) : (existingDoc as any).sectionId,
+                        subjectId: subjectId ? new Types.ObjectId(subjectId) : (existingDoc as any).subjectId,
                         schoolId: new Types.ObjectId(schoolId),
                         fileName: title || file.originalname,
                         metadata: {
@@ -88,6 +90,7 @@ export const ingestDocument = async (req: Request, res: Response) => {
             schoolId,
             classId,
             sectionId,
+            subjectId,
             fileName: title || file.originalname,
             originalName: file.originalname,
             s3Key,

@@ -12,6 +12,7 @@ const registerDocument = async (params: {
     schoolId: string;
     classId?: string;
     sectionId?: string;
+    subjectId?: string;
     fileName: string;
     originalName: string;
     s3Key: string;
@@ -26,6 +27,7 @@ const registerDocument = async (params: {
         schoolId,
         classId,
         sectionId,
+        subjectId,
         fileName,
         originalName,
         s3Key,
@@ -41,6 +43,7 @@ const registerDocument = async (params: {
         schoolId: new Types.ObjectId(schoolId),
         classId: classId ? new Types.ObjectId(classId) : undefined,
         sectionId: sectionId ? new Types.ObjectId(sectionId) : undefined,
+        subjectId: subjectId ? new Types.ObjectId(subjectId) : undefined,
         fileName,
         originalName,
         s3Key,
@@ -101,6 +104,7 @@ const getDocuments = async (query: {
         AiDocumentModel.find(filter)
             .populate("classId", "name")
             .populate("sectionId", "sectionName")
+            .populate("subjectId", "name")
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
