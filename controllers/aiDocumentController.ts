@@ -3,6 +3,7 @@ import { AiDocumentService } from "../services/aiDocumentService";
 import { AwsService } from "../services/awsService";
 import { AiDocumentModel } from "../models/AiDocument.model";
 import { logError } from "../utils/errorLogger";
+import { getPagination, buildPaginationResponse } from "../utils/pagination";
 
 /**
  * Ingest a document: Upload to S3, Save to Mongo, and trigger RAG Microservice
@@ -171,16 +172,21 @@ export const getDocuments = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "tenantId is required" });
         }
 
-        const documents = await AiDocumentService.getDocuments({
+        const { page, limit, skip } = getPagination(req);
+
+        const { documents, total } = await AiDocumentService.getDocuments({
             tenantId,
             schoolId,
             classId,
             sectionId,
+            skip,
+            limit
         });
 
         return res.status(200).json({
             message: "Documents fetched successfully",
             data: documents,
+            pagination: buildPaginationResponse(page, limit, total),
         });
     } catch (error) {
         console.error("Get Documents Error:", error);

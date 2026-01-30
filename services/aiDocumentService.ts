@@ -83,16 +83,29 @@ const getDocuments = async (query: {
     schoolId?: string;
     classId?: string;
     sectionId?: string;
+    skip?: number;
+    limit?: number;
 }) => {
     const filter: any = { tenantId: query.tenantId, isDeleted: false };
     if (query.schoolId) filter.schoolId = new Types.ObjectId(query.schoolId);
     if (query.classId) filter.classId = new Types.ObjectId(query.classId);
     if (query.sectionId) filter.sectionId = new Types.ObjectId(query.sectionId);
 
-    return await AiDocumentModel.find(filter)
-        .populate("classId", "name")
-        .populate("sectionId", "sectionName")
-        .sort({ createdAt: -1 });
+    const skip = query.skip || 0;
+    const limit = query.limit || 10;
+
+    const [documents, total] = await Promise.all([
+        AiDocumentModel.find(filter)
+            .populate("classId", "name")
+            .populate("sectionId", "sectionName")
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .lean(),
+        AiDocumentModel.countDocuments(filter)
+    ]);
+
+    return { documents, total };
 };
 
 /**
