@@ -23,6 +23,7 @@ import aiTeacherRoutes from "./aiTeacherRoutes";
 import studentRoutes from "./studentRoutes";
 import aiDocumentRoutes from "./aiDocumentRoutes";
 import s3Routes from "./s3Routes";
+import aiSubjectRoutes from "./aiSubjectRoutes";
 
 const routes = {
   appConfigRoutes,
@@ -47,6 +48,7 @@ const routes = {
   aiTeacherRoutes,
   studentRoutes,
   aiDocumentRoutes,
+  aiSubjectRoutes,
   s3Routes,
 };
 

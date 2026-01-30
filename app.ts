@@ -36,6 +36,7 @@ const {
   studentRoutes,
   s3Routes,
   aiDocumentRoutes,
+  aiSubjectRoutes,
 } = AppRoutes;
 
 const allowedOrigins: string[] = [
@@ -151,6 +152,7 @@ const routes: { path: string; router: Router; middlewares?: any[] }[] = [
   { path: "/api/ai-teacher", router: aiTeacherRoutes },
   { path: "/api/students", router: studentRoutes },
   { path: "/api/ai-docs", router: aiDocumentRoutes },
+  { path: "/api/ai-subjects", router: aiSubjectRoutes },
   { path: "/api/s3", router: s3Routes },
   { path: "/api/webhooks/ai-ingestion", router: Router().post("/", aiIngestionWebhook) as any },
 ];
