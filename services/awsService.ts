@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand, HeadObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const s3Client = new S3Client({
@@ -21,6 +21,18 @@ export class AwsService {
         });
         // URL expires in 1 hour
         return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    }
+
+    /**
+     * Generates a pre-signed URL for downloading/viewing a file from S3.
+     */
+    static async getDownloadUrl(key: string) {
+        const command = new GetObjectCommand({
+            Bucket: process.env.AMPLIFY_BUCKET,
+            Key: key,
+        });
+        // URL expires in 15 minutes (short-lived for security)
+        return await getSignedUrl(s3Client, command, { expiresIn: 900 });
     }
 
     /**

@@ -112,6 +112,13 @@ const getDocuments = async (query: {
 };
 
 /**
+ * Get a specific document by its ID
+ */
+const getDocumentById = async (id: string) => {
+    return await AiDocumentModel.findOne({ _id: id, isDeleted: false }).lean();
+};
+
+/**
  * Find an existing, successfully indexed document with the same content hash
  */
 const findExistingDuplicate = async (tenantId: string, contentHash: string) => {
@@ -238,4 +245,5 @@ export const AiDocumentService = {
     callToRagMicroservice,
     getRagStatus,
     findExistingDuplicate,
+    getDocumentById,
 };

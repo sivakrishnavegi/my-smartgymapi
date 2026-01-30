@@ -284,6 +284,37 @@ export const deleteDocument = async (req: Request, res: Response) => {
 };
 
 /**
+ * Get a pre-signed download URL for a file
+ * GET /api/ai-docs/:id/url
+ */
+export const getDocumentUrl = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        // 1. Fetch document metadata
+        const document = await AiDocumentService.getDocumentById(id);
+        if (!document) {
+            return res.status(404).json({ message: "Document not found" });
+        }
+
+        // 2. Generate pre-signed URL from S3
+        const downloadUrl = await AwsService.getDownloadUrl(document.s3Key);
+
+        return res.status(200).json({
+            message: "Download URL generated successfully",
+            data: {
+                fileName: document.fileName,
+                downloadUrl,
+            },
+        });
+    } catch (error) {
+        console.error("Get Document URL Error:", error);
+        await logError(req, error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+/**
  * Sync status for all documents in 'processing' state for a tenant
  * POST /api/ai-docs/sync
  */

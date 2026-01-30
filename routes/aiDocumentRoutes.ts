@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerDocument, getDocuments, deleteDocument, ingestDocument, syncDocuments } from "../controllers/aiDocumentController";
+import { registerDocument, getDocuments, deleteDocument, ingestDocument, syncDocuments, getDocumentUrl } from "../controllers/aiDocumentController";
 import { aiIngestionWebhook } from "../controllers/aiWebhookController";
 import { protect } from "../middlewares/authMiddleware";
 import multer from "multer";
@@ -164,6 +164,40 @@ router.get("/", getDocuments);
  *         description: Document not found
  */
 router.delete("/:id", deleteDocument);
+
+/**
+ * @swagger
+ * /api/ai-docs/{id}/url:
+ *   get:
+ *     summary: Get a pre-signed S3 download/view URL for a document
+ *     tags: [AI Document Management]
+ *     security:
+ *       - bearerAuth: []
+ *       - xTokenAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: URL generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     fileName: { type: string }
+ *                     downloadUrl: { type: string }
+ *       404:
+ *         description: Document not found
+ */
+router.get("/:id/url", getDocumentUrl);
 
 /**
  * @swagger
