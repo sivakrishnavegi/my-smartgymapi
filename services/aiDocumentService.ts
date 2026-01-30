@@ -109,9 +109,49 @@ const getDocuments = async (query: {
 };
 
 /**
- * Soft delete a document and prepare for cleanup in S3/VectorDB
+ * Delete from RAG Microservice
+ */
+const deleteFromRag = async (tenantId: string, schoolId: string, ragDocumentId: string) => {
+    const url = `${aiConfig.ragServiceBaseUrl}/api/v1/rag/documents/${tenantId}/${schoolId}/${ragDocumentId}`;
+    try {
+        await axios.delete(url, {
+            headers: {
+                "accept": "application/json",
+                "X-TOKEN": aiConfig.xToken || "secret-token-change-me",
+                "x-key": aiConfig.serviceKey || "default-secret-key",
+            },
+        });
+        console.log(`[AiDocumentService] Successfully deleted from RAG: ${ragDocumentId}`);
+    } catch (error: any) {
+        console.error(`[AiDocumentService] Failed to delete from RAG ${ragDocumentId}:`, error.response?.data || error.message);
+        // We do not throw here to allow soft-delete to proceed (safe delete)
+    }
+};
+
+/**
+ * Soft delete a document and cleanup in RAG Microservice
  */
 const deleteDocument = async (documentId: string) => {
+    // 1. Fetch document to get RAG details
+    const doc = await AiDocumentModel.findById(documentId);
+    if (!doc) {
+        return null;
+    }
+
+    if (doc.isDeleted) {
+        throw new Error("ALREADY_DELETED");
+    }
+
+    // 2. Call RAG Microservice to delete if ragDocumentId exists
+    if (doc.ragDocumentId) {
+        await deleteFromRag(
+            doc.tenantId,
+            doc.schoolId.toString(),
+            doc.ragDocumentId
+        );
+    }
+
+    // 3. Soft delete in MongoDB
     return await AiDocumentModel.findByIdAndUpdate(
         documentId,
         { $set: { isDeleted: true } },

@@ -206,6 +206,10 @@ export const deleteDocument = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
 
+        if (!id) {
+            return res.status(400).json({ error: "Missing document ID in request parameters" });
+        }
+
         const document = await AiDocumentService.deleteDocument(id);
         if (!document) {
             return res.status(404).json({ message: "Document not found" });
@@ -215,7 +219,10 @@ export const deleteDocument = async (req: Request, res: Response) => {
             message: "Document deleted successfully",
             data: document,
         });
-    } catch (error) {
+    } catch (error: any) {
+        if (error.message === "ALREADY_DELETED") {
+            return res.status(400).json({ message: "Document is already deleted" });
+        }
         console.error("Delete Document Error:", error);
         await logError(req, error);
         return res.status(500).json({
