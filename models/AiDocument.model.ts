@@ -16,6 +16,7 @@ export interface IAiDocument extends Document {
     status: "processing" | "indexed" | "failed";
     vectorIds: string[]; // Reference to IDs in Vector DB
     ragDocumentId?: string; // Reference to document in RAG Microservice
+    contentHash?: string; // SHA-256 hash of the content for deduplication
 
     metadata: {
         category?: string;
@@ -54,6 +55,7 @@ const AiDocumentSchema = new Schema<IAiDocument>(
         },
         vectorIds: [{ type: String }],
         ragDocumentId: { type: String, index: true },
+        contentHash: { type: String, index: true },
 
         metadata: {
             category: { type: String },

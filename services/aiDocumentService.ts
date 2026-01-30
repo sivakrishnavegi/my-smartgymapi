@@ -18,6 +18,7 @@ const registerDocument = async (params: {
     fileType: string;
     fileSize: number;
     uploadedBy: string;
+    contentHash?: string;
     metadata?: any;
 }) => {
     const {
@@ -31,6 +32,7 @@ const registerDocument = async (params: {
         fileType,
         fileSize,
         uploadedBy,
+        contentHash,
         metadata,
     } = params;
 
@@ -45,6 +47,7 @@ const registerDocument = async (params: {
         fileType,
         fileSize,
         status: "processing",
+        contentHash,
         metadata: {
             ...metadata,
             uploadedBy: new Types.ObjectId(uploadedBy),
@@ -106,6 +109,19 @@ const getDocuments = async (query: {
     ]);
 
     return { documents, total };
+};
+
+/**
+ * Find an existing, successfully indexed document with the same content hash
+ */
+const findExistingDuplicate = async (tenantId: string, contentHash: string) => {
+    return await AiDocumentModel.findOne({
+        tenantId,
+        contentHash,
+        status: "indexed",
+        isDeleted: false,
+        ragDocumentId: { $exists: true, $ne: null }
+    }).lean();
 };
 
 /**
@@ -221,4 +237,5 @@ export const AiDocumentService = {
     deleteDocument,
     callToRagMicroservice,
     getRagStatus,
+    findExistingDuplicate,
 };

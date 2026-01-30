@@ -32,6 +32,55 @@ export const ingestDocument = async (req: Request, res: Response) => {
         const userId = (req as any).user?._id || req.body.userId;
         const s3Key = `knowledge-base/${tenantId}/${schoolId}/${Date.now()}_${file.originalname}`;
 
+        // 0. Calculate Content Hash for deduplication
+        const crypto = require("crypto");
+        const contentHash = crypto.createHash("sha256").update(file.buffer).digest("hex");
+
+        // 1. Check if an identical document already exists and is indexed
+        const existingDoc = await AiDocumentService.findExistingDuplicate(tenantId, contentHash);
+
+        if (existingDoc) {
+            console.log(`[AiDocumentController] Duplicate content detected. ContentHash: ${contentHash}`);
+            console.log(`[AiDocumentController] Reusing RAG Document ID: ${existingDoc.ragDocumentId}`);
+
+            // Register a new record for this tenant/school but link to existing RAG data
+            const document = await AiDocumentService.registerDocument({
+                tenantId,
+                schoolId,
+                classId,
+                sectionId,
+                fileName: title || file.originalname,
+                originalName: file.originalname,
+                s3Key: existingDoc.s3Key, // Reuse existing S3 key if appropriate, or could upload new one. Plan says reuse.
+                fileType: file.mimetype,
+                fileSize: file.size,
+                uploadedBy: userId,
+                contentHash,
+                metadata: { category: "knowledge-base", subject, reusedFrom: existingDoc._id },
+            });
+
+            // Set to indexed immediately since we reused a completed record
+            await AiDocumentService.updateStatus(
+                (document._id as any).toString(),
+                "indexed",
+                existingDoc.vectorIds
+            );
+
+            // Link RAG ID
+            (document as any).ragDocumentId = existingDoc.ragDocumentId;
+            await document.save();
+
+            return res.status(200).json({
+                message: "Duplicate document detected. Metadata reused and ingestion skipped.",
+                data: {
+                    documentId: document._id,
+                    ragStatus: "indexed",
+                    ragDocumentId: existingDoc.ragDocumentId,
+                    isDuplicate: true
+                },
+            });
+        }
+
         // 1. Upload to S3
         await AwsService.uploadBuffer({
             key: s3Key,
@@ -51,6 +100,7 @@ export const ingestDocument = async (req: Request, res: Response) => {
             fileType: file.mimetype,
             fileSize: file.size,
             uploadedBy: userId,
+            contentHash, // Store the hash
             metadata: { category: "knowledge-base", subject },
         });
 
@@ -93,6 +143,7 @@ export const ingestDocument = async (req: Request, res: Response) => {
                 documentId: document._id,
                 ragStatus: ragResponse?.status || "failed_to_trigger",
                 ragDocumentId: ragResponse?.document_id,
+                isDuplicate: false
             },
         });
     } catch (error) {
