@@ -1,7 +1,7 @@
 // routes/attendanceRoutes.ts
 import express from 'express';
-import { checkIn, getStudentAttendance, markBulkAttendance, getSectionAttendance, updateBulkAttendance } from '../controllers/attendenceController';
-import { protect } from '../middlewares/authMiddleware';
+import { checkIn, getStudentAttendance, markBulkAttendance, getSectionAttendance, updateBulkAttendance } from '@academics/controllers/attendenceController';
+import { protect } from '@shared/middlewares/authMiddleware';
 
 const router = express.Router();
 

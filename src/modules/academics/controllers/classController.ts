@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
-import { ClassModel } from "../models/class.model";
-import SchoolModel from "../models/schools.schema";
+import { ClassModel } from "@academics/models/class.model";
+import SchoolModel from "@academics/models/schools.schema";
 import mongoose from "mongoose";
-import { buildPaginationResponse, getPagination, getQueryParam } from "../utils/pagination";
-import UserModel from '../models/users.schema';
-import { SectionModel } from "../models/section.model";
-import { logError } from '../utils/errorLogger';
+import { buildPaginationResponse, getPagination, getQueryParam } from "@shared/utils/pagination";
+import UserModel from '@iam/models/users.schema';
+import { SectionModel } from "@academics/models/section.model";
+import { logError } from '@shared/utils/errorLogger';
 
 
 const generateUniqueCode = async (): Promise<string> => {
@@ -238,7 +238,7 @@ export const assignTeacher = async (req: Request, res: Response) => {
 
     // 4. Verify Section (if provided)
     if (sectionId) {
-      const sectionExists = classObj.sections?.map(id => id.toString()).includes(sectionId);
+      const sectionExists = classObj.sections?.map((id: any) => id.toString()).includes(sectionId);
       if (!sectionExists) {
         return res.status(400).json({ message: "Section does not belong to this class!" });
       }

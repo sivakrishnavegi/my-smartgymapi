@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import School from "../models/schools.schema";
-import Tenant from "../models/tenant.schema";
-import { logError } from '../utils/errorLogger';
+import School from "@academics/models/schools.schema";
+import Tenant from "@academics/models/tenant.schema";
+import { logError } from '@shared/utils/errorLogger';
 
 /**
  * @swagger

@@ -1,0 +1,41 @@
+
+> my-gymapi@1.0.0 test
+> NODE_OPTIONS='--max-old-space-size=4096' jest src/modules/academics/__tests__/
+
+FAIL src/modules/academics/__tests__/academicSchool.test.ts
+  ● Test suite failed to run
+
+    [96msrc/modules/academics/__tests__/academicSchool.test.ts[0m:[93m1[0m:[93m36[0m - [91merror[0m[90m TS2307: [0mCannot find module '@academics/controllers/schoolController' or its corresponding type declarations.
+
+    [7m1[0m import { schoolRegistration } from "@academics/controllers/schoolController";
+    [7m [0m [91m                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+FAIL src/modules/academics/__tests__/academicClass.test.ts
+  ● Test suite failed to run
+
+    [96msrc/modules/academics/__tests__/academicClass.test.ts[0m:[93m1[0m:[93m23[0m - [91merror[0m[90m TS2305: [0mModule '"@academics/controllers/classController"' has no exported member 'listClasses'.
+
+    [7m1[0m import { createClass, listClasses } from "@academics/controllers/classController";
+    [7m [0m [91m                      ~~~~~~~~~~~[0m
+    [96msrc/modules/academics/__tests__/academicClass.test.ts[0m:[93m2[0m:[93m8[0m - [91merror[0m[90m TS1192: [0mModule '"/Users/sivakrishnavegi/Desktop/code/my-gymapi/src/modules/academics/models/class.model"' has no default export.
+
+    [7m2[0m import Class from "@academics/models/class.model";
+    [7m [0m [91m       ~~~~~[0m
+
+FAIL src/modules/academics/__tests__/academicStudent.test.ts
+  ● Test suite failed to run
+
+    [96msrc/modules/academics/__tests__/academicStudent.test.ts[0m:[93m1[0m:[93m10[0m - [91merror[0m[90m TS2305: [0mModule '"@academics/controllers/studentController"' has no exported member 'registerStudent'.
+
+    [7m1[0m import { registerStudent, listStudents } from "@academics/controllers/studentController";
+    [7m [0m [91m         ~~~~~~~~~~~~~~~[0m
+    [96msrc/modules/academics/__tests__/academicStudent.test.ts[0m:[93m1[0m:[93m27[0m - [91merror[0m[90m TS2305: [0mModule '"@academics/controllers/studentController"' has no exported member 'listStudents'.
+
+    [7m1[0m import { registerStudent, listStudents } from "@academics/controllers/studentController";
+    [7m [0m [91m                          ~~~~~~~~~~~~[0m
+
+Test Suites: 3 failed, 3 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        16.096 s
+Ran all test suites matching src/modules/academics/__tests__/.

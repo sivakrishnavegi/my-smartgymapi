@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { ISubject } from "./types/subject.types";
+import { ISubject } from "@academics/models/subject.types";
 
 const SubjectSchema = new Schema<ISubject>({
   tenantId: { type: String, required: true, index: true },

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import AttendanceModel from '../models/attendence.user';
-import { Attendance as StudentAttendanceModel } from '../models/student/attendence.schema';
-import { logError } from '../utils/errorLogger';
+import AttendanceModel from '@academics/models/attendence.user';
+import { Attendance as StudentAttendanceModel } from '@academics/models/attendence.schema';
+import { logError } from '@shared/utils/errorLogger';
 import mongoose from 'mongoose';
 
 export const checkIn = async (req: Request, res: Response) => {

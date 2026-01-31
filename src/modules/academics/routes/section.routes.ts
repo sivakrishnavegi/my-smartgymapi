@@ -16,8 +16,8 @@ import {
   getSectionTeachers,
   getSectionStats,
   checkSectionAlignment
-} from "../controllers/sectionController";
-import { protect } from "../middlewares/authMiddleware";
+} from "@academics/controllers/sectionController";
+import { protect } from "@shared/middlewares/authMiddleware";
 
 const router = Router();
 

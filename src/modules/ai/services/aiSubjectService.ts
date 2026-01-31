@@ -1,4 +1,4 @@
-import { SubjectModel } from "@shared/models/subject.model";
+import { SubjectModel } from "@academics/models/subject.model";
 import { AiSubjectConfigModel } from "@ai/models/AiSubjectConfig.model";
 import { AiDocumentModel } from "@ai/models/AiDocument.model";
 import { Types } from "mongoose";

@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { getCompleteStudentDetails } from "../controllers/studentController";
-import { protect } from "../middlewares/authMiddleware";
+import { getCompleteStudentDetails } from "@academics/controllers/studentController";
+import { protect } from "@shared/middlewares/authMiddleware";
 
 const router = Router();
 

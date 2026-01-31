@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 import mongoose from "mongoose";
 import User from "@iam/models/users.schema";
 
-import School from "@shared/models/schools.schema";
+import School from "@academics/models/schools.schema";
 import { generateRefreshToken, generateToken } from "@shared/utils/genarateToken";
 import { SessionModel } from "@iam/models/SessionSchema";
 import { logError } from '@shared/utils/errorLogger';

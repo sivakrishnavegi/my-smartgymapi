@@ -1,7 +1,7 @@
 
 import express from "express";
-import { upsertTeacherProfile, getTeacherProfile } from "../controllers/teacherController";
-// import { protect, authorize } from "../middlewares/authMiddleware"; // Assuming middleware exists
+import { upsertTeacherProfile, getTeacherProfile } from "@academics/controllers/teacherController";
+// import { protect, authorize } from "@shared/middlewares/authMiddleware"; // Assuming middleware exists
 
 const router = express.Router();
 

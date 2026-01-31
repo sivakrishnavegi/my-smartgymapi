@@ -1,10 +1,10 @@
 
 import { Request, Response } from "express";
 import mongoose from "mongoose";
-import User from "../models/users.schema";
-import TeacherProfile from "../models/TeacherProfile";
-import SchoolModel from "../models/schools.schema";
-import { logError } from '../utils/errorLogger';
+import User from "@academics/models/users.schema";
+import TeacherProfile from "@academics/models/TeacherProfile";
+import SchoolModel from "@academics/models/schools.schema";
+import { logError } from '@shared/utils/errorLogger';
 
 // Upsert (Create/Update) Teacher Profile
 export const upsertTeacherProfile = async (req: Request, res: Response) => {

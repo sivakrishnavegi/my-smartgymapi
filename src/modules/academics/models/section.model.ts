@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { ISection } from "./types/section.types";
+import { ISection } from "@academics/models/section.types";
 
 const SectionSchema = new Schema<ISection>({
   tenantId: { type: String, required: true, index: true },

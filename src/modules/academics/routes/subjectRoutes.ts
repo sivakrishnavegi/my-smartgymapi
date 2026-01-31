@@ -1,7 +1,7 @@
 
 import { Router } from "express";
-import { createSubject, getSubjects, updateSubject, deleteSubject } from "../controllers/subjectController";
-import { protect } from "../middlewares/authMiddleware";
+import { createSubject, getSubjects, updateSubject, deleteSubject } from "@academics/controllers/subjectController";
+import { protect } from "@shared/middlewares/authMiddleware";
 
 const router = Router();
 

@@ -6,7 +6,7 @@ import {
   updateClass,
   deleteClass,
   assignTeacher,
-} from "../controllers/classController";
+} from "@academics/controllers/classController";
 
 const router = Router();
 

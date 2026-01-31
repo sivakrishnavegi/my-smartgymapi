@@ -94,23 +94,45 @@ async function migrate(moduleName: string, config: {
 /**
  * RUNNER: Edit this section to migrate a new module.
  */
-migrate('iam', {
+migrate('academics', {
     controllers: [
-        'controllers/authController.ts',
-        'controllers/googleAuthContorller.ts',
-        'controllers/roleController.ts',
-        'controllers/userController.ts'
+        'controllers/academicYearController.ts',
+        'controllers/classController.ts',
+        'controllers/sectionController.ts',
+        'controllers/studentController.ts',
+        'controllers/subjectController.ts',
+        'controllers/teacherController.ts',
+        'controllers/attendenceController.ts',
+        'controllers/schoolController.ts'
     ],
     models: [
-        'models/users.schema.ts',
-        'models/roles.schema.ts',
-        'models/SessionSchema.ts'
+        'models/schools.schema.ts',
+        'models/academicYear.schema.ts',
+        'models/class.model.ts',
+        'models/section.model.ts',
+        'models/subject.model.ts',
+        'models/StudentProfile.ts',
+        'models/TeacherProfile.ts',
+        'models/AdminProfile.ts',
+        'models/student/student.schema.ts',
+        'models/student/attendence.schema.ts',
+        'models/types/class.types.ts',
+        'models/types/section.types.ts',
+        'models/types/subject.types.ts',
+        'models/exam.model.ts',
+        'models/result.model.ts',
+        'models/attendence.user.ts',
+        'models/tenant.schema.ts'
     ],
     routes: [
-        'routes/authRoutes.ts',
-        'routes/googleAuthRoutes.ts',
-        'routes/roleRoutes.ts',
-        'routes/user.routes.ts'
+        'routes/academicYearRoutes.ts',
+        'routes/attendanceRoutes.ts',
+        'routes/classRoutes.ts',
+        'routes/school.routes.ts',
+        'routes/section.routes.ts',
+        'routes/studentRoutes.ts',
+        'routes/subjectRoutes.ts',
+        'routes/teacherRoutes.ts'
     ]
 });
 

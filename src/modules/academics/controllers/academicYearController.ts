@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import AcademicYear, { IAcademicYear } from "../models/academicYear.schema";
-import { logError } from '../utils/errorLogger';
+import AcademicYear, { IAcademicYear } from "@academics/models/academicYear.schema";
+import { logError } from '@shared/utils/errorLogger';
 
 // Create Academic Year
 export const createAcademicYear = async (req: Request, res: Response) => {

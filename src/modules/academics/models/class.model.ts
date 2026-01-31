@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { IClass } from "./types/class.types";
+import { IClass } from "@academics/models/class.types";
 
 const ClassSchema = new Schema<IClass>({
   tenantId: { type: String, required: true, index: true },

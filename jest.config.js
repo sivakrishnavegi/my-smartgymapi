@@ -11,9 +11,17 @@ module.exports = {
     testMatch: ['**/__tests__/**/*.test.ts'],
     setupFilesAfterEnv: ['<rootDir>/src/modules/ai/__tests__/setup.ts'],
     verbose: true,
-    forceExit: false,
+    forceExit: true,
     clearMocks: true,
     resetModules: false,
     restoreMocks: true,
+    transform: {
+        '^.+\\.tsx?$': [
+            'ts-jest',
+            {
+                isolatedModules: true,
+            },
+        ],
+    },
     maxWorkers: 1,
 };

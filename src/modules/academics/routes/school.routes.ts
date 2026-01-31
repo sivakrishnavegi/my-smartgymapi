@@ -5,7 +5,7 @@ import {
   getSchoolById, 
   updateSchool, 
   deleteSchool 
-} from "../controllers/schoolController";
+} from "@academics/controllers/schoolController";
 
 const router = Router();
 

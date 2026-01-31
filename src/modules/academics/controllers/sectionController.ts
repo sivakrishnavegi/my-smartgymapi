@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
-import SchoolModel from "../models/schools.schema";
-import { SectionModel } from "../models/section.model";
-import UserModel from "../models/users.schema";
-import { ClassModel } from "../models/class.model";
-import { Student } from "../models/student/student.schema";
-import { logError } from '../utils/errorLogger';
+import SchoolModel from "@academics/models/schools.schema";
+import { SectionModel } from "@academics/models/section.model";
+import UserModel from "@iam/models/users.schema";
+import { ClassModel } from "@academics/models/class.model";
+import { Student } from "@academics/models/student.schema";
+import { logError } from '@shared/utils/errorLogger';
 import bcrypt from "bcrypt";
-import { SubjectModel } from "../models/subject.model";
-import { getPagination, buildPaginationResponse, getQueryParam } from "../utils/pagination/index";
+import { SubjectModel } from "@academics/models/subject.model";
+import { getPagination, buildPaginationResponse, getQueryParam } from "@shared/utils/pagination/index";
 
 // Create a new section
 export const createSection = async (req: Request, res: Response) => {
@@ -345,9 +345,9 @@ export const updateSectionsByClass = async (req: Request, res: Response) => {
     }).select('sections');
 
     const claimedSectionIds = new Set<string>();
-    conflictingClasses.forEach(cls => {
+    conflictingClasses.forEach((cls: any) => {
       if (cls.sections) {
-        cls.sections.forEach(secId => {
+        cls.sections.forEach((secId: any) => {
           if (sections.includes(secId.toString())) {
             claimedSectionIds.add(secId.toString());
           }

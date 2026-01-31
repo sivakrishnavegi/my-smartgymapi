@@ -1,15 +1,15 @@
 import { Response } from "express";
 import mongoose from "mongoose";
-import { Student } from "../models/student/student.schema";
-import UserModel, { IUser } from "../models/users.schema";
-import { ClassModel } from "../models/class.model";
-import { SectionModel } from "../models/section.model";
-import { ExamModel } from "../models/exam.model";
-import { ResultModel } from "../models/result.model";
-import { SubjectModel } from "../models/subject.model";
-import SchoolModel from "../models/schools.schema";
-import { logError } from "../utils/errorLogger";
-import { AuthenticatedRequest } from "../middlewares/authMiddleware";
+import { Student } from "@academics/models/student.schema";
+import UserModel, { IUser } from "@iam/models/users.schema";
+import { ClassModel } from "@academics/models/class.model";
+import { SectionModel } from "@academics/models/section.model";
+import { ExamModel } from "@academics/models/exam.model";
+import { ResultModel } from "@academics/models/result.model";
+import { SubjectModel } from "@academics/models/subject.model";
+import SchoolModel from "@academics/models/schools.schema";
+import { logError } from "@shared/utils/errorLogger";
+import { AuthenticatedRequest } from "@shared/middlewares/authMiddleware";
 
 /**
  * Get complete details of a student including academic context, exams, and results.

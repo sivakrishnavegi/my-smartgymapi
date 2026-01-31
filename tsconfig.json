@@ -8,6 +8,9 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
+      "@academics/*": [
+        "src/modules/academics/*"
+      ],
       "@ai/*": [
         "src/modules/ai/*"
       ],

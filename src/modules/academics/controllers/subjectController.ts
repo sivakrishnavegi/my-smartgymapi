@@ -1,9 +1,9 @@
 
 import { Request, Response } from "express";
-import { SubjectModel } from "../models/subject.model";
-import { ClassModel } from "../models/class.model";
-import { SectionModel } from "../models/section.model";
-import { logError } from "../utils/errorLogger";
+import { SubjectModel } from "@academics/models/subject.model";
+import { ClassModel } from "@academics/models/class.model";
+import { SectionModel } from "@academics/models/section.model";
+import { logError } from "@shared/utils/errorLogger";
 import { isValidObjectId } from "mongoose";
 
 /**
