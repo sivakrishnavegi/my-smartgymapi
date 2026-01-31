@@ -116,6 +116,9 @@ export const ingestDocument = async (req: Request, res: Response) => {
                 fileBuffer: file.buffer,
                 fileName: file.originalname,
                 webhookUrl,
+                classId,
+                sectionId,
+                subjectId
             });
 
             // Update document with RAG ID

@@ -195,13 +195,19 @@ const callToRagMicroservice = async (params: {
     fileBuffer: Buffer;
     fileName: string;
     webhookUrl: string;
+    classId?: string;
+    sectionId?: string;
+    subjectId?: string;
 }) => {
-    const { tenantId, schoolId, fileBuffer, fileName, webhookUrl } = params;
+    const { tenantId, schoolId, fileBuffer, fileName, webhookUrl, classId, sectionId, subjectId } = params;
 
     // Create Form Data
     const form = new FormData();
     form.append("file", fileBuffer, { filename: fileName, contentType: "application/pdf" });
     form.append("webhook_url", webhookUrl);
+    if (classId) form.append("class_id", classId);
+    if (sectionId) form.append("section_id", sectionId);
+    if (subjectId) form.append("subject_id", subjectId);
 
     const url = `${aiConfig.ragServiceBaseUrl}/api/v1/rag/documents/${tenantId}/${schoolId}`;
 

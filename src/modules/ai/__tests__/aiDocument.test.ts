@@ -28,7 +28,13 @@ describe("AiDocumentController", () => {
                 mimetype: "application/pdf",
                 size: 100
             },
-            body: { tenantId: "tenant-1", schoolId: "507f1f77bcf86cd799439011" },
+            body: {
+                tenantId: "tenant-1",
+                schoolId: "507f1f77bcf86cd799439011",
+                classId: "507f1f77bcf86cd799439012",
+                sectionId: "507f1f77bcf86cd799439013",
+                subjectId: "507f1f77bcf86cd799439014"
+            },
             params: { id: "507f1f77bcf86cd799439012" },
             query: { tenantId: "tenant-1" },
             user: { _id: "507f1f77bcf86cd799439013" }
@@ -49,7 +55,12 @@ describe("AiDocumentController", () => {
 
             expect(res.status).toHaveBeenCalledWith(202);
             expect(AwsService.uploadBuffer).toHaveBeenCalled();
-            expect(AiDocumentService.callToRagMicroservice).toHaveBeenCalled();
+            expect(AwsService.uploadBuffer).toHaveBeenCalled();
+            expect(AiDocumentService.callToRagMicroservice).toHaveBeenCalledWith(expect.objectContaining({
+                classId: "507f1f77bcf86cd799439012",
+                sectionId: "507f1f77bcf86cd799439013",
+                subjectId: "507f1f77bcf86cd799439014"
+            }));
         });
 
         it("should handle duplicate documents", async () => {

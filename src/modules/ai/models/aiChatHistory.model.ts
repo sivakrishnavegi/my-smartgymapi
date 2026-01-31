@@ -16,6 +16,7 @@ export interface IAiChatHistory extends Document {
     tenantId: string;
     schoolId: Types.ObjectId;
     userId: Types.ObjectId;
+    userEmail: string;
     userRole: string; // "student", "teacher", etc.
     classId?: Types.ObjectId; // For students
     sectionId?: Types.ObjectId; // For students
@@ -49,6 +50,7 @@ const AiChatHistorySchema = new Schema<IAiChatHistory>({
     tenantId: { type: String, required: true, index: true },
     schoolId: { type: Schema.Types.ObjectId, ref: "School", required: true, index: true },
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    userEmail: { type: String, required: true },
     userRole: { type: String, required: true },
 
     classId: { type: Schema.Types.ObjectId, ref: "Class" },

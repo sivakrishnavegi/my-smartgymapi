@@ -38,6 +38,7 @@ const {
   aiDocumentRoutes,
   aiSubjectRoutes,
   aiGovernanceRoutes,
+  aiPlaygroundRoutes,
 } = AppRoutes;
 
 const allowedOrigins: string[] = [
@@ -155,6 +156,7 @@ const routes: { path: string; router: Router; middlewares?: any[] }[] = [
   { path: "/api/ai-docs", router: aiDocumentRoutes },
   { path: "/api/ai-subjects", router: aiSubjectRoutes },
   { path: "/api/ai-governance", router: aiGovernanceRoutes },
+  { path: "/api/ai/playground", router: aiPlaygroundRoutes },
   { path: "/api/s3", router: s3Routes },
   { path: "/api/webhooks/ai-ingestion", router: Router().post("/", aiIngestionWebhook) as any },
 ];
