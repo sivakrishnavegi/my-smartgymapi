@@ -6,8 +6,8 @@ import {
     returnBook,
     getBooks,
     getTransactions
-} from "../controllers/libraryController";
-import { protect } from "../middlewares/authMiddleware";
+} from "@operational/controllers/libraryController";
+import { protect } from "@shared/middlewares/authMiddleware";
 
 const router = Router();
 

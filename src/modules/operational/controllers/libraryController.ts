@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { LibraryBookModel } from "../models/libraryBook.model";
-import { LibraryBookCopyModel } from "../models/libraryBookCopy.model";
-import { LibraryTransactionModel } from "../models/libraryTransaction.model";
-import UserModel from "../models/users.schema";
+import { LibraryBookModel } from "@operational/models/libraryBook.model";
+import { LibraryBookCopyModel } from "@operational/models/libraryBookCopy.model";
+import { LibraryTransactionModel } from "@operational/models/libraryTransaction.model";
+import UserModel from "@iam/models/users.schema";
 import { Types } from "mongoose";
 
 // --- Book Management ---

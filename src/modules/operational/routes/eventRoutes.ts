@@ -1,7 +1,7 @@
 // src/routes/event.routes.ts
 import { Router } from "express";
-import { createEvent, getEvents } from "../controllers/eventController";
-import { protect } from "../middlewares/authMiddleware";
+import { createEvent, getEvents } from "@operational/controllers/eventController";
+import { protect } from "@shared/middlewares/authMiddleware";
 
 const router = Router();
 

@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { createGoogleMeetEvent } from "../controllers/googleMeetControler";
-import { protect } from "../middlewares/authMiddleware";
+import { createGoogleMeetEvent } from "@collaboration/controllers/googleMeetControler";
+import { protect } from "@shared/middlewares/authMiddleware";
 
 const router = Router();
 

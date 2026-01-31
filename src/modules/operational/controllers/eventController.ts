@@ -1,12 +1,12 @@
 // src/controllers/event.controller.ts
 import { Request, Response } from "express";
-import Event from "../models/event.model";
+import Event from "@operational/models/event.model";
 import calendar, {
   getGoogleCalendarClient,
-} from "../utils/google/googleCalendar";
-import User from "../models/users.schema";
-import GoogleMeetEvent from "../models/GoogleMeetSchema";
-import { logError } from '../utils/errorLogger';
+} from "@shared/utils/google/googleCalendar";
+import User from "@iam/models/users.schema";
+import GoogleMeetEvent from "@collaboration/models/GoogleMeetSchema";
+import { logError } from '@shared/utils/errorLogger';
 
 export const createEvent = async (req: Request, res: Response) => {
   try {

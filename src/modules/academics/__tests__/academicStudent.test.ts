@@ -1,4 +1,4 @@
-import { getCompleteStudentDetails } from "../controllers/studentController";
+import { getCompleteStudentDetails } from "@academics/controllers/studentController";
 import { Student } from "@academics/models/student.schema";
 import UserModel from "@iam/models/users.schema";
 import { ClassModel } from "@academics/models/class.model";

@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { IResult } from "./types/result.types";
+import { IResult } from "./result.types";
 
 const ResultSchema = new Schema<IResult>({
   tenantId: { type: String, required: true, index: true },

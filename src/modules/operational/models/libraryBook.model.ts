@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { ILibraryBook } from "./types/library.types";
+import { ILibraryBook } from "./library.types";
 
 const LibraryBookSchema = new Schema<ILibraryBook>({
   tenantId: { type: String, required: true, index: true },

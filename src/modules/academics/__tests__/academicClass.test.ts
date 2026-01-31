@@ -1,4 +1,4 @@
-import { createClass, getClasses } from "../controllers/classController";
+import { createClass, getClasses } from "@academics/controllers/classController";
 import { ClassModel as Class } from "@academics/models/class.model";
 
 // Mock dependencies

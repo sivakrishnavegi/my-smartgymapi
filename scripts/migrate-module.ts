@@ -136,4 +136,33 @@ migrate('academics', {
     ]
 });
 
+migrate('operational', {
+    controllers: [
+        'controllers/libraryController.ts',
+        'controllers/eventController.ts'
+    ],
+    models: [
+        'models/libraryBook.model.ts',
+        'models/libraryBookCopy.model.ts',
+        'models/libraryTransaction.model.ts',
+        'models/event.model.ts'
+    ],
+    routes: [
+        'routes/library.routes.ts',
+        'routes/eventRoutes.ts'
+    ]
+});
+
+migrate('collaboration', {
+    controllers: [
+        'controllers/googleMeetControler.ts'
+    ],
+    models: [
+        'models/GoogleMeetSchema.ts'
+    ],
+    routes: [
+        'routes/googleMeetRoutes.ts'
+    ]
+});
+
 console.log("Migration script execution triggered.");

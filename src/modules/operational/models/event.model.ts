@@ -1,6 +1,6 @@
 // src/models/event.model.ts
 import { Schema, model } from 'mongoose';
-import { IEvent, IEventDocument } from '../models/types/events.types';
+import { IEvent, IEventDocument } from '@operational/models/events.types';
 
 const EventSchema: Schema<IEventDocument> = new Schema<IEventDocument>({
   title: { type: String, required: true },

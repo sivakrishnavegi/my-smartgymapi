@@ -1,4 +1,4 @@
-import { createSchool, listSchools } from "../controllers/schoolController";
+import { createSchool, listSchools } from "@academics/controllers/schoolController";
 import School from "@academics/models/schools.schema";
 
 // Mock dependencies

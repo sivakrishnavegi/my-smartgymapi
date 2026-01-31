@@ -1,5 +1,5 @@
 import { Schema, model, Types } from "mongoose";
-import { IExam } from "./types/exam.types";
+import { IExam } from "./exam.types";
 
 const ExamSchema = new Schema<IExam>(
   {

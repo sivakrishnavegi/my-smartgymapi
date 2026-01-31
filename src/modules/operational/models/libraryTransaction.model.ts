@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { ILibraryTransaction } from "./types/library.types";
+import { ILibraryTransaction } from "./library.types";
 
 const LibraryTransactionSchema = new Schema<ILibraryTransaction>({
   tenantId: { type: String, required: true, index: true },

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import GoogleMeetEvent from "../models/GoogleMeetSchema";
-import User from "../models/users.schema";
-import { logError } from '../utils/errorLogger';
+import GoogleMeetEvent from "@collaboration/models/GoogleMeetSchema";
+import User from "@iam/models/users.schema";
+import { logError } from '@shared/utils/errorLogger';
 
 
 export const createGoogleMeetEvent = async (req: Request, res: Response) => {
