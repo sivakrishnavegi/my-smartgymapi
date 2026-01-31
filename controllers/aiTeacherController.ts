@@ -20,6 +20,7 @@ import { AiConfigModel } from "../models/AiConfig";
 import { AiHistoryService } from "../services/aiHistoryService";
 import { askAiQuestion, checkAiHealth } from "../services/aiService";
 import { logError } from "../utils/errorLogger";
+import { AiGovernanceConfigModel } from "../models/AiGovernanceConfig.model";
 
 /**
  * Industry-standard AI query endpoint with SaaS billing.
@@ -79,7 +80,19 @@ export const askAi = async (req: Request, res: Response) => {
             });
         }
 
-        // 3. Prepare Payload for FastAPI
+        // 3. Fetch Governance Configuration
+        let governanceConfig = await AiGovernanceConfigModel.findOne({ tenantId, schoolId });
+        if (!governanceConfig) {
+            governanceConfig = new AiGovernanceConfigModel({ tenantId, schoolId }); // Use defaults
+        }
+
+        // Determine Teaching Style
+        const requestedStyleId = options?.teachingStyle || "socratic";
+        const activeStyle = governanceConfig.teachingStyles.find(s => s.id === requestedStyleId)
+            || governanceConfig.teachingStyles.find(s => s.isDefault)
+            || governanceConfig.teachingStyles[0];
+
+        // 4. Prepare Payload for FastAPI
         const sessionId = reqSessionId || uuidv4();
         const pythonPayload = {
             query: input.content,
@@ -89,6 +102,11 @@ export const askAi = async (req: Request, res: Response) => {
                 subject,
                 userRole: user.role,
                 ...context
+            },
+            governance: {
+                system_prompt: governanceConfig.globalSystemPrompt,
+                teaching_style: activeStyle ? activeStyle.prompt : "",
+                safety_guardrails: governanceConfig.safetyGuardrails
             },
             options
         };

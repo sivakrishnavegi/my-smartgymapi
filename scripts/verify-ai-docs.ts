@@ -2,6 +2,11 @@ import { AiDocumentService } from '../services/aiDocumentService';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { Types } from 'mongoose';
+import '../models/class.model';
+import '../models/section.model';
+import '../models/subject.model';
+import '../models/schools.schema';
+import '../models/users.schema';
 
 dotenv.config();
 
@@ -36,7 +41,7 @@ async function verifyDocumentFlow() {
 
         // 3. Test Retrieval with Hierarchy
         console.log("\n[TEST 2] Fetching documents for the school/section...");
-        const docs = await AiDocumentService.getDocuments({
+        const { documents: docs } = await AiDocumentService.getDocuments({
             tenantId: testData.tenantId,
             schoolId: testData.schoolId,
             sectionId: testData.sectionId,
@@ -65,7 +70,7 @@ async function verifyDocumentFlow() {
         // 5. Test Soft Delete
         console.log("\n[TEST 4] Deleting document...");
         await AiDocumentService.deleteDocument((doc._id as any).toString());
-        const remainingDocs = await AiDocumentService.getDocuments({
+        const { documents: remainingDocs } = await AiDocumentService.getDocuments({
             tenantId: testData.tenantId,
         });
 
