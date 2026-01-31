@@ -232,16 +232,33 @@ export const updateAiConfiguration = async (req: Request, res: Response) => {
             return res.status(403).json({ success: false, message: "Unauthorized tenant access." });
         }
 
+        // Security: Prevent updating subscription or token limits via this endpoint
+        // These should only be updated by internal system processes or super-admin specific routes
+
+        const updateData: any = {
+            updatedAt: new Date()
+        };
+
+        // Allow toggling system availability
+        if (typeof isEnabled === 'boolean') {
+            updateData.isEnabled = isEnabled;
+        }
+
+        // Allow updating model config
+        if (config) {
+            // Validate temperature
+            if (typeof config.temperature === 'number') {
+                if (config.temperature < 0 || config.temperature > 1) {
+                    return res.status(400).json({ success: false, message: "Temperature must be between 0 and 1" });
+                }
+            }
+            updateData.config = config;
+        }
+
         const updatedConfig = await AiConfigModel.findOneAndUpdate(
             { tenantId, schoolId },
             {
-                $set: {
-                    isEnabled,
-                    subscription,
-                    tokenManagement,
-                    config,
-                    updatedAt: new Date()
-                }
+                $set: updateData
             },
             { upsert: true, new: true, runValidators: true }
         );
