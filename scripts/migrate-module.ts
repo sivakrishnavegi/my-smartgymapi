@@ -94,10 +94,24 @@ async function migrate(moduleName: string, config: {
 /**
  * RUNNER: Edit this section to migrate a new module.
  */
-migrate('dummy', {
-    controllers: ['dummy/controllers/testController.ts'],
-    models: ['dummy/models/testModel.ts'],
-    routes: ['dummy/routes/testRoutes.ts']
+migrate('iam', {
+    controllers: [
+        'controllers/authController.ts',
+        'controllers/googleAuthContorller.ts',
+        'controllers/roleController.ts',
+        'controllers/userController.ts'
+    ],
+    models: [
+        'models/users.schema.ts',
+        'models/roles.schema.ts',
+        'models/SessionSchema.ts'
+    ],
+    routes: [
+        'routes/authRoutes.ts',
+        'routes/googleAuthRoutes.ts',
+        'routes/roleRoutes.ts',
+        'routes/user.routes.ts'
+    ]
 });
 
 console.log("Migration script execution triggered.");

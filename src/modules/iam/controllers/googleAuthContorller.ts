@@ -1,9 +1,9 @@
 import { serialize } from "cookie";
 import { Request, Response } from "express";
-import User, { IGoogleAuth, IProfile } from "../models/users.schema";
+import User, { IGoogleAuth, IProfile } from "@iam/models/users.schema";
 import { oauth2Client } from "../routes/googleAuthRoutes";
-import { generateToken } from "../utils/genarateToken";
-import { logError } from '../utils/errorLogger';
+import { generateToken } from "@shared/utils/genarateToken";
+import { logError } from '@shared/utils/errorLogger';
 
 export const googleAuthCallbackSignInButton = async (
   req: Request,

@@ -1,10 +1,10 @@
 import bcrypt from "bcrypt";
 import { serialize } from "cookie";
 import { Request, Response } from "express";
-import { SessionModel } from "../models/SessionSchema";
-import User from "../models/users.schema";
-import { generateToken } from "../utils/genarateToken";
-import { logError } from '../utils/errorLogger';
+import { SessionModel } from "@iam/models/SessionSchema";
+import User from "@iam/models/users.schema";
+import { generateToken } from "@shared/utils/genarateToken";
+import { logError } from '@shared/utils/errorLogger';
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;

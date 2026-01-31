@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import mongoose, { Document, Schema, Types } from "mongoose";
-import Counter from "./counter.schema";
+import Counter from "@shared/models/counter.schema";
 
 export interface IGoogleAuth {
   accessToken?: string;

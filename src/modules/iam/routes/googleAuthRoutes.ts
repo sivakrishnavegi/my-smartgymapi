@@ -3,7 +3,7 @@ import { google } from "googleapis";
 import {
   googleAuthCallbackSignInButton,
   googleAuthCallbacks,
-} from "../controllers/googleAuthContorller";
+} from "@iam/controllers/googleAuthContorller";
 
 const router = Router();
 

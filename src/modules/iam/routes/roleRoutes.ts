@@ -5,8 +5,8 @@ import {
   getRoleById,
   getRoles,
   updateRole,
-} from "../controllers/roleController";
-import { protect } from "../middlewares/authMiddleware";
+} from "@iam/controllers/roleController";
+import { protect } from "@shared/middlewares/authMiddleware";
 
 const router = Router();
 

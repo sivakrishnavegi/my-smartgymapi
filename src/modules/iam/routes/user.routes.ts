@@ -7,8 +7,8 @@ import {
   listUsers,
   loginUser,
   refreshToken
-} from "../controllers/userController";
-import { protect } from "../middlewares/authMiddleware";
+} from "@iam/controllers/userController";
+import { protect } from "@shared/middlewares/authMiddleware";
 
 const router = Router();
 

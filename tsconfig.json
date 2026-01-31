@@ -11,6 +11,9 @@
       "@ai/*": [
         "src/modules/ai/*"
       ],
+      "@iam/*": [
+        "src/modules/iam/*"
+      ],
       "@shared/*": [
         "*"
       ]

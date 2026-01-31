@@ -2,12 +2,12 @@ import bcrypt from "bcrypt";
 import { serialize } from "cookie";
 import { Request, Response } from "express";
 import mongoose from "mongoose";
-import User from "../models/users.schema";
+import User from "@iam/models/users.schema";
 
-import School from "../models/schools.schema";
-import { generateRefreshToken, generateToken } from "../utils/genarateToken";
-import { SessionModel } from "../models/SessionSchema";
-import { logError } from '../utils/errorLogger';
+import School from "@shared/models/schools.schema";
+import { generateRefreshToken, generateToken } from "@shared/utils/genarateToken";
+import { SessionModel } from "@iam/models/SessionSchema";
+import { logError } from '@shared/utils/errorLogger';
 
 export const createUser = async (req: Request, res: Response) => {
   try {

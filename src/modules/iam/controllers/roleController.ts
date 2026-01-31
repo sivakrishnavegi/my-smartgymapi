@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
-import { RoleModel } from "../models/roles.schema";
-import { logError } from '../utils/errorLogger';
+import { RoleModel } from "@iam/models/roles.schema";
+import { logError } from '@shared/utils/errorLogger';
 
 // Create a role
 export const createRole = async (req: Request, res: Response) => {
