@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { AiDocumentModel } from "../models/AiDocument.model";
-import { logError } from "../utils/errorLogger";
-import { cacheService } from "../services/cacheService";
+import { AiDocumentModel } from "@ai/models/AiDocument.model";
+import { logError } from "@shared/utils/errorLogger";
+import { cacheService } from "@shared/services/cacheService";
 
 /**
  * Handle status updates from the RAG Microservice

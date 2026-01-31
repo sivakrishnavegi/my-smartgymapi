@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { chatWithAi, askAi, getAiConfiguration, updateAiConfiguration, uploadKnowledge, getIngestionStatus } from "../controllers/aiTeacherController";
-import { protect } from "../middlewares/authMiddleware";
-import { validate, validateQuery } from "../middlewares/validateMiddleware";
-import { askAiSchema, chatAiSchema, updateAiConfigSchema, getAiConfigQuerySchema } from "../validators/aiTeacherValidators";
+import { chatWithAi, askAi, getAiConfiguration, updateAiConfiguration, uploadKnowledge, getIngestionStatus } from "@ai/controllers/aiTeacherController";
+import { protect } from "@shared/middlewares/authMiddleware";
+import { validate, validateQuery } from "@shared/middlewares/validateMiddleware";
+import { askAiSchema, chatAiSchema, updateAiConfigSchema, getAiConfigQuerySchema } from "@shared/validators/aiTeacherValidators";
 
 const router = Router();
 

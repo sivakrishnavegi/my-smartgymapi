@@ -3,8 +3,8 @@ import {
     getGovernanceConfig,
     updateGovernanceConfig,
     resetGovernanceConfig
-} from "../controllers/aiGovernanceController";
-import { protect, authorize } from "../middlewares/authMiddleware";
+} from "@ai/controllers/aiGovernanceController";
+import { protect, authorize } from "@shared/middlewares/authMiddleware";
 
 const router = express.Router();
 

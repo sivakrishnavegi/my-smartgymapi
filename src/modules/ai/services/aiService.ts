@@ -1,8 +1,8 @@
-import { aiConfig } from '../config/ai';
-import { createApiClient, apiGet, apiPost } from './api/apiClient';
-import redis from '../config/redis';
+import { aiConfig } from "@shared/config/ai";
+import { createApiClient, apiGet, apiPost } from "@shared/services/api/apiClient";
+import redis from "@shared/config/redis";
 import crypto from 'crypto';
-import { AiLog } from '../models/aiLog.model';
+import { AiLog } from "@ai/models/aiLog.model";
 import { v4 as uuidv4 } from 'uuid';
 
 /**

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import * as AiSubjectService from "../services/aiSubjectService";
-import { getPagination, buildPaginationResponse } from "../utils/pagination";
-import { cacheService } from "../services/cacheService";
+import * as AiSubjectService from "@ai/services/aiSubjectService";
+import { getPagination, buildPaginationResponse } from "@shared/utils/pagination";
+import { cacheService } from "@shared/services/cacheService";
 
 /**
  * Get the AI Control Tower dashboard data

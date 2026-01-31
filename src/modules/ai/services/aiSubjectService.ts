@@ -1,8 +1,8 @@
-import { SubjectModel } from "../models/subject.model";
-import { AiSubjectConfigModel } from "../models/AiSubjectConfig.model";
-import { AiDocumentModel } from "../models/AiDocument.model";
+import { SubjectModel } from "@shared/models/subject.model";
+import { AiSubjectConfigModel } from "@ai/models/AiSubjectConfig.model";
+import { AiDocumentModel } from "@ai/models/AiDocument.model";
 import { Types } from "mongoose";
-import { cacheService } from "./cacheService";
+import { cacheService } from "@shared/services/cacheService";
 
 /**
  * Get the consolidated Control Tower list for a school

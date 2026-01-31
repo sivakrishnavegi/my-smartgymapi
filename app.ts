@@ -5,7 +5,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./docs/swager";
 
 import AppRoutes from "./routes";
-import { aiIngestionWebhook } from "./controllers/aiWebhookController";
+import { aiIngestionWebhook } from "@ai/controllers/aiWebhookController";
 
 import cookieParser from "cookie-parser";
 import slowDown from "express-slow-down";

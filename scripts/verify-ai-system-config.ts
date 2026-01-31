@@ -1,10 +1,10 @@
 
-import { AiConfigModel } from '../models/AiConfig';
+import { AiConfigModel } from '@ai/models/AiConfig';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { Types } from 'mongoose';
-import '../models/users.schema';
-import '../models/schools.schema';
+import '@shared/models/users.schema';
+import '@shared/models/schools.schema';
 
 dotenv.config();
 

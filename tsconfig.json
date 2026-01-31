@@ -6,8 +6,18 @@
     "strict": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "baseUrl": "./server.ts",
-    "skipLibCheck": true  
+    "baseUrl": ".",
+    "paths": {
+      "@ai/*": [
+        "src/modules/ai/*"
+      ],
+      "@shared/*": [
+        "*"
+      ]
+    },
+    "skipLibCheck": true
   },
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

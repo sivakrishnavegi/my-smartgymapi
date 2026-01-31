@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { registerDocument, getDocuments, deleteDocument, ingestDocument, syncDocuments, getDocumentUrl } from "../controllers/aiDocumentController";
-import { aiIngestionWebhook } from "../controllers/aiWebhookController";
-import { protect } from "../middlewares/authMiddleware";
+import { registerDocument, getDocuments, deleteDocument, ingestDocument, syncDocuments, getDocumentUrl } from "@ai/controllers/aiDocumentController";
+import { aiIngestionWebhook } from "@ai/controllers/aiWebhookController";
+import { protect } from "@shared/middlewares/authMiddleware";
 import multer from "multer";
 
 const router = Router();

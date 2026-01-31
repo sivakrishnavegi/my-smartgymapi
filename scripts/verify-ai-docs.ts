@@ -1,12 +1,12 @@
-import { AiDocumentService } from '../services/aiDocumentService';
+import { AiDocumentService } from "@ai/services/aiDocumentService";
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { Types } from 'mongoose';
-import '../models/class.model';
-import '../models/section.model';
-import '../models/subject.model';
-import '../models/schools.schema';
-import '../models/users.schema';
+import "@shared/models/class.model";
+import "@shared/models/section.model";
+import "@shared/models/subject.model";
+import "@shared/models/schools.schema";
+import "@shared/models/users.schema";
 
 dotenv.config();
 

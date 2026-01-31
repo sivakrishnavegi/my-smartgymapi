@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { AiGovernanceConfigModel, IAiGovernanceConfig } from "../models/AiGovernanceConfig.model";
+import { AiGovernanceConfigModel, IAiGovernanceConfig } from "@ai/models/AiGovernanceConfig.model";
 
 /**
  * Get Governance Config

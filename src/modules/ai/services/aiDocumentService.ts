@@ -1,8 +1,8 @@
-import { AiDocumentModel, IAiDocument } from "../models/AiDocument.model";
+import { AiDocumentModel, IAiDocument } from "@ai/models/AiDocument.model";
 import { Types } from "mongoose";
 import axios from "axios";
 import FormData from "form-data";
-import { aiConfig } from "../config/ai";
+import { aiConfig } from "@shared/config/ai";
 
 /**
  * Register a new document in the system and prepare for processing.

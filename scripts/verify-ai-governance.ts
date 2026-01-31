@@ -1,11 +1,11 @@
 
-import { AiGovernanceConfigModel } from '../models/AiGovernanceConfig.model';
+import { AiGovernanceConfigModel } from "@ai/models/AiGovernanceConfig.model";
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { Types } from 'mongoose';
-import { AiConfigModel } from '../models/AiConfig';
-import '../models/users.schema';
-import '../models/schools.schema';
+import { AiConfigModel } from "@ai/models/AiConfig";
+import "@shared/models/users.schema";
+import "@shared/models/schools.schema";
 
 dotenv.config();
 

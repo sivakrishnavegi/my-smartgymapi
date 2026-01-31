@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import { Types } from "mongoose";
-import { AiDocumentService } from "../services/aiDocumentService";
-import { AwsService } from "../services/awsService";
-import { AiDocumentModel } from "../models/AiDocument.model";
-import { logError } from "../utils/errorLogger";
-import { getPagination, buildPaginationResponse } from "../utils/pagination";
-import { cacheService } from "../services/cacheService";
+import { AiDocumentService } from "@ai/services/aiDocumentService";
+import { AwsService } from "@shared/services/awsService";
+import { AiDocumentModel } from "@ai/models/AiDocument.model";
+import { logError } from "@shared/utils/errorLogger";
+import { getPagination, buildPaginationResponse } from "@shared/utils/pagination";
+import { cacheService } from "@shared/services/cacheService";
 
 /**
  * Ingest a document: Upload to S3, Save to Mongo, and trigger RAG Microservice

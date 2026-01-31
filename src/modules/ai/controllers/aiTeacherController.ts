@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import redis from "../config/redis";
+import redis from "@shared/config/redis";
 import { v4 as uuidv4 } from "uuid";
 
 // Mock Python Service URL (Env variable in prod)
@@ -16,11 +16,11 @@ const checkRateLimit = async (userId: string, limit: number, windowSeconds: numb
 };
 
 // --- AI SaaS & Chat Implementation ---
-import { AiConfigModel } from "../models/AiConfig";
-import { AiHistoryService } from "../services/aiHistoryService";
-import { askAiQuestion, checkAiHealth } from "../services/aiService";
-import { logError } from "../utils/errorLogger";
-import { AiGovernanceConfigModel } from "../models/AiGovernanceConfig.model";
+import { AiConfigModel } from "@ai/models/AiConfig";
+import { AiHistoryService } from "@ai/services/aiHistoryService";
+import { askAiQuestion, checkAiHealth } from "@ai/services/aiService";
+import { logError } from "@shared/utils/errorLogger";
+import { AiGovernanceConfigModel } from "@ai/models/AiGovernanceConfig.model";
 
 /**
  * Industry-standard AI query endpoint with SaaS billing.
@@ -346,7 +346,7 @@ export const chatWithAi = async (req: Request, res: Response) => {
 };
 
 // --- Knowledge Ingestion ---
-import { ingestionQueue } from "../config/queue";
+import { ingestionQueue } from "@shared/config/queue";
 
 export const uploadKnowledge = async (req: Request, res: Response) => {
     try {

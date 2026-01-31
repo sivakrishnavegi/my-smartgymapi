@@ -1,9 +1,9 @@
-import { AiDocumentModel } from '../models/AiDocument.model';
+import { AiDocumentModel } from "@ai/models/AiDocument.model";
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { Types } from 'mongoose';
 import axios from 'axios';
-import { aiConfig } from '../config/ai';
+import { aiConfig } from "@shared/config/ai";
 
 dotenv.config();
 

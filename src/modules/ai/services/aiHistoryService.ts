@@ -1,5 +1,5 @@
-import redis from "../config/redis";
-import { AiChatHistoryModel, IMessage } from "../models/aiChatHistory.model";
+import redis from "@shared/config/redis";
+import { AiChatHistoryModel, IMessage } from "@ai/models/aiChatHistory.model";
 import { Types } from "mongoose";
 
 export class AiHistoryService {

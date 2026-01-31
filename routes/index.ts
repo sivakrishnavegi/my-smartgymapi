@@ -19,12 +19,12 @@ import tenantRoutes from "./tenantRoutes";
 import userRoutes from "./user.routes";
 import teacherRoutes from "./teacherRoutes";
 import libraryRoutes from "./library.routes";
-import aiTeacherRoutes from "./aiTeacherRoutes";
+import aiTeacherRoutes from "@ai/routes/aiTeacherRoutes";
 import studentRoutes from "./studentRoutes";
-import aiDocumentRoutes from "./aiDocumentRoutes";
+import aiDocumentRoutes from "@ai/routes/aiDocumentRoutes";
 import s3Routes from "./s3Routes";
-import aiSubjectRoutes from "./aiSubjectRoutes";
-import aiGovernanceRoutes from "./aiGovernance.routes";
+import aiSubjectRoutes from "@ai/routes/aiSubjectRoutes";
+import aiGovernanceRoutes from "@ai/routes/aiGovernance.routes";
 
 const routes = {
   appConfigRoutes,

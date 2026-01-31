@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { getControlTower, toggleAiStatus } from "../controllers/aiSubjectController";
-import { protect } from "../middlewares/authMiddleware";
+import { getControlTower, toggleAiStatus } from "@ai/controllers/aiSubjectController";
+import { protect } from "@shared/middlewares/authMiddleware";
 
 const router = Router();
 
