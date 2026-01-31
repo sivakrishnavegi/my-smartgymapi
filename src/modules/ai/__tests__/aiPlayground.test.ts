@@ -6,10 +6,12 @@ jest.mock('uuid', () => ({
 import { handleChat } from "@ai/controllers/aiPlaygroundController";
 import { AiService } from "@ai/services/aiService";
 import { AiChatHistoryModel } from "@ai/models/AiChatHistory.model";
+import { SubjectModel } from "@academics/models/subject.model";
 
 // Mock dependencies
 jest.mock("@ai/services/aiService");
 jest.mock("@ai/models/AiChatHistory.model");
+jest.mock("@academics/models/subject.model");
 jest.mock("@shared/utils/errorLogger");
 
 describe("AiPlaygroundController", () => {
@@ -26,7 +28,7 @@ describe("AiPlaygroundController", () => {
                 question: "What is the syllabus for mid-terms?",
                 classId: "507f1f77bcf86cd799439011",
                 sectionId: "507f1f77bcf86cd799439012",
-                subjectId: "science"
+                subjectId: "507f1f77bcf86cd799439013"
             },
             user: {
                 id: "507f1f77bcf86cd799439015",
@@ -45,13 +47,29 @@ describe("AiPlaygroundController", () => {
         (AiChatHistoryModel.findOne as jest.Mock).mockResolvedValue(null);
         (AiChatHistoryModel as unknown as jest.Mock).mockImplementation(() => ({
             save: jest.fn().mockResolvedValue(true),
-            messages: []
+            messages: [],
+            _id: "history-123",
+            title: "What is the syllabus..."
         }));
+
+        // Mock Subject
+        (SubjectModel.findById as jest.Mock).mockReturnValue({
+            lean: jest.fn().mockResolvedValue({
+                name: "Science",
+                code: "SCI101"
+            })
+        });
     });
 
     describe("handleChat", () => {
         it("should call AI service with correct payload matching user requirements", async () => {
-            (AiService.askAiQuestion as jest.Mock).mockResolvedValue({ answer: "Here is the syllabus..." });
+            const mockAiResponse = {
+                answer: "Here is the syllabus...",
+                sources: ["Verified School Documents"],
+                confidence_score: 0.62,
+                context: [{ score: 0.62, text: "Some context" }]
+            };
+            (AiService.askAiQuestion as jest.Mock).mockResolvedValue(mockAiResponse);
 
             await handleChat(req, res);
 
@@ -65,7 +83,7 @@ describe("AiPlaygroundController", () => {
                     school_id: "507f1f77bcf86cd799439016",
                     class_id: "507f1f77bcf86cd799439011",
                     section_id: "507f1f77bcf86cd799439012",
-                    subject_id: "science",
+                    subject_id: "507f1f77bcf86cd799439013",
                     user_id: "507f1f77bcf86cd799439015"
                 }),
                 requestId: "mock-req-id-1"
@@ -73,7 +91,12 @@ describe("AiPlaygroundController", () => {
 
             expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
                 data: expect.objectContaining({
-                    response: "Here is the syllabus..."
+                    response: "Here is the syllabus...",
+                    subjectName: "Science",
+                    subjectCode: "SCI101",
+                    sources: ["Verified School Documents"],
+                    confidenceScore: 0.62,
+                    context: expect.any(Array)
                 })
             }));
         });

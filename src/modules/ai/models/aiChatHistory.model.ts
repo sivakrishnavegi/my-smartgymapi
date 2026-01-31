@@ -9,6 +9,9 @@ export interface IMessage {
         totalTokens: number;
         cost?: number;
     };
+    sources?: string[];
+    confidenceScore?: number;
+    context?: any[];
     timestamp: Date;
 }
 
@@ -43,6 +46,9 @@ const MessageSchema = new Schema<IMessage>({
         totalTokens: { type: Number, default: 0 },
         cost: { type: Number, default: 0 },
     },
+    sources: [{ type: String }],
+    confidenceScore: { type: Number },
+    context: { type: Schema.Types.Mixed },
     timestamp: { type: Date, default: Date.now },
 });
 

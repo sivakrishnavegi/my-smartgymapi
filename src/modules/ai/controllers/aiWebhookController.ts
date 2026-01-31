@@ -9,7 +9,6 @@ import { cacheService } from "@shared/services/cacheService";
  */
 export const aiIngestionWebhook = async (req: Request, res: Response) => {
     try {
-        console.log("[AI Webhook] Full Payload:", JSON.stringify(req.body, null, 2));
 
         // Parse Payload (Handle nested document structure if present)
         let { document_id, id, status, vector_ids, vectorIds, chunks, segments, data, error } = req.body;
@@ -36,7 +35,6 @@ export const aiIngestionWebhook = async (req: Request, res: Response) => {
         // Use any discovered field
         const finalVectorIds = vector_ids || vectorIds || chunks || segments;
 
-        console.log(`[AI Webhook] Received update for doc ${finalId}: status=${status}`);
 
         if (!finalId || !status) {
             return res.status(400).json({ message: "document_id/id and status are required" });

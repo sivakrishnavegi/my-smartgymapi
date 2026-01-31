@@ -304,7 +304,6 @@ export const chatWithAi = async (req: Request, res: Response) => {
 
         // 3. Mock Forwarding to Python Microservice (In real scenario, call askAiQuestion or similar)
         // For now keeping the mock logic but making it cleaner
-        console.log(`[AI Proxy] Chat Session=${sessionId}, User=${userId}, Msg="${message}"`);
 
         // 4. Response (Mocking RAG response)
         const mockResponse = {

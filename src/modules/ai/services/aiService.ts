@@ -19,9 +19,7 @@ const client = createApiClient(aiConfig.baseUrl, {
  */
 export const checkAiHealth = async (): Promise<boolean> => {
     try {
-        console.log(`[AiService] Checking health at ${aiConfig.baseUrl}/health`);
         await apiGet(client, '/health');
-        console.log('[AiService] Connection successful');
         return true;
     } catch (error) {
         console.error('[AiService] Connection error:', error);
@@ -75,7 +73,6 @@ export const askAiQuestion = async (params: {
         }
 
         if (cached) {
-            console.log(`[AiService] Cache Hit for ${cacheKey}`);
             const response = JSON.parse(cached);
 
             // Log the cache hit
@@ -94,7 +91,6 @@ export const askAiQuestion = async (params: {
             return response;
         }
 
-        console.log(`[AiService] Cache Miss for ${cacheKey}. Calling microservice...`);
 
         // 4. API Call
         const response = await apiPost<any>(client, '/api/v1/rag/query', payload, {}, requestId);
@@ -164,9 +160,7 @@ export const callAiMicroservice = async (
  */
 export const checkVectorDbHealth = async (): Promise<any> => {
     try {
-        console.log(`[AiService] Checking Vector DB health at ${aiConfig.baseUrl}/api/v1/ai/vector-db-health`);
         const response = await apiGet(client, '/api/v1/ai/vector-db-health');
-        console.log('[AiService] Vector DB Health Check successful');
         return response;
     } catch (error: any) {
         console.error('[AiService] Vector DB Health Check error:', error.message);
@@ -179,9 +173,7 @@ export const checkVectorDbHealth = async (): Promise<any> => {
  */
 export const checkRedisHealth = async (): Promise<any> => {
     try {
-        console.log('[AiService] Checking Redis health...');
         const result = await redis.ping();
-        console.log('[AiService] Redis PONG:', result);
         return { status: "ok", message: result };
     } catch (error: any) {
         console.error('[AiService] Redis connection error:', error.message);

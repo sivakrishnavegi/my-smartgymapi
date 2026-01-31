@@ -4,6 +4,7 @@ import { AiChatHistoryModel } from "@ai/models/AiChatHistory.model";
 import { Types } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import { logError } from "@shared/utils/errorLogger";
+import { SubjectModel } from "@academics/models/subject.model";
 
 /**
  * Handle AI Playground Chat
@@ -21,7 +22,6 @@ export const handleChat = async (req: Request, res: Response) => {
             sessionId, // Optional, implies continuing a conversation
         } = req.body;
 
-        console.log(`[AiPlayground] Request started. ID: ${requestId}, User: ${(req as any).user?.id}`);
 
         const user = (req as any).user;
 
@@ -36,12 +36,22 @@ export const handleChat = async (req: Request, res: Response) => {
         // 1. Resolve or Generate Session ID
         const resolvedSessionId = sessionId || uuidv4();
 
-        // 2. Prepare Context
+        // 2. Prepare Context & Metadata
         const context = {
             classId: classId ? new Types.ObjectId(classId) : undefined,
             sectionId: sectionId ? new Types.ObjectId(sectionId) : undefined,
             subjectId: subjectId, // Keeping as string per schema, or ObjectId if valid
         };
+
+        let subjectName = "";
+        let subjectCode = "";
+        if (subjectId && Types.ObjectId.isValid(subjectId)) {
+            const subject = await SubjectModel.findById(subjectId).lean();
+            if (subject) {
+                subjectName = subject.name;
+                subjectCode = subject.code;
+            }
+        }
 
         // 3. Find or Create Chat History Record
         let chatHistory = await AiChatHistoryModel.findOne({ sessionId: resolvedSessionId });
@@ -84,7 +94,6 @@ export const handleChat = async (req: Request, res: Response) => {
             history: chatHistory.messages.map(m => ({ role: m.role, content: m.content })).slice(-10) // Send last 10 messages for context
         };
 
-        console.log("[AiPlayground] Sending payload to AI:", JSON.stringify(aiPayload, null, 2));
 
         let aiResponse;
         try {
@@ -101,11 +110,17 @@ export const handleChat = async (req: Request, res: Response) => {
         }
 
         const answer = aiResponse?.answer || aiResponse?.response || "No response derived.";
+        const sources = aiResponse?.sources || [];
+        const confidenceScore = aiResponse?.confidence_score || 0;
+        const enrichedContext = aiResponse?.context || [];
 
         // 6. Append Assistant Message
         chatHistory.messages.push({
             role: "assistant",
             content: answer,
+            sources,
+            confidenceScore,
+            context: enrichedContext,
             timestamp: new Date(),
             usage: aiResponse?.usage
         });
@@ -117,7 +132,13 @@ export const handleChat = async (req: Request, res: Response) => {
             data: {
                 sessionId: resolvedSessionId,
                 response: answer,
-                historyId: chatHistory._id
+                historyId: chatHistory._id,
+                subjectName,
+                subjectCode,
+                title: chatHistory.title,
+                sources,
+                confidenceScore,
+                context: enrichedContext
             }
         });
 

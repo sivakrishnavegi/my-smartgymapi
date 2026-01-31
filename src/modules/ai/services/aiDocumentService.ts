@@ -148,7 +148,6 @@ const deleteFromRag = async (tenantId: string, schoolId: string, ragDocumentId: 
                 "x-key": aiConfig.serviceKey || "default-secret-key",
             },
         });
-        console.log(`[AiDocumentService] Successfully deleted from RAG: ${ragDocumentId}`);
     } catch (error: any) {
         console.error(`[AiDocumentService] Failed to delete from RAG ${ragDocumentId}:`, error.response?.data || error.message);
         // We do not throw here to allow soft-delete to proceed (safe delete)
