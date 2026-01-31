@@ -160,10 +160,42 @@ export const callAiMicroservice = async (
 };
 
 /**
+ * Check health of the Vector Database.
+ */
+export const checkVectorDbHealth = async (): Promise<any> => {
+    try {
+        console.log(`[AiService] Checking Vector DB health at ${aiConfig.baseUrl}/api/v1/ai/vector-db-health`);
+        const response = await apiGet(client, '/api/v1/ai/vector-db-health');
+        console.log('[AiService] Vector DB Health Check successful');
+        return response;
+    } catch (error: any) {
+        console.error('[AiService] Vector DB Health Check error:', error.message);
+        throw error;
+    }
+};
+
+/**
+ * Check health of the Redis Cache.
+ */
+export const checkRedisHealth = async (): Promise<any> => {
+    try {
+        console.log('[AiService] Checking Redis health...');
+        const result = await redis.ping();
+        console.log('[AiService] Redis PONG:', result);
+        return { status: "ok", message: result };
+    } catch (error: any) {
+        console.error('[AiService] Redis connection error:', error.message);
+        throw error;
+    }
+};
+
+/**
  * Grouped AI Service exports for consistent usage across the application.
  */
 export const AiService = {
     checkHealth: checkAiHealth,
+    checkVectorDbHealth,
+    checkRedisHealth,
     askAiQuestion,
     callAiMicroservice
 };

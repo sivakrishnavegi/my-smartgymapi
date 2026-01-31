@@ -2,7 +2,9 @@ import express from "express";
 import {
     getGovernanceConfig,
     updateGovernanceConfig,
-    resetGovernanceConfig
+    resetGovernanceConfig,
+    getVectorDbHealth,
+    getRedisHealth
 } from "@ai/controllers/aiGovernanceController";
 import { protect, authorize } from "@shared/middlewares/authMiddleware";
 
@@ -13,5 +15,9 @@ router.route("/config")
     .put(protect, authorize("admin"), updateGovernanceConfig);
 
 router.post("/restore-defaults", protect, authorize("admin"), resetGovernanceConfig);
+
+router.get("/vector-db-health", protect, getVectorDbHealth);
+
+router.get("/redis-health", protect, getRedisHealth);
 
 export default router;

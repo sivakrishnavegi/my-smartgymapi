@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { AiGovernanceConfigModel, IAiGovernanceConfig } from "@ai/models/AiGovernanceConfig.model";
+import { AiService } from "@ai/services/aiService";
 
 /**
  * Get Governance Config
@@ -103,5 +104,41 @@ export const resetGovernanceConfig = async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error("Reset Governance Config Error:", error);
         res.status(500).json({ success: false, message: "Error resetting governance config" });
+    }
+};
+
+/**
+ * Get Vector DB Health
+ * @route GET /api/ai-governance/vector-db-health
+ */
+export const getVectorDbHealth = async (req: Request, res: Response) => {
+    try {
+        const health = await AiService.checkVectorDbHealth();
+        res.status(200).json(health);
+    } catch (error: any) {
+        console.error("Get Vector DB Health Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error fetching Vector DB health",
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Get Redis Health
+ * @route GET /api/ai-governance/redis-health
+ */
+export const getRedisHealth = async (req: Request, res: Response) => {
+    try {
+        const health = await AiService.checkRedisHealth();
+        res.status(200).json(health);
+    } catch (error: any) {
+        console.error("Get Redis Health Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Error fetching Redis health",
+            error: error.message
+        });
     }
 };
