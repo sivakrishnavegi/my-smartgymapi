@@ -1,7 +1,7 @@
 
 import { Request, Response } from "express";
 import mongoose from "mongoose";
-import User from "@academics/models/users.schema";
+import User from "@iam/models/users.schema";
 import TeacherProfile from "@academics/models/TeacherProfile";
 import SchoolModel from "@academics/models/schools.schema";
 import { logError } from '@shared/utils/errorLogger';

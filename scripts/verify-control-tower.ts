@@ -1,5 +1,5 @@
 import { getControlTowerList, toggleSubjectAi } from '../services/aiSubjectService';
-import { SubjectModel } from '../models/subject.model';
+import { SubjectModel } from '@academics/models/subject.model';
 import { AiDocumentModel } from '../models/AiDocument.model';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';

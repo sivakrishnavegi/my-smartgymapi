@@ -1,10 +1,10 @@
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import { upsertTeacherProfile } from '../controllers/teacherController';
-import { assignSubjects, getSectionSubjects } from '../controllers/sectionController';
-import { createSubject } from '../controllers/subjectController'; // Import subject controller
-import { SubjectModel } from '../models/subject.model';
-import UserModel from '../models/users.schema';
+import { upsertTeacherProfile } from '@academics/controllers/teacherController';
+import { assignSubjects, getSectionSubjects } from '@academics/controllers/sectionController';
+import { createSubject } from '@academics/controllers/subjectController'; // Import subject controller
+import { SubjectModel } from '@academics/models/subject.model';
+import UserModel from '@iam/models/users.schema';
 import path from 'path';
 
 // Load .env from root directory

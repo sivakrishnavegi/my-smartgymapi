@@ -2,9 +2,9 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import { connectDB } from '../config/ds';
-import { SectionModel } from '../models/section.model';
-import { ClassModel } from '../models/class.model';
-import { checkSectionAlignment } from '../controllers/sectionController';
+import { SectionModel } from '@academics/models/section.model';
+import { ClassModel } from '@academics/models/class.model';
+import { checkSectionAlignment } from '@academics/controllers/sectionController';
 import mongoose from 'mongoose';
 import { Request, Response } from 'express';
 

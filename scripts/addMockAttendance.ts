@@ -2,7 +2,7 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
-import { Student } from '../models/student/student.schema';
+import { Student } from '@academics/models/student.schema';
 import { Attendance } from '../models/student/attendence.schema';
 
 // Load .env from root directory

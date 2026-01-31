@@ -2,10 +2,10 @@
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
-import UserModel from '../models/users.schema';
-import { SectionModel } from '../models/section.model';
-import { SubjectModel } from '../models/subject.model';
-import { ClassModel } from '../models/class.model';
+import UserModel from '@iam/models/users.schema';
+import { SectionModel } from '@academics/models/section.model';
+import { SubjectModel } from '@academics/models/subject.model';
+import { ClassModel } from '@academics/models/class.model';
 import TeacherProfileModel from '../models/TeacherProfile';
 import path from 'path';
 

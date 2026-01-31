@@ -2,15 +2,15 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import { connectDB } from '../config/ds';
-import { Student } from '../models/student/student.schema';
-import UserModel from '../models/users.schema';
-import { ClassModel } from '../models/class.model';
-import { SectionModel } from '../models/section.model';
-import { ExamModel } from '../models/exam.model';
-import { ResultModel } from '../models/result.model';
-import { SubjectModel } from '../models/subject.model';
-import SchoolModel from '../models/schools.schema';
-import { getCompleteStudentDetails } from '../controllers/studentController';
+import { Student } from '@academics/models/student.schema';
+import UserModel from '@iam/models/users.schema';
+import { ClassModel } from '@academics/models/class.model';
+import { SectionModel } from '@academics/models/section.model';
+import { ExamModel } from '@academics/models/exam.model';
+import { ResultModel } from '@academics/models/result.model';
+import { SubjectModel } from '@academics/models/subject.model';
+import SchoolModel from '@academics/models/schools.schema';
+import { getCompleteStudentDetails } from '@academics/controllers/studentController';
 import mongoose from 'mongoose';
 import { Request, Response } from 'express';
 

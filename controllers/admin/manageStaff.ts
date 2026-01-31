@@ -1,9 +1,9 @@
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import { Types } from "mongoose";
-import { RoleModel } from "../../models/roles.schema";
-import School from "../../models/schools.schema";
-import UserModel from "../../models/users.schema";
+import { RoleModel } from "@iam/models/roles.schema";
+import School from "@academics/models/schools.schema";
+import UserModel from "@iam/models/users.schema";
 import { logError } from '../../utils/errorLogger';
 
 export const addNewStaffMemberToSchool = async (

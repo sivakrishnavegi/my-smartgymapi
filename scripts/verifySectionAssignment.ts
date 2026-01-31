@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import { ClassModel } from '../models/class.model';
-import { SectionModel } from '../models/section.model';
+import { ClassModel } from '@academics/models/class.model';
+import { SectionModel } from '@academics/models/section.model';
 import dotenv from 'dotenv';
 
 dotenv.config();

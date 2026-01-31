@@ -1,5 +1,5 @@
 import { Router } from "express";
-import UserModel from "../../models/users.schema";
+import UserModel from "@iam/models/users.schema";
 import { redis } from "../../services/redis/redisClient";
 
 const router = Router();

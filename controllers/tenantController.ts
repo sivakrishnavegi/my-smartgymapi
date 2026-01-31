@@ -1,8 +1,8 @@
 import crypto from "crypto";
 import { Request, Response } from "express";
 import { parseApiKey } from "../helpers/keys";
-import School from "../models/schools.schema";
-import Tenant from "../models/tenant.schema";
+import School from "@academics/models/schools.schema";
+import Tenant from "@academics/models/tenant.schema";
 import { logError } from '../utils/errorLogger';
 
 export const createTenant = async (req: Request, res: Response) => {

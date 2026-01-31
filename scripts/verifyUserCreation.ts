@@ -1,10 +1,10 @@
 
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import { addStudentToSection } from '../controllers/sectionController';
-import { loginUser } from '../controllers/userController';
-import UserModel from '../models/users.schema';
-import { Student } from '../models/student/student.schema';
+import { addStudentToSection } from '@academics/controllers/sectionController';
+import { loginUser } from '@iam/controllers/userController';
+import UserModel from '@iam/models/users.schema';
+import { Student } from '@academics/models/student.schema';
 import path from 'path';
 
 // Load .env from root directory

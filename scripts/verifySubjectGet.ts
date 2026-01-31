@@ -1,6 +1,6 @@
 
 import { Request, Response } from "express";
-import { SubjectModel } from "../models/subject.model";
+import { SubjectModel } from "@academics/models/subject.model";
 
 // Minimal Jest Shim for standalone execution without test runner
 const jest = {
@@ -29,7 +29,7 @@ mockFind.mockReturnValue({ lean: mockLean }); // find() returns object with lean
 (SubjectModel as any).find = mockFind;
 
 
-import { getSubjects } from "../controllers/subjectController";
+import { getSubjects } from "@academics/controllers/subjectController";
 
 async function verifySubjectGet() {
     console.log('--- Verifying Subject GET Query Handling (Unit Test) ---');

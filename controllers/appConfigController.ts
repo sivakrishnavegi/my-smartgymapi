@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Tenant from "../models/tenant.schema";
+import Tenant from "@academics/models/tenant.schema";
 
 
 import { logError } from '../utils/errorLogger';

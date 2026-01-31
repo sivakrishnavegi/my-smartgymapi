@@ -2,8 +2,8 @@
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import mongoose from "mongoose";
-import { RoleModel } from "../../models/roles.schema";
-import UserModel, { IUser } from "../../models/users.schema";
+import { RoleModel } from "@iam/models/roles.schema";
+import UserModel, { IUser } from "@iam/models/users.schema";
 import { logError } from '../../utils/errorLogger';
 
 // ------------------ Type for Payload ------------------

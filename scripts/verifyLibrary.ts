@@ -1,9 +1,9 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import { connectDB } from '../config/ds';
-import { LibraryBookModel } from '../models/libraryBook.model';
-import { LibraryBookCopyModel } from '../models/libraryBookCopy.model';
-import { LibraryTransactionModel } from '../models/libraryTransaction.model';
+import { LibraryBookModel } from '@operational/models/libraryBook.model';
+import { LibraryBookCopyModel } from '@operational/models/libraryBookCopy.model';
+import { LibraryTransactionModel } from '@operational/models/libraryTransaction.model';
 import mongoose from 'mongoose';
 
 const run = async () => {

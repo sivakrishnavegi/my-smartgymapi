@@ -1,5 +1,5 @@
 
-import { createSubject } from "../controllers/subjectController";
+import { createSubject } from "@academics/controllers/subjectController";
 import { Request, Response } from "express";
 
 async function verifySubjectCreation() {

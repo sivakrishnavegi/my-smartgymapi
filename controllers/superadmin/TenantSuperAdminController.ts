@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import Tenant from "../../models/tenant.schema";
-import School from "../../models/schools.schema";
-import User from "../../models/users.schema";
+import Tenant from "@academics/models/tenant.schema";
+import School from "@academics/models/schools.schema";
+import User from "@iam/models/users.schema";
 import { logError } from '../../utils/errorLogger';
 
 
