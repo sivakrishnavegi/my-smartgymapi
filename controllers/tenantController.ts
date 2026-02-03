@@ -4,6 +4,27 @@ import { parseApiKey } from "../helpers/keys";
 import School from "@academics/models/schools.schema";
 import Tenant from "@academics/models/tenant.schema";
 import { logError } from '../utils/errorLogger';
+import { z } from "zod";
+
+export const schoolConfigSchema = z.object({
+  schoolName: z.string().min(1, "School name is required"),
+  logoUrl: z.string().url("Invalid logo URL").optional().or(z.string().length(0)),
+  affiliationNumber: z.string().min(1, "Affiliation number is required"),
+  website: z.string().url("Invalid website URL").optional().or(z.string().length(0)),
+  address: z.string().min(1, "Address is required"),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  pincode: z.string().min(1, "Pincode is required"),
+  contactNumber: z.string().min(1, "Contact number is required"),
+  email: z.string().email("Invalid email address"),
+  adminName: z.string().min(1, "Admin name is required"),
+  adminDesignation: z.string().min(1, "Admin designation is required"),
+  academicYear: z.string().min(1, "Academic year is required"),
+  timezone: z.string().min(1, "Timezone is required"),
+  primaryColor: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, "Invalid hex color").optional(),
+  secondaryColor: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, "Invalid hex color").optional(),
+  agreedToTerms: z.boolean().refine(val => val === true, "You must agree to the terms"),
+});
 
 export const createTenant = async (req: Request, res: Response) => {
   try {
@@ -263,5 +284,82 @@ export const updateSubscription = async (req: Request, res: Response) => {
   } catch (err: any) {
     await logError(req, err);
     res.status(400).json({ error: err.message });
+  }
+};
+
+export const configureSchool = async (req: Request, res: Response) => {
+  try {
+    const tenantId = req.headers["x-tenant-id"] as string;
+    const schoolId = req.headers["x-school-id"] as string;
+    const tenantDomain = req.headers["x-tenant-domain"] as string;
+    const apiKey = req.headers["x-api-key"] as string;
+
+    // 1. Fail-safe checks for headers
+    if (!tenantId || !schoolId || !apiKey) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing Required Headers: x-tenant-id, x-school-id, and x-api-key are mandatory"
+      });
+    }
+
+    // 2. Validate Tenant Exists & matches domain (if provided)
+    const tenant = await Tenant.findOne({ tenantId });
+    if (!tenant) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid Tenant ID: Tenant not found"
+      });
+    }
+
+    if (tenantDomain && tenant.domain !== tenantDomain) {
+      return res.status(400).json({
+        success: false,
+        message: "Domain Mismatch: x-tenant-domain does not match the registered tenant domain"
+      });
+    }
+
+    // Data is already validated by middleware if used, but we handle it here for direct calls
+    const configData = req.body;
+
+    // 3. Update School Configuration
+    const updatedSchool = await School.findOneAndUpdate(
+      { _id: schoolId, tenantId },
+      {
+        ...configData,
+        updatedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!updatedSchool) {
+      return res.status(404).json({
+        success: false,
+        message: "School not found or does not belong to this tenant"
+      });
+    }
+
+    // 4. Update tenant setup status (Both flags as requested)
+    await Tenant.findOneAndUpdate(
+      { tenantId },
+      {
+        isSchoolSetupCompleted: true,
+        isSassSetupCompleted: true, // Mark SASS setup as complete
+        updatedAt: new Date()
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "School configuration updated successfully",
+      data: updatedSchool
+    });
+  } catch (error: any) {
+    console.error("[CONFIGURE SCHOOL ERROR]", error);
+    await logError(req, error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error during school configuration",
+      error: error.message
+    });
   }
 };

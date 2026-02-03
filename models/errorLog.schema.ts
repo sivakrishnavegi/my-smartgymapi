@@ -1,4 +1,4 @@
-import { Schema, model, Types } from "mongoose";
+import mongoose, { Schema, model, Types } from "mongoose";
 
 const errorLogSchema = new Schema(
     {
@@ -8,7 +8,7 @@ const errorLogSchema = new Schema(
         method: { type: String },
         message: { type: String },
         stack: { type: String },
-        metadata: { type: Schema.Types.Mixed }, // For body, query, params, etc.
+        metadata: { type: mongoose.Schema.Types.Mixed }, // For body, query, params, etc.
         timestamp: { type: Date, default: Date.now },
     },
     { timestamps: true }

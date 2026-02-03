@@ -1,8 +1,51 @@
 import { Router } from "express";
-import { getPresignedUrl, listFiles, verifyUpload } from "../controllers/s3Controller";
+import { getPresignedUrl, listFiles, verifyUpload, uploadFile } from "../controllers/s3Controller";
 import { protect } from "../middlewares/authMiddleware";
+import { apiKeyProtect } from "../middlewares/apiKeyMiddleware";
+import multer from "multer";
 
 const router = Router();
+const upload = multer({ storage: multer.memoryStorage() });
+
+/**
+ * @swagger
+ * /api/s3/upload:
+ *   post:
+ *     summary: Upload file to S3 (Multi-tenant)
+ *     tags: [S3 File Management]
+ *     parameters:
+ *       - in: header
+ *         name: x-tenant-id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: header
+ *         name: x-school-id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: header
+ *         name: x-api-key
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *               purpose:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: File uploaded successfully
+ */
+router.post("/upload", apiKeyProtect, upload.single("file"), uploadFile);
 
 // Protect all S3 routes
 router.use(protect);

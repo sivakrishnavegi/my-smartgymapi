@@ -9,9 +9,13 @@ import {
   revokeApiKey,
   updateSubscription,
   updateTenant,
-  verifyApiKey
+  verifyApiKey,
+  configureSchool,
+  schoolConfigSchema
 } from "../controllers/tenantController";
 import { protect } from "../middlewares/authMiddleware";
+import { apiKeyProtect } from "../middlewares/apiKeyMiddleware";
+import { validate } from "../middlewares/validateMiddleware";
 
 const router = Router();
 
@@ -67,7 +71,7 @@ router.get("/d/:domainId", getTenantByDomainId);
  *         description: List of tenants
  */
 router.post("/", createTenant);
-router.get("/",protect, listTenants);
+router.get("/", protect, listTenants);
 
 
 
@@ -234,5 +238,39 @@ router.put("/:tenantId/subscription", updateSubscription);
  *         description: Internal server error
  */
 router.post("/verify-keys", protect, verifyApiKey);
+
+/**
+ * @swagger
+ * /api/tenants/school-config:
+ *   post:
+ *     summary: Configure school settings (Multi-tenant SaaS)
+ *     tags: [Tenants]
+ *     parameters:
+ *       - in: header
+ *         name: x-tenant-id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: header
+ *         name: x-school-id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: header
+ *         name: x-api-key
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/SchoolConfig'
+ *     responses:
+ *       200:
+ *         description: School configured successfully
+ */
+router.post("/school-config", apiKeyProtect, validate(schoolConfigSchema), configureSchool);
 
 export default router;

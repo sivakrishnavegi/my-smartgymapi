@@ -1,3 +1,8 @@
+import { TextEncoder, TextDecoder } from 'util';
+
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder as any;
+
 // Manual mock for Redis
 class MockRedis {
     async get() { return null; }
@@ -22,15 +27,36 @@ jest.mock('bullmq', () => ({
 }));
 
 jest.mock('mongoose', () => {
-    const mongoose = jest.requireActual('mongoose');
-    const mockMongoose = new mongoose.Mongoose();
-    mockMongoose.connect = jest.fn().mockResolvedValue(mockMongoose);
-    mockMongoose.disconnect = jest.fn().mockResolvedValue(undefined);
-    mockMongoose.connection = {
-        on: jest.fn(),
-        close: jest.fn().mockResolvedValue(undefined),
+    const mockMongoose = {
+        connect: jest.fn().mockResolvedValue(null),
+        disconnect: jest.fn().mockResolvedValue(undefined),
+        connection: {
+            on: jest.fn(),
+            close: jest.fn().mockResolvedValue(undefined),
+            readyState: 1
+        },
+        Schema: class { },
+        model: jest.fn(),
+        Types: {
+            ObjectId: class {
+                constructor(id?: string) { return id || "mock-object-id"; }
+                toString() { return "mock-object-id"; }
+            }
+        },
+        Mongoose: class {
+            connect = jest.fn().mockResolvedValue(this);
+            disconnect = jest.fn().mockResolvedValue(undefined);
+            connection = {
+                on: jest.fn(),
+                close: jest.fn().mockResolvedValue(undefined)
+            };
+        }
     };
-    return mockMongoose;
+    return {
+        __esModule: true,
+        ...mockMongoose,
+        default: mockMongoose,
+    };
 });
 
 // Global cleanup to prevent hanging

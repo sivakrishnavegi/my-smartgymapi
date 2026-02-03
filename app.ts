@@ -98,6 +98,9 @@ const corsOptions: CorsOptions = {
     "Content-Type",
     "Accept",
     "Authorization",
+    "x-tenant-id",
+    "x-school-id",
+    "x-api-key",
   ],
   exposedHeaders: ["set-cookie"],
 };

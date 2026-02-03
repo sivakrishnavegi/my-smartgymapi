@@ -1,4 +1,4 @@
-import { AiService } from '../services/aiService';
+import { AiService } from '../src/modules/ai/services/aiService';
 
 (async () => {
     console.log('Testing AI Service Connection...');
