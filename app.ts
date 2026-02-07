@@ -39,6 +39,7 @@ const {
   aiSubjectRoutes,
   aiGovernanceRoutes,
   aiPlaygroundRoutes,
+  leaveRoutes,
 } = AppRoutes;
 
 const allowedOrigins: string[] = [
@@ -137,6 +138,7 @@ const speedLimiter = slowDown({
 const routes: { path: string; router: Router; middlewares?: any[] }[] = [
   { path: "/api/auth", router: authRoutes, middlewares: [speedLimiter] },
   { path: "/api/attendance", router: attendanceRoutes },
+  { path: "/api/leave", router: leaveRoutes },
   { path: "/api/tenants", router: tenantRoutes },
   { path: "/api/schools", router: schoolRoutes },
   { path: "/api/roles", router: rolesRoutes },

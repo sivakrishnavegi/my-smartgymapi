@@ -8,6 +8,7 @@ const attendanceCorrectionSchema = new Schema(
         sectionId: { type: Types.ObjectId, ref: "Section", required: true },
         studentId: { type: Types.ObjectId, ref: "Student", required: true },
         attendanceId: { type: Types.ObjectId, ref: "StudentAttendance", required: true },
+        attendanceDate: { type: Date, required: true },
 
         currentStatus: {
             type: String,

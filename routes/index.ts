@@ -26,10 +26,12 @@ import s3Routes from "./s3Routes";
 import aiSubjectRoutes from "@ai/routes/aiSubjectRoutes";
 import aiGovernanceRoutes from "@ai/routes/aiGovernance.routes";
 import aiPlaygroundRoutes from "@ai/routes/aiPlayground.routes";
+import leaveRoutes from "@academics/routes/leaveRoutes";
 
 const routes = {
   appConfigRoutes,
   attendanceRoutes,
+  leaveRoutes,
   authRoutes,
   classesRoutes,
   eventRoutes,

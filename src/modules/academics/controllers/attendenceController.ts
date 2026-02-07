@@ -353,7 +353,7 @@ export const getSectionAttendance = async (req: Request, res: Response) => {
       status,
       page = '1',
       limit = '10',
-    } = req.query;
+    } = (req.query as any).params || req.query;
 
     // 1. Validation
     if (!sectionId || !tenantId || !schoolId || !classId || !date) {
@@ -677,6 +677,7 @@ export const submitCorrectionRequest = async (req: Request, res: Response) => {
       sectionId: attendance.sectionId,
       studentId: attendance.studentId,
       attendanceId,
+      attendanceDate: attendance.date,
       currentStatus: attendance.status,
       requestedStatus,
       reason,
@@ -701,7 +702,15 @@ export const submitCorrectionRequest = async (req: Request, res: Response) => {
  */
 export const getCorrectionRequests = async (req: Request, res: Response) => {
   try {
-    const { tenantId, schoolId, classId, sectionId, status = 'Pending', page = '1', limit = '10' } = req.query;
+    const {
+      tenantId,
+      schoolId,
+      classId,
+      sectionId,
+      status = 'Pending',
+      page = '1',
+      limit = '10'
+    } = (req.query as any).params || req.query;
 
     if (!tenantId || !schoolId) {
       return res.status(400).json({ success: false, message: 'tenantId and schoolId are required.' });

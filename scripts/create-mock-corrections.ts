@@ -68,6 +68,7 @@ async function createMockCorrections() {
             ...sharedContext,
             studentId: new mongoose.Types.ObjectId(item.studentId),
             attendanceId: new mongoose.Types.ObjectId(item.attendanceId),
+            attendanceDate: new Date("2026-02-07"),
             currentStatus: "Present",
             requestedStatus: item.requestedStatus,
             reason: item.reason,
