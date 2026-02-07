@@ -5,6 +5,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./docs/swager";
 
 import AppRoutes from "./routes";
+import assignmentRoutes from "@academics/routes/assignmentRoutes";
 import { aiIngestionWebhook } from "@ai/controllers/aiWebhookController";
 
 import cookieParser from "cookie-parser";
@@ -139,6 +140,8 @@ const routes: { path: string; router: Router; middlewares?: any[] }[] = [
   { path: "/api/auth", router: authRoutes, middlewares: [speedLimiter] },
   { path: "/api/attendance", router: attendanceRoutes },
   { path: "/api/leave", router: leaveRoutes },
+  { path: "/api/leave", router: leaveRoutes },
+  { path: "/api/academics/assignments", router: assignmentRoutes },
   { path: "/api/tenants", router: tenantRoutes },
   { path: "/api/schools", router: schoolRoutes },
   { path: "/api/roles", router: rolesRoutes },
