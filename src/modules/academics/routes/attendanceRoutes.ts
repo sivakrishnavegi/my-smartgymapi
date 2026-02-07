@@ -1,6 +1,6 @@
 // routes/attendanceRoutes.ts
 import express from 'express';
-import { checkIn, getStudentAttendance, markBulkAttendance, getSectionAttendance, updateBulkAttendance } from '@academics/controllers/attendenceController';
+import { checkIn, getStudentAttendance, markBulkAttendance, getSectionAttendance, updateBulkAttendance, getDailyAttendanceRecord, submitCorrectionRequest, getCorrectionRequests, resolveCorrectionRequest } from '@academics/controllers/attendenceController';
 import { protect } from '@shared/middlewares/authMiddleware';
 
 const router = express.Router();
@@ -394,5 +394,82 @@ router.put('/mark-bulk', protect, updateBulkAttendance);
  *         description: Internal Server Error
  */
 router.get('/section/:sectionId', protect, getSectionAttendance);
+
+/**
+ * @swagger
+ * /api/attendance/daily-record:
+ *   get:
+ *     summary: Get attendance record of the day for all students in a specific class/section
+ *     description: Retrieves attendance records for all students in a section for a specific date, even those not marked.
+ *     tags:
+ *       - Attendance
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: tenantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: schoolId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: classId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sectionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: date
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: Successfully fetched daily attendance records
+ *       400:
+ *         description: Missing required parameters
+ *       500:
+ *         description: Internal Server Error
+ */
+router.get('/daily-record', protect, getDailyAttendanceRecord);
+
+/**
+ * @swagger
+ * /api/attendance/correction-request:
+ *   post:
+ *     summary: Submit a request for attendance correction (For Students/Parents)
+ *     tags: [Attendance]
+ *     security: [{ bearerAuth: [] }]
+ */
+router.post('/correction-request', protect, submitCorrectionRequest);
+
+/**
+ * @swagger
+ * /api/attendance/correction-requests:
+ *   get:
+ *     summary: Get pending correction requests for approval (For Teachers/Admins)
+ *     tags: [Attendance]
+ *     security: [{ bearerAuth: [] }]
+ */
+router.get('/correction-requests', protect, getCorrectionRequests);
+
+/**
+ * @swagger
+ * /api/attendance/correction-requests/{requestId}:
+ *   patch:
+ *     summary: Resolve (Approve/Reject) a correction request
+ *     tags: [Attendance]
+ *     security: [{ bearerAuth: [] }]
+ */
+router.patch('/correction-requests/:requestId', protect, resolveCorrectionRequest);
 
 export default router;

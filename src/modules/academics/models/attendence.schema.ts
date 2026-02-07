@@ -27,6 +27,17 @@ const studentAttendanceSchema = new Schema(
     },
     remarks: { type: String },
 
+    isMarked: { type: Boolean, default: true },
+    editHistory: [
+      {
+        previousStatus: { type: String },
+        updatedStatus: { type: String },
+        changedBy: { type: Types.ObjectId, ref: "User" },
+        changedAt: { type: Date, default: Date.now },
+        remarks: { type: String },
+      },
+    ],
+
     session: { type: String }, // academic year, e.g. "2025-26"
   },
   { timestamps: true }

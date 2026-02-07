@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import AttendanceModel from '@academics/models/attendence.user';
 import { Attendance as StudentAttendanceModel } from '@academics/models/attendence.schema';
+import { Student as StudentModel } from '@academics/models/student.schema';
+import { AttendanceCorrection as AttendanceCorrectionModel } from '@academics/models/attendanceCorrection.schema';
 import { logError } from '@shared/utils/errorLogger';
 import mongoose from 'mongoose';
 
@@ -311,6 +313,7 @@ export const markBulkAttendance = async (req: Request, res: Response) => {
                 at: new Date()
               } : undefined,
               session, // e.g. "2025-26"
+              isMarked: true,
             },
           },
           upsert: true,
@@ -507,6 +510,15 @@ export const updateBulkAttendance = async (req: Request, res: Response) => {
               remarks: remarks || '',
               session,
               updatedBy: logInfo,
+              isMarked: true,
+            },
+            $push: {
+              editHistory: {
+                updatedStatus: status,
+                changedBy: logInfo?.user,
+                changedAt: logInfo?.at || new Date(),
+                remarks: remarks || '',
+              },
             },
             $setOnInsert: {
               markedBy: logInfo,
@@ -533,3 +545,266 @@ export const updateBulkAttendance = async (req: Request, res: Response) => {
     });
   }
 };
+
+/**
+ * Get attendance record of the day for all students in a specific class/section
+ */
+export const getDailyAttendanceRecord = async (req: Request, res: Response) => {
+  try {
+    const { tenantId, schoolId, classId, sectionId, date, page = '1', limit = '10' } = (req.query as any).params || req.query;
+
+    // 1. Validation
+    if (!tenantId || !schoolId || !classId || !sectionId || !date) {
+      return res.status(400).json({
+        success: false,
+        message: 'tenantId, schoolId, classId, sectionId, and date are required.',
+      });
+    }
+
+    if (
+      !mongoose.Types.ObjectId.isValid(schoolId as string) ||
+      !mongoose.Types.ObjectId.isValid(classId as string) ||
+      !mongoose.Types.ObjectId.isValid(sectionId as string)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid ID format.',
+      });
+    }
+
+    const attendanceDate = new Date(date as string);
+    if (isNaN(attendanceDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date format.',
+      });
+    }
+
+    // Pagination constants
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    const studentFilter = {
+      tenantId,
+      schoolId: new mongoose.Types.ObjectId(schoolId as string),
+      classId: new mongoose.Types.ObjectId(classId as string),
+      sectionId: new mongoose.Types.ObjectId(sectionId as string),
+      status: 'Active',
+    };
+
+    // 2. Fetch students with pagination and total count
+    const [students, totalStudents] = await Promise.all([
+      StudentModel.find(studentFilter)
+        .select('firstName lastName admissionNo rollNo')
+        .sort({ rollNo: 1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      StudentModel.countDocuments(studentFilter),
+    ]);
+
+    // 3. Fetch attendance records for ONLY these students on this date
+    const studentIds = students.map(s => s._id);
+    const attendanceRecords = await StudentAttendanceModel.find({
+      tenantId,
+      studentId: { $in: studentIds },
+      date: attendanceDate,
+    }).lean();
+
+    const attendanceMap = new Map(attendanceRecords.map((r) => [r.studentId.toString(), r]));
+
+    // 4. Merge data
+    const result = students.map((student) => {
+      const attendance = attendanceMap.get(student._id.toString());
+      return {
+        ...student,
+        attendance: attendance || null,
+        isMarked: !!attendance,
+      };
+    });
+
+    const totalPages = Math.ceil(totalStudents / limitNum);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Daily attendance records fetched successfully.',
+      data: result,
+      pagination: {
+        totalRecords: totalStudents,
+        totalPages,
+        currentPage: pageNum,
+        limit: limitNum,
+      },
+      summary: {
+        totalStudents,
+        markedCount: attendanceRecords.length,
+        unmarkedCount: students.length - attendanceRecords.length,
+      },
+    });
+  } catch (error: any) {
+    console.error('[GET DAILY ATTENDANCE RECORD ERROR]', error);
+    await logError(req, error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal Server Error',
+    });
+  }
+};
+
+/**
+ * Submit a request for attendance correction (For Students/Parents)
+ */
+export const submitCorrectionRequest = async (req: Request, res: Response) => {
+  try {
+    const { attendanceId, requestedStatus, reason } = req.body;
+    const userId = (req as any).user?.id;
+    const role = (req as any).user?.role;
+
+    if (!attendanceId || !requestedStatus || !reason) {
+      return res.status(400).json({ success: false, message: 'attendanceId, requestedStatus, and reason are required.' });
+    }
+
+    const attendance = await StudentAttendanceModel.findById(attendanceId);
+    if (!attendance) {
+      return res.status(404).json({ success: false, message: 'Attendance record not found.' });
+    }
+
+    const correctionRequest = await AttendanceCorrectionModel.create({
+      tenantId: attendance.tenantId,
+      schoolId: attendance.schoolId,
+      classId: attendance.classId,
+      sectionId: attendance.sectionId,
+      studentId: attendance.studentId,
+      attendanceId,
+      currentStatus: attendance.status,
+      requestedStatus,
+      reason,
+      requestedBy: userId,
+      role: role || 'unknown',
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Correction request submitted successfully.',
+      data: correctionRequest,
+    });
+  } catch (error: any) {
+    console.error('[SUBMIT CORRECTION REQUEST ERROR]', error);
+    await logError(req, error);
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+};
+
+/**
+ * Get pending correction requests for approval (For Teachers/Admins)
+ */
+export const getCorrectionRequests = async (req: Request, res: Response) => {
+  try {
+    const { tenantId, schoolId, classId, sectionId, status = 'Pending' } = req.query;
+
+    if (!tenantId || !schoolId) {
+      return res.status(400).json({ success: false, message: 'tenantId and schoolId are required.' });
+    }
+
+    const query: any = {
+      tenantId,
+      schoolId: new mongoose.Types.ObjectId(schoolId as string),
+      status,
+    };
+
+    if (classId) query.classId = new mongoose.Types.ObjectId(classId as string);
+    if (sectionId) query.sectionId = new mongoose.Types.ObjectId(sectionId as string);
+
+    const requests = await AttendanceCorrectionModel.find(query)
+      .populate('studentId', 'firstName lastName rollNo')
+      .populate('requestedBy', 'profile.firstName profile.lastName')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      data: requests,
+    });
+  } catch (error: any) {
+    console.error('[GET CORRECTION REQUESTS ERROR]', error);
+    await logError(req, error);
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+};
+
+/**
+ * Resolve (Approve/Reject) a correction request
+ */
+export const resolveCorrectionRequest = async (req: Request, res: Response) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { requestId } = req.params;
+    const { status, adminRemarks } = req.body;
+    const adminId = (req as any).user?.id;
+
+    if (!['Approved', 'Rejected'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status. Must be Approved or Rejected.' });
+    }
+
+    const request = await AttendanceCorrectionModel.findById(requestId).session(session);
+    if (!request) {
+      await session.abortTransaction();
+      return res.status(404).json({ success: false, message: 'Request not found.' });
+    }
+
+    if (request.status !== 'Pending') {
+      await session.abortTransaction();
+      return res.status(400).json({ success: false, message: 'Request has already been resolved.' });
+    }
+
+    request.status = status;
+    request.reviewedBy = adminId as any;
+    request.reviewedAt = new Date();
+    request.adminRemarks = adminRemarks;
+    await request.save({ session });
+
+    if (status === 'Approved') {
+      // Synchronize with main attendance record
+      const attendance = await StudentAttendanceModel.findById(request.attendanceId).session(session);
+      if (attendance) {
+        const previousStatus = attendance.status;
+        attendance.status = request.requestedStatus as any;
+
+        // Push to edit history
+        attendance.editHistory.push({
+          previousStatus,
+          updatedStatus: request.requestedStatus,
+          changedBy: adminId as any,
+          changedAt: new Date(),
+          remarks: `Approved correction request: ${request.reason}`,
+        });
+
+        attendance.updatedBy = {
+          user: adminId as any,
+          role: (req as any).user?.role || 'Admin',
+          at: new Date(),
+        };
+
+        await attendance.save({ session });
+      }
+    }
+
+    await session.commitTransaction();
+    return res.status(200).json({
+      success: true,
+      message: `Correction request ${status.toLowerCase()} successfully.`,
+      data: request,
+    });
+  } catch (error: any) {
+    await session.abortTransaction();
+    console.error('[RESOLVE CORRECTION REQUEST ERROR]', error);
+    await logError(req, error);
+    return res.status(500).json({ success: false, message: 'Internal Server Error' });
+  } finally {
+    session.endSession();
+  }
+};
+
+
