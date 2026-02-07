@@ -701,7 +701,7 @@ export const submitCorrectionRequest = async (req: Request, res: Response) => {
  */
 export const getCorrectionRequests = async (req: Request, res: Response) => {
   try {
-    const { tenantId, schoolId, classId, sectionId, status = 'Pending' } = req.query;
+    const { tenantId, schoolId, classId, sectionId, status = 'Pending', page = '1', limit = '10' } = req.query;
 
     if (!tenantId || !schoolId) {
       return res.status(400).json({ success: false, message: 'tenantId and schoolId are required.' });
@@ -716,15 +716,33 @@ export const getCorrectionRequests = async (req: Request, res: Response) => {
     if (classId) query.classId = new mongoose.Types.ObjectId(classId as string);
     if (sectionId) query.sectionId = new mongoose.Types.ObjectId(sectionId as string);
 
-    const requests = await AttendanceCorrectionModel.find(query)
-      .populate('studentId', 'firstName lastName rollNo')
-      .populate('requestedBy', 'profile.firstName profile.lastName')
-      .sort({ createdAt: -1 })
-      .lean();
+    // Pagination constants
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [requests, totalRecords] = await Promise.all([
+      AttendanceCorrectionModel.find(query)
+        .populate('studentId', 'firstName lastName rollNo')
+        .populate('requestedBy', 'profile.firstName profile.lastName')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      AttendanceCorrectionModel.countDocuments(query),
+    ]);
+
+    const totalPages = Math.ceil(totalRecords / limitNum);
 
     return res.status(200).json({
       success: true,
       data: requests,
+      pagination: {
+        totalRecords,
+        totalPages,
+        currentPage: pageNum,
+        limit: limitNum,
+      },
     });
   } catch (error: any) {
     console.error('[GET CORRECTION REQUESTS ERROR]', error);
